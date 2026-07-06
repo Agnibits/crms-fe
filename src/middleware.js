@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
+const AUTH_PAGES = ["/login", "/forgot-password", "/reset-password", "/verify-email"];
 const PUBLIC_PAGES = [...AUTH_PAGES];
 
 /**
@@ -12,6 +12,11 @@ export function middleware(request) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get("accessToken")?.value;
   const isPublic = PUBLIC_PAGES.some((page) => pathname.startsWith(page));
+
+  // Self-signup is disabled — /register always sends users to /login.
+  if (pathname.startsWith("/register")) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
   if (pathname === "/") {
     return NextResponse.redirect(new URL(token ? "/dashboard" : "/login", request.url));

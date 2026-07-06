@@ -1,6 +1,7 @@
 "use client";
 
 import { api, unwrap } from "./api";
+import { normalizeList } from "./normalize";
 
 /**
  * Factory producing a standard CRUD service for a REST collection.
@@ -14,8 +15,12 @@ export function createCrudService(basePath) {
     basePath,
 
     async list(params = {}, { signal } = {}) {
-      const res = await api.get(basePath, { params, signal });
-      return unwrap(res);
+      // Backend caps `limit` at 100; several pages request more for client-side
+      // filtering — clamp so those requests don't 422.
+      const safeParams =
+        params.limit != null ? { ...params, limit: Math.min(Number(params.limit) || 20, 100) } : params;
+      const res = await api.get(basePath, { params: safeParams, signal });
+      return normalizeList(res);
     },
 
     async getById(id, { signal } = {}) {

@@ -45,7 +45,8 @@ function NavLink({ item, collapsed, onNavigate }) {
 
 function SidebarBody({ collapsed = false, onNavigate }) {
   const role = useAuthStore((s) => s.user?.role);
-  const sections = navForRole(role);
+  const isSuperAdmin = useAuthStore((s) => s.user?.rawRole === "SUPER_ADMIN");
+  const sections = navForRole(role, { isSuperAdmin });
 
   return (
     <div className="flex h-full flex-col">

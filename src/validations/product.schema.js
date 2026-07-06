@@ -3,7 +3,7 @@ import { z } from "zod";
 export const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters").max(120),
   sku: z.string().min(2, "SKU is required").max(40),
-  categoryId: z.string().min(1, "Select a category"),
+  categoryId: z.string().optional().or(z.literal("")),
   price: z
     .number({ invalid_type_error: "Price is required" })
     .min(0, "Price cannot be negative"),

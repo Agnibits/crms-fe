@@ -13,6 +13,7 @@ import {
 import { DEAL_STAGES } from "@/constants/options";
 import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
+import { useCustomerOptions } from "@/features/contacts/hooks";
 
 /** Shared create/edit opportunity form. */
 export default function OpportunityForm({
@@ -23,6 +24,7 @@ export default function OpportunityForm({
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
+  const customers = useCustomerOptions();
 
   const {
     register,
@@ -33,6 +35,7 @@ export default function OpportunityForm({
     resolver: zodResolver(opportunitySchema),
     defaultValues: {
       name: "",
+      customerId: "",
       customerName: "",
       stage: "qualification",
       amount: "",
@@ -47,8 +50,16 @@ export default function OpportunityForm({
     },
   });
 
+  const submit = (values) => {
+    const customerName =
+      customers.options.find((o) => o.value === values.customerId)?.label ??
+      defaultValues?.customerName ??
+      "";
+    onSubmit({ ...values, customerName });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(submit)} className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Opportunity Details</CardTitle>
@@ -63,13 +74,15 @@ export default function OpportunityForm({
             error={errors.name}
             className="sm:col-span-2"
           />
-          <FormInput
-            register={register}
-            name="customerName"
+          <FormSelect
+            control={control}
+            name="customerId"
             label="Customer"
-            placeholder="e.g. Acme Corp"
             required
-            error={errors.customerName}
+            options={customers.options}
+            placeholder={customers.isPending ? "Loading customers…" : "Select customer"}
+            disabled={customers.isPending}
+            error={errors.customerId}
           />
           <FormSelect
             control={control}

@@ -19,6 +19,7 @@ import {
   UserCog,
   Settings,
   FolderOpen,
+  Building2,
 } from "lucide-react";
 import { ROLES } from "./roles";
 
@@ -94,12 +95,23 @@ export const NAV_SECTIONS = [
   },
 ];
 
-/** Flat list of all nav items (used by breadcrumbs / command search). */
-export const NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
+/**
+ * Platform section — SUPER_ADMIN only (tenant management). Shown in addition to
+ * the normal admin nav, so the super admin can also browse cross-tenant CRM data.
+ */
+export const PLATFORM_SECTION = {
+  title: "Platform",
+  items: [{ label: "Companies", href: "/companies", icon: Building2, roles: [ADMIN] }],
+};
 
-export function navForRole(role) {
-  return NAV_SECTIONS.map((section) => ({
+/** Flat list of all nav items (used by breadcrumbs / command search). */
+export const NAV_ITEMS = [...NAV_SECTIONS, PLATFORM_SECTION].flatMap((s) => s.items);
+
+export function navForRole(role, { isSuperAdmin = false } = {}) {
+  const sections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter((item) => !role || item.roles.includes(role)),
   })).filter((section) => section.items.length > 0);
+  if (isSuperAdmin) sections.unshift(PLATFORM_SECTION);
+  return sections;
 }

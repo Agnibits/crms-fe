@@ -16,10 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { FormInput, FormSelect } from "@/components/forms/fields";
 import { userSchema } from "@/validations/user.schema";
-import { ROLE_LABELS } from "@/constants/roles";
+import { ASSIGNABLE_ROLES, BACKEND_ROLE_LABELS, SUPER_ADMIN_ROLE } from "@/constants/roles";
 import { userHooks } from "@/features/users/hooks";
 
-const ROLE_OPTIONS = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
+// SUPER_ADMIN is reserved and never offered here.
+const ROLE_OPTIONS = ASSIGNABLE_ROLES;
 
 const DEPARTMENT_OPTIONS = ["Sales", "Marketing", "Support", "Operations"].map((d) => ({
   value: d,
@@ -33,6 +34,8 @@ const DEPARTMENT_OPTIONS = ["Sales", "Marketing", "Support", "Operations"].map((
  */
 export default function UserFormDialog({ open, onOpenChange, user = null }) {
   const isEdit = !!user?.id;
+  // The one reserved super admin is read-only — its role can't be changed here.
+  const isSuperAdmin = user?.rawRole === SUPER_ADMIN_ROLE;
   const create = userHooks.useCreate();
   const update = userHooks.useUpdate();
   const submitting = create.isPending || update.isPending;
@@ -44,17 +47,27 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(userSchema),
     values: {
       name: user?.name ?? "",
       email: user?.email ?? "",
-      role: user?.role ?? "user",
+      password: "",
+      role: user?.rawRole ?? "USER",
       phone: user?.phone ?? "",
       department: user?.department ?? "",
     },
   });
+
+  /** Surface backend 422 validation errors under the offending field. */
+  const applyFieldErrors = (err) => {
+    const fields = err?.response?.data?.errors;
+    if (Array.isArray(fields)) {
+      fields.forEach((f) => f.field && setError(f.field, { type: "server", message: f.message }));
+    }
+  };
 
   // Sync the status switch whenever the dialog opens for a different user.
   useEffect(() => {
@@ -68,8 +81,10 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
 
   const onSubmit = (values) => {
     const payload = { ...values, status: active ? "active" : "inactive" };
+    // Never attempt to (re)assign the reserved super admin role.
+    if (isSuperAdmin) delete payload.role;
     if (isEdit) {
-      update.mutate({ id: user.id, ...payload }, { onSuccess: close });
+      update.mutate({ id: user.id, ...payload }, { onSuccess: close, onError: applyFieldErrors });
     } else {
       create.mutate(
         {
@@ -78,7 +93,7 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
           emailVerified: false,
           lastLoginAt: null,
         },
-        { onSuccess: close }
+        { onSuccess: close, onError: applyFieldErrors }
       );
     }
   };
@@ -114,15 +129,24 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
               required
               placeholder="jane@company.com"
             />
-            <FormSelect
-              control={control}
-              name="role"
-              label="Role"
-              error={errors.role}
-              required
-              options={ROLE_OPTIONS}
-              placeholder="Select role"
-            />
+            {isSuperAdmin ? (
+              <div className="space-y-1.5">
+                <Label>Role</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm text-muted-foreground">
+                  {BACKEND_ROLE_LABELS.SUPER_ADMIN} · reserved
+                </div>
+              </div>
+            ) : (
+              <FormSelect
+                control={control}
+                name="role"
+                label="Role"
+                error={errors.role}
+                required
+                options={ROLE_OPTIONS}
+                placeholder="Select role"
+              />
+            )}
             <FormInput
               register={register}
               name="phone"
@@ -131,6 +155,18 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
               error={errors.phone}
               placeholder="+91 9876543210"
             />
+            {!isEdit && (
+              <FormInput
+                register={register}
+                name="password"
+                type="password"
+                label="Temporary password"
+                error={errors.password}
+                required
+                placeholder="At least 8 characters"
+                className="sm:col-span-2"
+              />
+            )}
             <FormSelect
               control={control}
               name="department"

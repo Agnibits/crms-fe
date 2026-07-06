@@ -39,17 +39,23 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { userHooks } from "@/features/users/hooks";
 import UserFormDialog from "@/features/users/UserFormDialog";
-import { ROLE_LABELS, ROLES } from "@/constants/roles";
+import { ASSIGNABLE_ROLES, BACKEND_ROLE_LABELS, SUPER_ADMIN_ROLE } from "@/constants/roles";
 import { formatNumber, formatRelative } from "@/utils/format";
 
-/** Colored role badge options (StatusBadge-compatible). */
+/** Colored role badge options (StatusBadge-compatible), keyed by backend role. */
 const ROLE_BADGES = [
-  { value: ROLES.ADMIN, label: ROLE_LABELS[ROLES.ADMIN], color: "violet" },
-  { value: ROLES.MANAGER, label: ROLE_LABELS[ROLES.MANAGER], color: "blue" },
-  { value: ROLES.SALES, label: ROLE_LABELS[ROLES.SALES], color: "green" },
-  { value: ROLES.SUPPORT, label: ROLE_LABELS[ROLES.SUPPORT], color: "amber" },
-  { value: ROLES.USER, label: ROLE_LABELS[ROLES.USER], color: "gray" },
+  { value: "SUPER_ADMIN", label: BACKEND_ROLE_LABELS.SUPER_ADMIN, color: "violet" },
+  { value: "ADMIN", label: BACKEND_ROLE_LABELS.ADMIN, color: "violet" },
+  { value: "MANAGER", label: BACKEND_ROLE_LABELS.MANAGER, color: "blue" },
+  { value: "SALES_MANAGER", label: BACKEND_ROLE_LABELS.SALES_MANAGER, color: "blue" },
+  { value: "SALES_EXECUTIVE", label: BACKEND_ROLE_LABELS.SALES_EXECUTIVE, color: "green" },
+  { value: "MARKETING", label: BACKEND_ROLE_LABELS.MARKETING, color: "teal" },
+  { value: "CUSTOMER_SUPPORT", label: BACKEND_ROLE_LABELS.CUSTOMER_SUPPORT, color: "amber" },
+  { value: "USER", label: BACKEND_ROLE_LABELS.USER, color: "gray" },
 ];
+
+// Assignment/filter dropdowns never include the reserved SUPER_ADMIN.
+const ROLE_FILTER_OPTIONS = ASSIGNABLE_ROLES;
 
 const USER_STATUSES = [
   { value: "active", label: "Active", color: "green" },
@@ -71,7 +77,7 @@ export default function UsersPage() {
   const stats = {
     total: all.data?.total ?? 0,
     active: allUsers.filter((u) => u.status === "active").length,
-    admins: allUsers.filter((u) => u.role === ROLES.ADMIN).length,
+    admins: allUsers.filter((u) => u.rawRole === "ADMIN" || u.rawRole === SUPER_ADMIN_ROLE).length,
   };
 
   const columns = useMemo(
@@ -90,7 +96,7 @@ export default function UsersPage() {
       {
         accessorKey: "role",
         header: "Role",
-        cell: ({ row }) => <StatusBadge value={row.original.role} options={ROLE_BADGES} />,
+        cell: ({ row }) => <StatusBadge value={row.original.rawRole} options={ROLE_BADGES} />,
       },
       {
         accessorKey: "department",
@@ -116,6 +122,8 @@ export default function UsersPage() {
         cell: ({ row }) => {
           const user = row.original;
           const isActive = user.status === "active";
+          // The reserved super admin is read-only: no suspend / delete.
+          const isSuperAdmin = user.rawRole === SUPER_ADMIN_ROLE;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -132,28 +140,34 @@ export default function UsersPage() {
                 <DropdownMenuItem onClick={() => setFormDialog({ open: true, user })}>
                   <Pencil /> Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    patch.mutate({ id: user.id, status: isActive ? "inactive" : "active" })
-                  }
-                >
-                  {isActive ? (
-                    <>
-                      <UserX /> Deactivate
-                    </>
-                  ) : (
-                    <>
-                      <UserCheck /> Activate
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => setDeleteId(user.id)}
-                >
-                  <Trash2 /> Delete
-                </DropdownMenuItem>
+                {!isSuperAdmin && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      patch.mutate({ id: user.id, status: isActive ? "inactive" : "active" })
+                    }
+                  >
+                    {isActive ? (
+                      <>
+                        <UserX /> Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck /> Activate
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                {!isSuperAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setDeleteId(user.id)}
+                    >
+                      <Trash2 /> Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           );
@@ -237,7 +251,7 @@ export default function UsersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All roles</SelectItem>
-                {ROLE_BADGES.map((role) => (
+                {ROLE_FILTER_OPTIONS.map((role) => (
                   <SelectItem key={role.value} value={role.value}>
                     {role.label}
                   </SelectItem>

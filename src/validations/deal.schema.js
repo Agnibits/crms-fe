@@ -7,7 +7,8 @@ const emptyToUndefined = (v) =>
 
 export const dealSchema = z.object({
   name: z.string().min(2, "Deal name must be at least 2 characters"),
-  customerName: z.string().min(1, "Customer is required"),
+  customerId: z.string().min(1, "Customer is required"),
+  customerName: z.string().optional().or(z.literal("")),
   stage: z.string().min(1, "Stage is required"),
   amount: z.preprocess(
     emptyToUndefined,
