@@ -105,7 +105,15 @@ function StageColumn({ stage, leads, usersById }) {
           </div>
         ) : (
           leads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} owner={usersById[lead.ownerId]} />
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              owner={
+                lead.assignedUser
+                  ? { name: `${lead.assignedUser.firstName} ${lead.assignedUser.lastName || ""}`.trim() }
+                  : usersById[lead.ownerId]
+              }
+            />
           ))
         )}
       </div>

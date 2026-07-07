@@ -3,6 +3,32 @@
 import { api, unwrap } from "./api";
 import { normalizeList } from "./normalize";
 
+// Standard list params passed through as-is; everything else is a filter and
+// must go out in the backend's bracket notation: `filter[key]=VALUE`.
+const STANDARD_PARAMS = new Set(["page", "limit", "search", "q", "sortBy", "sortOrder"]);
+// Filter fields whose values are backend enums → sent UPPERCASE (free-text
+// filters like `industry` are left as typed).
+const ENUM_FILTER_KEYS = new Set(["status", "priority", "rating", "method", "type", "role"]);
+
+/**
+ * Shape the UI's flat query object into what the API expects:
+ *  { page, limit, search, sortBy, sortOrder, filter[status]=ACTIVE, filter[industry]=… }
+ * Skips empty / "all" (the dropdowns' no-filter sentinel) and clamps limit to 100.
+ */
+export function buildListParams(params = {}) {
+  const out = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "" || value === "all") continue;
+    if (STANDARD_PARAMS.has(key)) {
+      out[key] = key === "limit" ? Math.min(Number(value) || 20, 100) : value;
+    } else {
+      out[`filter[${key}]`] =
+        ENUM_FILTER_KEYS.has(key) && typeof value === "string" ? value.toUpperCase() : value;
+    }
+  }
+  return out;
+}
+
 /**
  * Factory producing a standard CRUD service for a REST collection.
  * Every method accepts an optional `{ signal }` for cancellation
@@ -15,11 +41,7 @@ export function createCrudService(basePath) {
     basePath,
 
     async list(params = {}, { signal } = {}) {
-      // Backend caps `limit` at 100; several pages request more for client-side
-      // filtering — clamp so those requests don't 422.
-      const safeParams =
-        params.limit != null ? { ...params, limit: Math.min(Number(params.limit) || 20, 100) } : params;
-      const res = await api.get(basePath, { params: safeParams, signal });
+      const res = await api.get(basePath, { params: buildListParams(params), signal });
       return normalizeList(res);
     },
 

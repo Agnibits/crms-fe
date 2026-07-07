@@ -169,7 +169,7 @@ function CustomersTab() {
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard
           title="Customers by Status"
-          description="Active, prospect, inactive and churned"
+          description="Active, inactive and churned"
           loading={isPending}
           height={300}
         >

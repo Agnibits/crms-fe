@@ -17,6 +17,13 @@ export function useAuth() {
   const login = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
+      // The CRM is tenant-only. Super admins manage the platform from the
+      // Agnibits console — block them here and discard the token.
+      if (data.user?.rawRole === "SUPER_ADMIN") {
+        clearAuth();
+        toast.error("Super admins yahan login nahi kar sakte — Agnibits console use karein");
+        return;
+      }
       setAuth(data);
       toast.success(`Welcome back, ${data.user?.name?.split(" ")[0] || "there"}!`);
       router.replace(searchParams.get("callbackUrl") || "/dashboard");

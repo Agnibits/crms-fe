@@ -61,11 +61,28 @@ export default function DashboardPage() {
 
   const s = stats.data;
 
+  // A specific, actionable subtitle beats a generic "here's what's happening".
+  const firstName = user?.name?.split(" ")[0] || "there";
+  const todayStr = new Date().toDateString();
+  const isDone = (t) => ["done", "cancelled"].includes(String(t.status || "").toLowerCase());
+  const tasksDueToday = (tasks.data || []).filter(
+    (t) => t.dueDate && !isDone(t) && new Date(t.dueDate).toDateString() === todayStr
+  ).length;
+  const openOpps = s?.openOpportunities ?? 0;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const dashboardSubtitle = stats.isPending
+    ? "Getting your day ready…"
+    : tasksDueToday > 0
+      ? `You have ${plural(tasksDueToday, "task", "tasks")} due today.`
+      : openOpps > 0
+        ? `You have ${plural(openOpps, "open opportunity", "open opportunities")} in your pipeline.`
+        : "You're all caught up — nothing needs your attention right now.";
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user?.name?.split(" ")[0] || "there"} 👋`}
-        description="Here's what's happening across your sales pipeline today."
+        title={`Welcome back, ${firstName} 👋`}
+        description={dashboardSubtitle}
         actions={
           <Button asChild>
             <Link href="/leads/new">

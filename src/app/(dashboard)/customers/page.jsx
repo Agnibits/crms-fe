@@ -30,24 +30,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
-import { customerHooks } from "@/features/customers/hooks";
+import { customerHooks, useCustomerIndustries } from "@/features/customers/hooks";
 import ImportCustomersDialog from "@/features/customers/ImportCustomersDialog";
 import { CUSTOMER_STATUSES } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatDate } from "@/utils/format";
-
-const INDUSTRY_OPTIONS = [
-  "Technology",
-  "Manufacturing",
-  "Healthcare",
-  "Finance",
-  "Retail",
-  "Education",
-  "Real Estate",
-  "Logistics",
-  "Media",
-  "Energy",
-];
 
 const EXPORT_COLUMNS = [
   { key: "name", label: "Company" },
@@ -59,14 +46,14 @@ const EXPORT_COLUMNS = [
   { key: "status", label: "Status" },
   { key: "city", label: "City" },
   { key: "country", label: "Country" },
-  { key: "annualRevenue", label: "Annual Revenue" },
-  { key: "employees", label: "Employees" },
+  { key: "revenue", label: "Revenue" },
   { key: "createdAt", label: "Created At" },
 ];
 
 export default function CustomersPage() {
   const router = useRouter();
   const t = useTableState();
+  const industryOptions = useCustomerIndustries().data ?? [];
   const { data, isPending, error, refetch } = customerHooks.useList(t.queryParams);
   const remove = customerHooks.useRemove();
   const bulkRemove = customerHooks.useBulkRemove();
@@ -98,11 +85,12 @@ export default function CustomersPage() {
         ),
       },
       {
-        accessorKey: "annualRevenue",
+        accessorKey: "revenue",
         header: "Revenue",
         cell: ({ row }) => (
-          <span className="block text-right tabular-nums">
-            {formatCurrency(row.original.annualRevenue)}
+          <span className="tabular-nums">
+            {/* Backend-calculated sum of paid invoices; "—" until there's revenue. */}
+            {row.original.revenue > 0 ? formatCurrency(row.original.revenue) : "—"}
           </span>
         ),
       },
@@ -203,7 +191,7 @@ export default function CustomersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All industries</SelectItem>
-                {INDUSTRY_OPTIONS.map((industry) => (
+                {industryOptions.map((industry) => (
                   <SelectItem key={industry} value={industry}>
                     {industry}
                   </SelectItem>

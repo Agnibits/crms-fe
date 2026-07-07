@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
+import OwnerCell from "@/components/common/OwnerCell";
 import DataTable, { selectionColumn } from "@/components/tables/DataTable";
 import StatusBadge from "@/components/common/StatusBadge";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -35,7 +36,6 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { dealHooks } from "@/features/deals/hooks";
 import DealBoard from "@/features/deals/DealBoard";
-import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { DEAL_STAGES } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -46,7 +46,6 @@ export default function DealsPage() {
   const { data, isPending, error, refetch } = dealHooks.useList(t.queryParams);
   const remove = dealHooks.useRemove();
   const bulkRemove = dealHooks.useBulkRemove();
-  const { usersById } = useUsersOptions();
   const [deleteId, setDeleteId] = useState(null);
 
   const columns = useMemo(
@@ -65,9 +64,9 @@ export default function DealsPage() {
       },
       {
         accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
+        header: "Amount",
         cell: ({ row }) => (
-          <div className="text-right tabular-nums">{formatCurrency(row.original.amount)}</div>
+          <span className="tabular-nums">{formatCurrency(row.original.amount)}</span>
         ),
       },
       {
@@ -90,7 +89,7 @@ export default function DealsPage() {
       {
         accessorKey: "ownerId",
         header: "Owner",
-        cell: ({ row }) => usersById[row.original.ownerId]?.name ?? "—",
+        cell: ({ row }) => <OwnerCell entity={row.original} />,
       },
       {
         id: "actions",
@@ -127,7 +126,7 @@ export default function DealsPage() {
         ),
       },
     ],
-    [router, usersById]
+    [router]
   );
 
   return (

@@ -151,7 +151,10 @@ export default function CustomerDetailPage() {
     );
   }
 
-  const owner = ownersById[customer.ownerId];
+  // getById returns a resolved `owner` object; fall back to the users lookup.
+  const owner = customer.owner
+    ? { ...customer.owner, name: [customer.owner.firstName, customer.owner.lastName].filter(Boolean).join(" ") }
+    : ownersById[customer.ownerId];
   const allNotes = [...localNotes, ...(notes.data ?? [])];
 
   return (
@@ -280,8 +283,12 @@ export default function CustomerDetailPage() {
                 <DefItem label="City">{customer.city || "—"}</DefItem>
                 <DefItem label="Country">{customer.country || "—"}</DefItem>
                 <DefItem label="Address">{customer.address || "—"}</DefItem>
-                <DefItem label="Annual revenue">{formatCurrency(customer.annualRevenue)}</DefItem>
-                <DefItem label="Employees">{formatNumber(customer.employees)}</DefItem>
+                <DefItem label="Revenue">
+                  {customer.revenue > 0 ? formatCurrency(customer.revenue) : "—"}
+                </DefItem>
+                <DefItem label="Employees">
+                  {customer.employees > 0 ? formatNumber(customer.employees) : "—"}
+                </DefItem>
                 <DefItem label="Tags">
                   {customer.tags?.length ? customer.tags.join(", ") : "—"}
                 </DefItem>
@@ -365,10 +372,12 @@ export default function CustomerDetailPage() {
                           className="cursor-pointer"
                           onClick={() => router.push(`/contacts/${contact.id}`)}
                         >
-                          <TableCell className="font-medium">{contact.name}</TableCell>
-                          <TableCell>{contact.email}</TableCell>
+                          <TableCell className="font-medium">
+                            {`${contact.firstName} ${contact.lastName || ""}`.trim()}
+                          </TableCell>
+                          <TableCell>{contact.email || "—"}</TableCell>
                           <TableCell>{contact.phone || "—"}</TableCell>
-                          <TableCell>{contact.jobTitle || "—"}</TableCell>
+                          <TableCell>{contact.designation || "—"}</TableCell>
                           <TableCell>
                             {contact.isPrimary ? (
                               <Star className="h-4 w-4 fill-amber-400 text-amber-400" />

@@ -28,6 +28,7 @@ import {
   Trophy,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
+import OwnerCell from "@/components/common/OwnerCell";
 import StatCard from "@/components/common/StatCard";
 import DataTable, { selectionColumn } from "@/components/tables/DataTable";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -52,7 +53,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
 import { opportunityHooks } from "@/features/opportunities/hooks";
-import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { DEAL_STAGES } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import {
@@ -216,7 +216,6 @@ export default function OpportunitiesPage() {
   const all = opportunityHooks.useList({ limit: 200 });
   const remove = opportunityHooks.useRemove();
   const bulkRemove = opportunityHooks.useBulkRemove();
-  const { usersById } = useUsersOptions();
   const [deleteId, setDeleteId] = useState(null);
 
   const allItems = all.data?.items ?? [];
@@ -260,9 +259,9 @@ export default function OpportunitiesPage() {
       },
       {
         accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
+        header: "Amount",
         cell: ({ row }) => (
-          <div className="text-right tabular-nums">{formatCurrency(row.original.amount)}</div>
+          <span className="tabular-nums">{formatCurrency(row.original.amount)}</span>
         ),
       },
       {
@@ -285,7 +284,7 @@ export default function OpportunitiesPage() {
       {
         accessorKey: "ownerId",
         header: "Owner",
-        cell: ({ row }) => usersById[row.original.ownerId]?.name ?? "—",
+        cell: ({ row }) => <OwnerCell entity={row.original} />,
       },
       {
         id: "actions",
@@ -326,7 +325,7 @@ export default function OpportunitiesPage() {
         ),
       },
     ],
-    [router, usersById]
+    [router]
   );
 
   return (

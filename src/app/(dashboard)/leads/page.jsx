@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
+import OwnerCell from "@/components/common/OwnerCell";
 import DataTable, { selectionColumn } from "@/components/tables/DataTable";
 import StatusBadge from "@/components/common/StatusBadge";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -35,7 +36,6 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { leadHooks } from "@/features/leads/hooks";
 import LeadKanban from "@/features/leads/LeadKanban";
-import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { LEAD_STAGES, LEAD_SOURCES, findOption } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -46,7 +46,6 @@ export default function LeadsPage() {
   const { data, isPending, error, refetch } = leadHooks.useList(t.queryParams);
   const remove = leadHooks.useRemove();
   const bulkRemove = leadHooks.useBulkRemove();
-  const { usersById } = useUsersOptions();
   const [deleteId, setDeleteId] = useState(null);
 
   const columns = useMemo(
@@ -71,9 +70,9 @@ export default function LeadsPage() {
       },
       {
         accessorKey: "value",
-        header: () => <div className="text-right">Value</div>,
+        header: "Value",
         cell: ({ row }) => (
-          <div className="text-right tabular-nums">{formatCurrency(row.original.value)}</div>
+          <span className="tabular-nums">{formatCurrency(row.original.value)}</span>
         ),
       },
       {
@@ -91,7 +90,7 @@ export default function LeadsPage() {
       {
         accessorKey: "ownerId",
         header: "Owner",
-        cell: ({ row }) => usersById[row.original.ownerId]?.name ?? "—",
+        cell: ({ row }) => <OwnerCell entity={row.original} />,
       },
       {
         accessorKey: "createdAt",
@@ -133,7 +132,7 @@ export default function LeadsPage() {
         ),
       },
     ],
-    [router, usersById]
+    [router]
   );
 
   return (

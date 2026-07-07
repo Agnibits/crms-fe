@@ -19,7 +19,7 @@ import { QUERY_KEYS } from "@/constants/app";
 import { formatBytes } from "@/utils/format";
 
 const MAX_ROWS = 100;
-const ALLOWED_STATUSES = ["active", "inactive", "prospect", "churned"];
+const ALLOWED_STATUSES = ["active", "inactive", "churned"];
 
 /** Map a raw CSV row (case-insensitive headers) onto the customer payload. */
 function toPayload(row) {
@@ -31,7 +31,6 @@ function toPayload(row) {
     return "";
   };
   const status = get("status").toLowerCase();
-  const numeric = (v) => (v && !Number.isNaN(Number(v)) ? Number(v) : undefined);
   return {
     name: get("name", "company", "company name"),
     contactName: get("contactName", "contact", "contact name"),
@@ -39,12 +38,10 @@ function toPayload(row) {
     phone: get("phone"),
     website: get("website"),
     industry: get("industry"),
-    status: ALLOWED_STATUSES.includes(status) ? status : "prospect",
+    status: ALLOWED_STATUSES.includes(status) ? status : "active",
     city: get("city"),
     country: get("country"),
     address: get("address"),
-    annualRevenue: numeric(get("annualRevenue", "annual revenue", "revenue")),
-    employees: numeric(get("employees")),
   };
 }
 

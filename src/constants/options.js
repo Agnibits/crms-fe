@@ -43,10 +43,10 @@ export const PRIORITIES = [
   { value: "urgent", label: "Urgent", color: "red" },
 ];
 
+// Backend CustomerStatus: ACTIVE, INACTIVE, CHURNED (PROSPECT is a Lead concept).
 export const CUSTOMER_STATUSES = [
   { value: "active", label: "Active", color: "green" },
   { value: "inactive", label: "Inactive", color: "gray" },
-  { value: "prospect", label: "Prospect", color: "blue" },
   { value: "churned", label: "Churned", color: "red" },
 ];
 

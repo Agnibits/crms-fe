@@ -41,11 +41,10 @@ export default function CustomerForm({
       phone: defaultValues?.phone ?? "",
       website: defaultValues?.website ?? "",
       industry: defaultValues?.industry ?? "",
-      status: defaultValues?.status ?? "prospect",
+      status: defaultValues?.status ?? "active",
       city: defaultValues?.city ?? "",
       country: defaultValues?.country ?? "",
       address: defaultValues?.address ?? "",
-      annualRevenue: defaultValues?.annualRevenue ?? "",
       employees: defaultValues?.employees ?? "",
       notes: defaultValues?.notes ?? "",
     },
@@ -136,14 +135,6 @@ export default function CustomerForm({
             error={errors.address}
             placeholder="4th Floor, Tech Park One"
             className="sm:col-span-2"
-          />
-          <FormNumber
-            register={register}
-            name="annualRevenue"
-            label="Annual revenue (USD)"
-            error={errors.annualRevenue}
-            min={0}
-            placeholder="500000"
           />
           <FormNumber
             register={register}

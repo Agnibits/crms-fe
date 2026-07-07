@@ -76,22 +76,28 @@ function Timeline({ query }) {
   }
   return (
     <div className="space-y-1">
-      {items.map((activity) => {
-        const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
+      {items.map((item, i) => {
+        // Backend timeline items are { kind: 'activity'|'note', at, data }.
+        const rec = item.data ?? item;
+        const isNote = item.kind === "note";
+        const Icon = isNote ? StickyNote : ACTIVITY_ICONS[rec.type] || StickyNote;
+        const title = isNote ? rec.title || "Note" : rec.subject;
+        const body = isNote ? rec.content : rec.description;
+        const who = rec.userName || [rec.user?.firstName, rec.user?.lastName].filter(Boolean).join(" ");
+        const when = item.at || rec.createdAt;
         return (
-          <div key={activity.id} className="flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50">
+          <div key={rec.id ?? i} className="flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50">
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Icon className="h-3.5 w-3.5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{activity.subject}</p>
-              {activity.description && (
-                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                  {activity.description}
-                </p>
+              <p className="truncate text-sm font-medium">{title}</p>
+              {body && (
+                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{body}</p>
               )}
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {activity.userName} · {formatRelative(activity.createdAt)}
+                {who ? `${who} · ` : ""}
+                {formatRelative(when)}
               </p>
             </div>
           </div>
@@ -126,7 +132,10 @@ export default function LeadDetailPage() {
   if (error) return <ErrorState error={error} onRetry={refetch} />;
   if (!lead) return <EmptyState title="Lead not found" />;
 
-  const owner = usersById[lead.ownerId];
+  // Backend returns a resolved `assignedUser`; fall back to the users lookup.
+  const owner = lead.assignedUser
+    ? { ...lead.assignedUser, name: `${lead.assignedUser.firstName} ${lead.assignedUser.lastName || ""}`.trim() }
+    : usersById[lead.ownerId];
 
   return (
     <div className="space-y-6">

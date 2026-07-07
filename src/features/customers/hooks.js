@@ -14,6 +14,15 @@ export const customerHooks = createCrudHooks({
   label: "Customer",
 });
 
+/** Distinct industries present on this company's customers (for the filter dropdown). */
+export function useCustomerIndustries() {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.customers, "industries"],
+    queryFn: ({ signal }) => customerService.getIndustries({ signal }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /**
  * Lightweight lookup of users so ownerId can be rendered as a name.
  * Returns the query plus an `ownersById` map.

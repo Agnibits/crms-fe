@@ -17,6 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
+import { ownerName } from "@/components/common/OwnerCell";
 import StatusBadge from "@/components/common/StatusBadge";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import UserAvatar from "@/components/common/UserAvatar";
@@ -46,7 +47,6 @@ import { cn } from "@/utils/cn";
 import { taskHooks } from "@/features/tasks/hooks";
 import TaskBoard from "@/features/tasks/TaskBoard";
 import TaskFormDialog from "@/features/tasks/TaskFormDialog";
-import { useUsersOptions } from "@/features/tasks/useUsersOptions";
 import { TASK_DUE_COLOR } from "@/features/events/hooks";
 
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
@@ -54,7 +54,6 @@ const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false }
 export default function TasksPage() {
   const router = useRouter();
   const t = useTableState();
-  const { usersById } = useUsersOptions();
 
   // Board + calendar need the full set; the list tab stays server-paginated.
   const board = taskHooks.useList({ limit: 200 });
@@ -136,14 +135,14 @@ export default function TasksPage() {
         header: "Assignee",
         enableSorting: false,
         cell: ({ row }) => {
-          const user = usersById?.[row.original.assigneeId];
-          return user ? (
+          const assignee = row.original.owner || row.original.assignedUser;
+          if (!assignee) return <span className="text-muted-foreground">Unassigned</span>;
+          const name = ownerName(row.original);
+          return (
             <span className="flex items-center gap-2">
-              <UserAvatar name={user.name} className="h-6 w-6 text-[10px]" />
-              <span className="truncate">{user.name}</span>
+              <UserAvatar name={name} className="h-6 w-6 text-[10px]" />
+              <span className="truncate">{name}</span>
             </span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
           );
         },
       },
@@ -182,7 +181,7 @@ export default function TasksPage() {
         ),
       },
     ],
-    [router, usersById]
+    [router]
   );
 
   return (

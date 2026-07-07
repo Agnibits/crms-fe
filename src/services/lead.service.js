@@ -8,7 +8,7 @@ import { makeMapper, withMapping } from "./crudMap";
  * Lead CRUD service + lead-specific actions.
  *   leadService.action(id, "convert")            → convert lead to customer
  *   leadService.action(id, "merge", { mergeId }) → merge a duplicate lead
- * Field map: ownerId→assignedUserId, score→probability; "city" has no column.
+ * Field map: ownerId→assignedUserId, score→probability.
  */
 const base = createCrudService(ENDPOINTS.leads);
 const mapper = makeMapper({
@@ -17,7 +17,7 @@ const mapper = makeMapper({
   allow: [
     "name", "title", "company", "email", "phone", "source", "campaign",
     "industry", "value", "rating", "status", "stage", "probability",
-    "assignedUserId", "notes",
+    "assignedUserId", "notes", "city",
   ],
 });
 
