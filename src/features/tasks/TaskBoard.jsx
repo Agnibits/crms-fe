@@ -127,7 +127,7 @@ function BoardColumn({ status, tasks, usersById, onEdit, onDelete }) {
   const { setNodeRef, isOver } = useDroppable({ id: status.value });
 
   return (
-    <div className="flex w-72 shrink-0 flex-col sm:w-80">
+    <div className="flex w-72 shrink-0 flex-col sm:w-80 lg:w-auto lg:min-w-0 lg:flex-1">
       <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <StatusBadge value={status.value} options={TASK_STATUSES} />
@@ -197,7 +197,7 @@ export default function TaskBoard({ tasks = [], loading = false, onEdit, onDelet
     return (
       <div className="flex gap-4 overflow-x-auto pb-2">
         {TASK_STATUSES.map((status) => (
-          <div key={status.value} className="w-72 shrink-0 space-y-2 sm:w-80">
+          <div key={status.value} className="w-72 shrink-0 space-y-2 sm:w-80 lg:w-auto lg:min-w-0 lg:flex-1">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-24 w-full rounded-xl" />
             <Skeleton className="h-24 w-full rounded-xl" />

@@ -32,7 +32,7 @@ export const DEAL_STAGES = [
 export const TASK_STATUSES = [
   { value: "todo", label: "To Do", color: "gray" },
   { value: "in_progress", label: "In Progress", color: "blue" },
-  { value: "review", label: "In Review", color: "amber" },
+  { value: "in_review", label: "In Review", color: "amber" },
   { value: "done", label: "Done", color: "green" },
 ];
 

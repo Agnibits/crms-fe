@@ -51,6 +51,10 @@ export const ENDPOINTS = {
   superadmin: {
     companies: "/superadmin/companies",
   },
+  // Per-company two-way email
+  emailChannels: "/email/channels",
+  conversations: "/conversations",
+  emailTemplates: "/email-templates",
   files: "/files",
   search: "/search",
   settings: {

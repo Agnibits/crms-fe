@@ -20,6 +20,7 @@ import {
   Settings,
   FolderOpen,
   Building2,
+  Inbox,
 } from "lucide-react";
 import { ROLES } from "./roles";
 
@@ -77,6 +78,7 @@ export const NAV_SECTIONS = [
   {
     title: "Engage",
     items: [
+      { label: "Inbox", href: "/inbox", icon: Inbox, roles: [ADMIN, MANAGER, SALES, SUPPORT] },
       { label: "Marketing", href: "/marketing", icon: Megaphone, roles: [ADMIN, MANAGER] },
       { label: "Support Tickets", href: "/tickets", icon: LifeBuoy, roles: [ADMIN, MANAGER, SUPPORT] },
       { label: "File Manager", href: "/files", icon: FolderOpen, roles: [ADMIN, MANAGER, SALES, SUPPORT] },
