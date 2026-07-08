@@ -9,7 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -53,6 +55,33 @@ export function FormTextarea({ register, name, label, error, required, hint, cla
 }
 
 /** options: [{ value, label }] */
+/** Flat by default; renders grouped `<SelectGroup>`s when options carry a `group`. */
+function renderSelectOptions(options) {
+  const item = (option) => (
+    <SelectItem key={option.value} value={String(option.value)}>
+      {option.label}
+    </SelectItem>
+  );
+  if (!options.some((o) => o.group)) return options.map(item);
+
+  const groups = [];
+  const byName = new Map();
+  for (const option of options) {
+    const name = option.group || "Other";
+    if (!byName.has(name)) {
+      byName.set(name, []);
+      groups.push(name);
+    }
+    byName.get(name).push(option);
+  }
+  return groups.map((name) => (
+    <SelectGroup key={name}>
+      <SelectLabel>{name}</SelectLabel>
+      {byName.get(name).map(item)}
+    </SelectGroup>
+  ));
+}
+
 export function FormSelect({
   control,
   name,
@@ -79,13 +108,7 @@ export function FormSelect({
             <SelectTrigger id={name} aria-invalid={!!error}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={String(option.value)}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            <SelectContent>{renderSelectOptions(options)}</SelectContent>
           </Select>
         )}
       />

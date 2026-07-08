@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Package, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, Package, Pencil, Trash2 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
@@ -10,10 +10,9 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { productHooks } from "@/features/products/hooks";
+import { productHooks, useUploadProductImage } from "@/features/products/hooks";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/utils/format";
 
 const PRODUCT_STATUSES = [
@@ -31,12 +30,31 @@ function Stat({ label, value, sub }) {
   );
 }
 
+const STOCK_STATUS = {
+  IN_STOCK: { label: "In stock", cls: "bg-success/15 text-success" },
+  LOW_STOCK: { label: "Low stock", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  OUT_OF_STOCK: { label: "Out of stock", cls: "bg-destructive/15 text-destructive" },
+};
+
+function StockStatusBadge({ status }) {
+  const s = STOCK_STATUS[status] || STOCK_STATUS.OUT_OF_STOCK;
+  return <Badge className={s.cls}>{s.label}</Badge>;
+}
+
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data: product, isPending, error, refetch } = productHooks.useDetail(id);
   const remove = productHooks.useRemove();
+  const uploadImage = useUploadProductImage();
+  const fileRef = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const onPickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) uploadImage.mutate({ id, file });
+  };
 
   if (error) {
     return (
@@ -88,9 +106,23 @@ export default function ProductDetailPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Package className="h-5 w-5" />
-            </span>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadImage.isPending}
+              aria-label="Upload product image"
+              className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-primary/10 text-primary"
+            >
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+              ) : (
+                <Package className="h-5 w-5" />
+              )}
+              <span className="absolute inset-0 hidden items-center justify-center bg-black/50 text-white group-hover:flex">
+                <ImagePlus className="h-4 w-4" />
+              </span>
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
             <div>
               <CardTitle className="text-base">{product.name}</CardTitle>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -117,21 +149,15 @@ export default function ProductDetailPage() {
 
           <div className="rounded-lg border p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Stock on hand</p>
-              <p className="text-sm tabular-nums text-muted-foreground">
-                {formatNumber(product.stock)} {product.unit}s
-              </p>
+              <p className="text-sm font-medium">Inventory</p>
+              <StockStatusBadge status={product.stockStatus} />
             </div>
-            <Progress
-              value={Math.min(100, (product.stock / 500) * 100)}
-              className="mt-3"
-              indicatorClassName={product.stock < 20 ? "bg-amber-500" : undefined}
-            />
-            {product.stock < 20 && (
-              <p className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
-                Low stock — consider restocking soon.
-              </p>
-            )}
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <Stat label="On hand" value={formatNumber(product.stock)} />
+              <Stat label="Reserved" value={formatNumber(product.reservedStock ?? 0)} />
+              <Stat label="Available" value={formatNumber(product.availableStock ?? product.stock)} />
+              <Stat label="Reorder level" value={formatNumber(product.reorderLevel ?? 0)} />
+            </div>
           </div>
 
           {product.description && (

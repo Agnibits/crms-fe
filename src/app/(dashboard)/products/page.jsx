@@ -167,19 +167,33 @@ export default function ProductsPage() {
         accessorKey: "name",
         header: "Name",
         cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate font-medium">{row.original.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{row.original.categoryName}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/40 text-muted-foreground">
+              {row.original.imageUrl ? (
+                <img src={row.original.imageUrl} alt={row.original.name} className="h-full w-full object-cover" />
+              ) : (
+                <Package className="h-4 w-4" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-medium">{row.original.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{row.original.categoryName}</p>
+            </div>
           </div>
         ),
       },
       { accessorKey: "sku", header: "SKU" },
       {
-        accessorKey: "price",
-        header: "Price",
+        accessorKey: "cost",
+        header: "Cost",
         cell: ({ row }) => (
-          <span className="text-right tabular-nums">{formatCurrency(row.original.price)}</span>
+          <span className="tabular-nums text-muted-foreground">{formatCurrency(row.original.cost)}</span>
         ),
+      },
+      {
+        accessorKey: "price",
+        header: "Selling",
+        cell: ({ row }) => <span className="tabular-nums">{formatCurrency(row.original.price)}</span>,
       },
       {
         accessorKey: "stock",

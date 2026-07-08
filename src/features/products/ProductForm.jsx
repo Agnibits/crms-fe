@@ -12,15 +12,7 @@ import {
   FormTextarea,
 } from "@/components/forms/fields";
 import { productSchema } from "@/validations/product.schema";
-import { productCategoryHooks } from "@/features/products/hooks";
-
-const UNIT_OPTIONS = [
-  { value: "license", label: "License" },
-  { value: "seat", label: "Seat" },
-  { value: "pack", label: "Pack" },
-  { value: "hour", label: "Hour" },
-  { value: "unit", label: "Unit" },
-];
+import { productCategoryHooks, useProductUnits } from "@/features/products/hooks";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" },
@@ -37,6 +29,7 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
     value: c.id,
     label: c.name,
   }));
+  const { data: unitOptions = [] } = useProductUnits();
 
   const {
     register,
@@ -52,7 +45,9 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
       price: defaultValues?.price ?? 0,
       cost: defaultValues?.cost ?? 0,
       stock: defaultValues?.stock ?? 0,
-      unit: defaultValues?.unit ?? "unit",
+      reservedStock: defaultValues?.reservedStock ?? 0,
+      reorderLevel: defaultValues?.reorderLevel ?? 0,
+      unit: defaultValues?.unit ?? "",
       taxRate: defaultValues?.taxRate ?? 18,
       status: defaultValues?.status ?? "active",
       description: defaultValues?.description ?? "",
@@ -100,10 +95,11 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
           <FormSelect
             control={control}
             name="unit"
+            placeholder="Select unit"
             label="Unit"
             required
             error={errors.unit}
-            options={UNIT_OPTIONS}
+            options={unitOptions}
           />
           <FormNumber
             register={register}
@@ -129,6 +125,24 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
             error={errors.stock}
             min={0}
             step={1}
+          />
+          <FormNumber
+            register={register}
+            name="reservedStock"
+            label="Reserved stock"
+            error={errors.reservedStock}
+            min={0}
+            step={1}
+            hint="Committed to open orders — not available to sell."
+          />
+          <FormNumber
+            register={register}
+            name="reorderLevel"
+            label="Reorder level"
+            error={errors.reorderLevel}
+            min={0}
+            step={1}
+            hint="Flag as low stock at or below this quantity."
           />
           <FormNumber
             register={register}
