@@ -3,6 +3,7 @@ import { generateText } from "@/services/ai/provider";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const SYSTEM = `You are an expert B2B sales copywriter for the AgniBits CRM.
 Write a single email (or SMS if channel is "sms") based on the user's brief.

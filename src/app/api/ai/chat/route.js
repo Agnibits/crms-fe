@@ -4,6 +4,7 @@ import { buildCrmContext } from "@/services/ai/crmContext";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const SYSTEM = `You are "Agni", the AI sales copilot inside the AgniBits CRM.
 You help sales reps and managers by answering questions about their pipeline,
