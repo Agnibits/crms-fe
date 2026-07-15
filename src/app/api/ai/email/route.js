@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateText } from "@/services/ai/provider";
+import { isAuthenticated } from "../_auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,10 @@ Guidelines:
 - Do not wrap the JSON in markdown fences.`;
 
 export async function POST(request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { channel = "email", tone = "professional", length = "medium", brief = "", recipient = "", company = "" } =
       await request.json();
