@@ -29,8 +29,13 @@ export const tooltipStyle = {
     borderRadius: "8px",
     color: "var(--popover-foreground)",
     fontSize: "12px",
-    boxShadow: "0 4px 12px rgb(0 0 0 / 0.1)",
+    boxShadow: "0 8px 24px rgb(0 0 0 / 0.35)",
+    padding: "8px 10px",
   },
-  labelStyle: { color: "var(--popover-foreground)", fontWeight: 600 },
+  labelStyle: { color: "var(--popover-foreground)", fontWeight: 600, marginBottom: "2px" },
+  // Recharts sets an inline colour on each tooltip row from the series/slice
+  // fill, which overrides contentStyle — pin it to the popover foreground so
+  // rows stay readable on every chart (a violet slice was invisible on dark).
+  itemStyle: { color: "var(--popover-foreground)" },
   cursor: { fill: "var(--muted)", opacity: 0.4 },
 };
