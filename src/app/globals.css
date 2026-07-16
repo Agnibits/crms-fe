@@ -28,9 +28,12 @@
   --border: oklch(0.928 0.006 264.531);
   --input: oklch(0.928 0.006 264.531);
   --ring: oklch(0.55 0.15 162);
-  --chart-1: oklch(0.55 0.15 162);
+  /* Chart slots are stepped per mode for the light surface and validated
+     (lightness band, chroma floor, CVD separation, contrast) — not the same
+     values as --primary, which only has to work under button text. */
+  --chart-1: #047857;
   --chart-2: oklch(0.55 0.2 262);
-  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-3: #d97706;
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.21 0.034 264.665);
@@ -64,9 +67,11 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.696 0.17 162);
-  --chart-1: oklch(0.696 0.17 162);
+  /* Re-stepped for the dark surface (dark band is L 0.48–0.67); the light
+     steps sit above it and failed the band. */
+  --chart-1: #10a37a;
   --chart-2: oklch(0.62 0.19 260);
-  --chart-3: oklch(0.828 0.189 84.429);
+  --chart-3: #d97706;
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.16 0.03 262);

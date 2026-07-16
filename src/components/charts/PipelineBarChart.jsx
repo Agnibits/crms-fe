@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { axisProps, gridProps, tooltipStyle } from "./chartTheme";
 import ChartEmpty from "./ChartEmpty";
+import ChartTooltip from "./ChartTooltip";
 import { formatCompactCurrency } from "@/utils/format";
 
 /** Deal value by pipeline stage. Data: [{ stage, value, count }] */
@@ -42,8 +43,8 @@ export default function PipelineBarChart({ data = [] }) {
           allowDecimals={false}
         />
         <Tooltip
-          {...tooltipStyle}
-          formatter={(value, name) => (name === "Value" ? formatCompactCurrency(value) : value)}
+          cursor={tooltipStyle.cursor}
+          content={<ChartTooltip formatter={(v) => formatCompactCurrency(v)} />}
         />
         <Bar dataKey="value" name="Value" fill="var(--chart-1)" radius={[6, 6, 0, 0]} maxBarSize={48} />
       </BarChart>

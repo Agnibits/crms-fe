@@ -16,10 +16,24 @@ export const axisProps = {
   axisLine: false,
 };
 
+/** Recessive, solid hairline grid. Dashed gridlines read as a threshold/projection. */
 export const gridProps = {
   stroke: "var(--border)",
-  strokeDasharray: "3 3",
   vertical: false,
+};
+
+/** Crosshair for line/area charts — readers aim at a date, not at a 2px line. */
+export const lineCursor = {
+  stroke: "var(--muted-foreground)",
+  strokeWidth: 1,
+  strokeOpacity: 0.5,
+};
+
+/** Marker spec: >=8px (r>=4) with a 2px surface ring so it stays legible on a line. */
+export const activeDotProps = {
+  r: 4,
+  strokeWidth: 2,
+  stroke: "var(--card)",
 };
 
 export const tooltipStyle = {

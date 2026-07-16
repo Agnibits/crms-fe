@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { axisProps, tooltipStyle, CHART_COLORS } from "./chartTheme";
 import ChartEmpty from "./ChartEmpty";
+import ChartTooltip from "./ChartTooltip";
 
 /** Horizontal sales funnel. Data: [{ stage, count }] */
 export default function FunnelBarChart({ data = [] }) {
@@ -23,11 +24,11 @@ export default function FunnelBarChart({ data = [] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
-        <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
+        <CartesianGrid stroke="var(--border)" horizontal={false} />
         <XAxis type="number" {...axisProps} allowDecimals={false} />
         {/* Widened so long stage names ("Closed Lost") aren't truncated. */}
         <YAxis type="category" dataKey="stage" {...axisProps} width={104} tick={{ fontSize: 11 }} />
-        <Tooltip {...tooltipStyle} />
+        <Tooltip cursor={tooltipStyle.cursor} content={<ChartTooltip />} />
         <Bar dataKey="count" name="Leads" radius={[0, 6, 6, 0]} maxBarSize={22}>
           {data.map((_, i) => (
             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} fillOpacity={0.85} />

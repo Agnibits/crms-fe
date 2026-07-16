@@ -1,8 +1,9 @@
 "use client";
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { CHART_COLORS, tooltipStyle } from "./chartTheme";
+import { CHART_COLORS } from "./chartTheme";
 import ChartEmpty from "./ChartEmpty";
+import ChartTooltip from "./ChartTooltip";
 
 /**
  * Generic donut chart. Data: [{ name, value }]
@@ -31,7 +32,7 @@ export default function DonutChart({ data = [], centerLabel, emptyMessage = "No 
               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip {...tooltipStyle} />
+          <Tooltip content={<ChartTooltip />} />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
         </PieChart>
       </ResponsiveContainer>
