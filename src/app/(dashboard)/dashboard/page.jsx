@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   CalendarDays,
   DollarSign,
   Handshake,
+  ListChecks,
   Mail,
   MessageSquare,
   PhoneCall,
@@ -51,6 +53,7 @@ const ACTIVITY_ICONS = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const stats = useDashboardStats();
   const sales = useSalesChart();
@@ -218,7 +221,7 @@ export default function DashboardPage() {
       {/* Activities + tasks + calendar-ish widget */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {/* Recent activities */}
-        <Card className="xl:col-span-1">
+        <Card className="flex h-full flex-col xl:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <CardTitle className="text-base">Recent Activities</CardTitle>
             <Button asChild variant="ghost" size="sm">
@@ -227,11 +230,18 @@ export default function DashboardPage() {
               </Link>
             </Button>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="flex-1 space-y-1">
             {activities.isPending ? (
               Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
             ) : (activities.data || []).length === 0 ? (
-              <EmptyState title="No recent activity" className="border-0 py-8" />
+              <EmptyState
+                icon={PhoneCall}
+                title="No recent activity"
+                description="Calls, emails and meetings with your customers will show up here."
+                actionLabel="Log activity"
+                onAction={() => router.push("/activities")}
+                className="h-full border-0 py-0"
+              />
             ) : (
               (activities.data || []).slice(0, 7).map((activity) => {
                 const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
@@ -254,7 +264,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Upcoming tasks */}
-        <Card className="xl:col-span-1">
+        <Card className="flex h-full flex-col xl:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <CardTitle className="text-base">Upcoming Tasks</CardTitle>
             <Button asChild variant="ghost" size="sm">
@@ -263,11 +273,18 @@ export default function DashboardPage() {
               </Link>
             </Button>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="flex-1 space-y-2">
             {tasks.isPending ? (
               Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
             ) : (tasks.data || []).length === 0 ? (
-              <EmptyState title="No upcoming tasks" className="border-0 py-8" />
+              <EmptyState
+                icon={ListChecks}
+                title="No upcoming tasks"
+                description="Follow-ups and to-dos due soon will appear here."
+                actionLabel="Create task"
+                onAction={() => router.push("/tasks")}
+                className="h-full border-0 py-0"
+              />
             ) : (
               (tasks.data || []).slice(0, 5).map((task) => (
                 <div key={task.id} className="rounded-lg border p-3">
@@ -297,6 +314,7 @@ export default function DashboardPage() {
           >
             <DonutChart
               data={(pipeline.data || []).map((p) => ({ name: p.stage, value: p.count }))}
+              emptyMessage="No deals yet — create your first deal to see the stage breakdown."
               centerLabel={{
                 value: formatNumber((pipeline.data || []).reduce((a, p) => a + p.count, 0)),
                 label: "deals",
