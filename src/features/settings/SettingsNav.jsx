@@ -12,6 +12,7 @@ import {
   Network,
   Palette,
   Percent,
+  Target,
   Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +28,7 @@ const SECTIONS = [
   { href: "/settings/sms", label: "SMS", icon: MessageSquare },
   { href: "/settings/tax", label: "Tax", icon: Percent },
   { href: "/settings/currency", label: "Currency", icon: Coins },
+  { href: "/settings/targets", label: "Sales Targets", icon: Target },
   { href: "/settings/appearance", label: "Appearance", icon: Palette },
 ];
 
