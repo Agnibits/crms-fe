@@ -2,12 +2,18 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CHART_COLORS, tooltipStyle } from "./chartTheme";
+import ChartEmpty from "./ChartEmpty";
 
 /**
  * Generic donut chart. Data: [{ name, value }]
  * Optional centerLabel renders in the middle of the donut.
  */
-export default function DonutChart({ data = [], centerLabel }) {
+export default function DonutChart({ data = [], centerLabel, emptyMessage = "No data to show yet." }) {
+  // An all-zero pie renders as an invisible ring — say "empty" instead.
+  if (!data.length || !data.some((d) => Number(d.value) > 0)) {
+    return <ChartEmpty message={emptyMessage} />;
+  }
+
   return (
     <div className="relative h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
