@@ -71,6 +71,8 @@ export default function DashboardPage() {
   const tasksDueToday = (tasks.data || []).filter(
     (t) => t.dueDate && !isDone(t) && new Date(t.dueDate).toDateString() === todayStr
   ).length;
+  // Only promise "vs target" when the API actually returns targets.
+  const salesHasTarget = (sales.data || []).some((d) => Number(d.target) > 0);
   const openOpps = s?.openOpportunities ?? 0;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const dashboardSubtitle = stats.isPending
@@ -136,7 +138,11 @@ export default function DashboardPage() {
         <div className="xl:col-span-2">
           <ChartCard
             title="Monthly Sales"
-            description="Revenue vs target over the last 12 months"
+            description={
+              salesHasTarget
+                ? "Revenue vs target over the last 12 months"
+                : "Revenue over the last 12 months"
+            }
             loading={sales.isPending}
             height={320}
           >
