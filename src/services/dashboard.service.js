@@ -10,12 +10,28 @@ import { titleCase } from "@/utils/format";
  * /dashboard/summary (which bundles everything), plus the pipeline view under
  * /opportunities. Each method reshapes the response into what the widgets expect.
  */
+/** "2025-08" → "Aug 25". Anything else (e.g. an already-short "Aug") passes through. */
+function monthLabel(value) {
+  const match = /^(\d{4})-(\d{2})$/.exec(String(value ?? ""));
+  if (!match) return String(value ?? "");
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+}
+
 export const dashboardService = {
   getStats: async ({ signal } = {}) =>
     unwrap(await api.get(ENDPOINTS.dashboard.stats, { signal })),
 
-  getSalesChart: async (params = {}, { signal } = {}) =>
-    unwrap(await api.get(ENDPOINTS.dashboard.salesChart, { params, signal })),
+  // monthly-revenue returns [{ month: "YYYY-MM", revenue }] — label the months
+  // readably and keep `target` only when the API actually sends one.
+  getSalesChart: async (params = {}, { signal } = {}) => {
+    const data = unwrap(await api.get(ENDPOINTS.dashboard.salesChart, { params, signal }));
+    return (Array.isArray(data) ? data : []).map((r) => ({
+      month: monthLabel(r.month ?? r.label ?? r.period),
+      revenue: Number(r.revenue ?? r.total ?? 0),
+      ...(r.target == null ? {} : { target: Number(r.target) }),
+    }));
+  },
 
   // No dedicated funnel endpoint — derive it from the summary's leadsByStatus.
   // FunnelBarChart reads `count`, so emit that key (not `value`).
