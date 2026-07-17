@@ -11,8 +11,19 @@ import {
 } from "../format";
 
 describe("formatCurrency", () => {
-  it("formats USD by default", () => {
-    expect(formatCurrency(1234.5)).toBe("$1,234.50");
+  // Intl separates a narrow symbol from the amount with U+00A0, not a space.
+  const NPR = (amount) => `Rs\u00A0${amount}`;
+
+  it("falls back to NPR, rendered as a narrow symbol not the bare code", () => {
+    expect(formatCurrency(1234.5)).toBe(NPR("1,234.50"));
+  });
+  it("honours an explicit currency over the default", () => {
+    expect(formatCurrency(1234.5, "INR")).toBe("₹1,234.50");
+    expect(formatCurrency(1234.5, "USD")).toBe("$1,234.50");
+  });
+  it("falls back when a record carries an empty currency", () => {
+    expect(formatCurrency(1234.5, "")).toBe(NPR("1,234.50"));
+    expect(formatCurrency(1234.5, null)).toBe(NPR("1,234.50"));
   });
   it("returns em dash for nullish values", () => {
     expect(formatCurrency(null)).toBe("—");
@@ -20,7 +31,7 @@ describe("formatCurrency", () => {
     expect(formatCurrency(NaN)).toBe("—");
   });
   it("handles zero", () => {
-    expect(formatCurrency(0)).toBe("$0.00");
+    expect(formatCurrency(0)).toBe(NPR("0.00"));
   });
 });
 

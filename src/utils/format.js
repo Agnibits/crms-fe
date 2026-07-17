@@ -1,4 +1,5 @@
 import { format, formatDistanceToNow, parseISO, isValid } from "date-fns";
+import { DEFAULT_CURRENCY } from "@/constants/app";
 
 function toDate(value) {
   if (!value) return null;
@@ -20,20 +21,25 @@ export function formatRelative(value) {
   return date ? formatDistanceToNow(date, { addSuffix: true }) : "—";
 }
 
-export function formatCurrency(amount, currency = "USD", locale = "en-US") {
+// narrowSymbol keeps NPR readable as "Rs 1,234.50" — the default "symbol"
+// display renders it as the bare code ("NPR 1,234.50"). Other currencies are
+// unaffected ($, ₹, €, £).
+export function formatCurrency(amount, currency = DEFAULT_CURRENCY, locale = "en-US") {
   if (amount === null || amount === undefined || isNaN(amount)) return "—";
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency,
+    currency: currency || DEFAULT_CURRENCY,
+    currencyDisplay: "narrowSymbol",
     maximumFractionDigits: 2,
   }).format(Number(amount));
 }
 
-export function formatCompactCurrency(amount, currency = "USD") {
+export function formatCompactCurrency(amount, currency = DEFAULT_CURRENCY) {
   if (amount === null || amount === undefined || isNaN(amount)) return "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency,
+    currency: currency || DEFAULT_CURRENCY,
+    currencyDisplay: "narrowSymbol",
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(Number(amount));

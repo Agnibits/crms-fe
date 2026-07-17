@@ -10,7 +10,9 @@ export const USE_MOCK =
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-export const DEFAULT_CURRENCY = "USD";
+// Fallback only — records that carry their own `currency` (invoices, quotes,
+// orders, payments) are formatted in theirs. Matches Company.currency's default.
+export const DEFAULT_CURRENCY = "NPR";
 
 export const QUERY_KEYS = {
   auth: ["auth"],

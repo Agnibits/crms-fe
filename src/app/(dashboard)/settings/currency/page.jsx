@@ -11,12 +11,14 @@ import { currencySchema } from "@/validations/settings.schema";
 import { useSetting, useUpdateSetting } from "@/features/settings/hooks";
 import { useSettingsStore } from "@/store/settings.store";
 import { formatCurrency } from "@/utils/format";
+import { DEFAULT_CURRENCY } from "@/constants/app";
 
 const CODES = [
+  { value: "NPR", label: "NPR — Nepalese Rupee" },
+  { value: "INR", label: "INR — Indian Rupee" },
   { value: "USD", label: "USD — US Dollar" },
   { value: "EUR", label: "EUR — Euro" },
   { value: "GBP", label: "GBP — British Pound" },
-  { value: "INR", label: "INR — Indian Rupee" },
   { value: "AED", label: "AED — UAE Dirham" },
   { value: "SGD", label: "SGD — Singapore Dollar" },
 ];
@@ -41,8 +43,8 @@ export default function CurrencySettingsPage() {
   } = useForm({
     resolver: zodResolver(currencySchema),
     values: {
-      code: data?.code || "USD",
-      symbol: data?.symbol || "$",
+      code: data?.code || DEFAULT_CURRENCY,
+      symbol: data?.symbol || "Rs",
       position: data?.position || "before",
       decimals: data?.decimals ?? 2,
     },
@@ -74,7 +76,7 @@ export default function CurrencySettingsPage() {
               <FormNumber register={register} name="decimals" label="Decimal places" error={errors.decimals} required min={0} max={3} />
             </div>
             <div className="rounded-lg border bg-muted/40 p-3 text-sm">
-              Preview: <span className="font-medium">{formatCurrency(1234.5, code || "USD")}</span>
+              Preview: <span className="font-medium">{formatCurrency(1234.5, code || DEFAULT_CURRENCY)}</span>
             </div>
             <div className="flex justify-end">
               <Button type="submit" loading={update.isPending} disabled={!isDirty}>

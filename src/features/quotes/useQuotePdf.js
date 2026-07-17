@@ -2,15 +2,8 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { formatDate } from "@/utils/format";
+import { formatCurrency, formatDate } from "@/utils/format";
 import { QUOTE_COMPANY } from "./QuoteDocument";
-
-const money = (amount) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  }).format(Number(amount || 0));
 
 /**
  * Lazy-loads jspdf + jspdf-autotable and downloads a styled PDF of a quote.
@@ -23,6 +16,8 @@ export function useQuotePdf() {
   async function downloadPdf(quote) {
     if (!quote || downloading) return;
     setDownloading(true);
+    // Blank amounts print as a zero rather than an em-dash on a PDF.
+    const money = (amount) => formatCurrency(Number(amount || 0), quote.currency);
     try {
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");

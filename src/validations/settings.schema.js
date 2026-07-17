@@ -79,7 +79,7 @@ export const taxItemSchema = z.object({
 
 /* ── Currency ─────────────────────────────────────────────────── */
 export const currencySchema = z.object({
-  code: z.enum(["USD", "EUR", "GBP", "INR", "AED", "SGD"], {
+  code: z.enum(["NPR", "INR", "USD", "EUR", "GBP", "AED", "SGD"], {
     errorMap: () => ({ message: "Please pick a currency" }),
   }),
   symbol: z.string().min(1, "Symbol is required").max(4, "Symbol is too long"),

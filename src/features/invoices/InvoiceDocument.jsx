@@ -111,10 +111,10 @@ export default function InvoiceDocument({ invoice }) {
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{item.quantity}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
-                  {formatCurrency(item.unitPrice)}
+                  {formatCurrency(item.unitPrice, invoice.currency)}
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
-                  {formatCurrency(item.total)}
+                  {formatCurrency(item.total, invoice.currency)}
                 </td>
               </tr>
             ))}
@@ -127,26 +127,26 @@ export default function InvoiceDocument({ invoice }) {
         <dl className="w-full max-w-xs space-y-2 text-sm">
           <div className="flex items-center justify-between">
             <dt className="text-muted-foreground">Subtotal</dt>
-            <dd className="tabular-nums">{formatCurrency(invoice.subtotal)}</dd>
+            <dd className="tabular-nums">{formatCurrency(invoice.subtotal, invoice.currency)}</dd>
           </div>
           <div className="flex items-center justify-between">
             <dt className="text-muted-foreground">Tax</dt>
-            <dd className="tabular-nums">{formatCurrency(invoice.tax)}</dd>
+            <dd className="tabular-nums">{formatCurrency(invoice.tax, invoice.currency)}</dd>
           </div>
           <div className="flex items-center justify-between border-t pt-2 text-base font-semibold">
             <dt>Total</dt>
-            <dd className="tabular-nums">{formatCurrency(invoice.total)}</dd>
+            <dd className="tabular-nums">{formatCurrency(invoice.total, invoice.currency)}</dd>
           </div>
           <div className="flex items-center justify-between">
             <dt className="text-muted-foreground">Amount Paid</dt>
             <dd className="tabular-nums text-emerald-600 dark:text-emerald-400">
-              {formatCurrency(invoice.amountPaid)}
+              {formatCurrency(invoice.amountPaid, invoice.currency)}
             </dd>
           </div>
           <div className="flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2 font-semibold">
             <dt>Balance Due</dt>
             <dd className={cn("tabular-nums", invoice.balance > 0 && "text-red-600 dark:text-red-400")}>
-              {formatCurrency(invoice.balance)}
+              {formatCurrency(invoice.balance, invoice.currency)}
             </dd>
           </div>
         </dl>

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { FormInput } from "@/components/forms/fields";
 import { companySchema } from "@/validations/company.schema";
 import { useCreateCompany } from "@/features/companies/hooks";
+import { DEFAULT_CURRENCY } from "@/constants/app";
 
 /** Super Admin → onboard a new tenant company and its first ADMIN. */
 export default function CompanyFormDialog({ open, onOpenChange }) {
@@ -31,7 +32,7 @@ export default function CompanyFormDialog({ open, onOpenChange }) {
     defaultValues: {
       name: "",
       email: "",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       country: "",
       adminFirstName: "",
       adminLastName: "",
@@ -79,7 +80,7 @@ export default function CompanyFormDialog({ open, onOpenChange }) {
             />
             <FormInput register={register} name="email" type="email" label="Company email" error={errors.email} placeholder="info@client.com" />
             <FormInput register={register} name="country" label="Country" error={errors.country} placeholder="India" />
-            <FormInput register={register} name="currency" label="Currency (3-letter)" error={errors.currency} placeholder="INR" />
+            <FormInput register={register} name="currency" label="Currency (3-letter)" error={errors.currency} placeholder="NPR" />
           </div>
 
           <Separator />
