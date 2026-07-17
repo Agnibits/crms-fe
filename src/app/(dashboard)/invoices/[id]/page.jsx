@@ -38,8 +38,8 @@ export default function InvoiceDetailPage() {
   const router = useRouter();
   const [paymentOpen, setPaymentOpen] = useState(false);
 
+  // /invoices/:id/detail carries customer + items + payments in one response.
   const { data: invoice, isPending, error, refetch } = invoiceHooks.useDetail(id);
-  const paymentsQuery = invoiceHooks.useSub(id, "payments");
   const { downloadPdf, isGenerating } = useInvoicePdf();
 
   const sendInvoice = invoiceHooks.useAction({
@@ -55,7 +55,7 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  const payments = paymentsQuery.data ?? [];
+  const payments = invoice?.payments ?? [];
 
   return (
     <div className="space-y-6">
@@ -140,15 +140,11 @@ export default function InvoiceDetailPage() {
         <TabsContent value="payments">
           <Card>
             <CardContent className="p-0">
-              {paymentsQuery.isPending ? (
+              {isPending ? (
                 <div className="space-y-3 p-6">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton key={i} className="h-10 w-full" />
                   ))}
-                </div>
-              ) : paymentsQuery.error ? (
-                <div className="p-6">
-                  <ErrorState error={paymentsQuery.error} onRetry={paymentsQuery.refetch} />
                 </div>
               ) : payments.length === 0 ? (
                 <EmptyState
