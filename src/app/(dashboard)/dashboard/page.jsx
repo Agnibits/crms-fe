@@ -33,7 +33,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { TASK_STATUSES, PRIORITIES } from "@/constants/options";
 import { useAuthStore } from "@/store/auth.store";
-import { formatCurrency, formatDate, formatNumber, formatRelative } from "@/utils/format";
+import {
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  formatRelative,
+} from "@/utils/format";
 import {
   useDashboardStats,
   useFunnel,
@@ -62,14 +67,18 @@ export default function DashboardPage() {
   const activities = useRecentActivities();
   const tasks = useUpcomingTasks();
 
-  const s = stats.data;
+  const s = stats?.data;
 
   // A specific, actionable subtitle beats a generic "here's what's happening".
   const firstName = user?.name?.split(" ")[0] || "there";
   const todayStr = new Date().toDateString();
-  const isDone = (t) => ["done", "cancelled"].includes(String(t.status || "").toLowerCase());
+  const isDone = (t) =>
+    ["done", "cancelled"].includes(String(t.status || "").toLowerCase());
   const tasksDueToday = (tasks.data || []).filter(
-    (t) => t.dueDate && !isDone(t) && new Date(t.dueDate).toDateString() === todayStr
+    (t) =>
+      t.dueDate &&
+      !isDone(t) &&
+      new Date(t.dueDate).toDateString() === todayStr,
   ).length;
   // Only promise "vs target" when the API actually returns targets.
   const salesHasTarget = (sales.data || []).some((d) => Number(d.target) > 0);
@@ -151,7 +160,9 @@ export default function DashboardPage() {
         </div>
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-base">Conversion &amp; Win Rate</CardTitle>
+            <CardTitle className="text-base">
+              Conversion &amp; Win Rate
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {stats.isPending ? (
@@ -163,8 +174,12 @@ export default function DashboardPage() {
               <>
                 <div>
                   <div className="flex items-baseline justify-between">
-                    <p className="text-sm text-muted-foreground">Lead Conversion Rate</p>
-                    <p className="text-2xl font-semibold">{s?.conversionRate ?? 0}%</p>
+                    <p className="text-sm text-muted-foreground">
+                      Lead Conversion Rate
+                    </p>
+                    <p className="text-2xl font-semibold">
+                      {s?.conversionRate ?? 0}%
+                    </p>
                   </div>
                   <Progress value={s?.conversionRate ?? 0} className="mt-2" />
                   <p className="mt-1.5 text-xs text-muted-foreground">
@@ -173,22 +188,36 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="flex items-baseline justify-between">
-                    <p className="text-sm text-muted-foreground">Win / Loss Ratio</p>
+                    <p className="text-sm text-muted-foreground">
+                      Win / Loss Ratio
+                    </p>
                     <p className="text-2xl font-semibold">{s?.winRate ?? 0}%</p>
                   </div>
-                  <Progress value={s?.winRate ?? 0} className="mt-2" indicatorClassName="bg-success" />
+                  <Progress
+                    value={s?.winRate ?? 0}
+                    className="mt-2"
+                    indicatorClassName="bg-success"
+                  />
                   <p className="mt-1.5 text-xs text-muted-foreground">
                     Closed-won share of all closed deals
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs text-muted-foreground">Open Tickets</p>
-                    <p className="mt-1 text-xl font-semibold">{formatNumber(s?.openTickets)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Open Tickets
+                    </p>
+                    <p className="mt-1 text-xl font-semibold">
+                      {formatNumber(s?.openTickets)}
+                    </p>
                   </div>
                   <div className="rounded-lg border p-3">
-                    <p className="text-xs text-muted-foreground">Pending Tasks</p>
-                    <p className="mt-1 text-xl font-semibold">{formatNumber(s?.pendingTasks)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Pending Tasks
+                    </p>
+                    <p className="mt-1 text-xl font-semibold">
+                      {formatNumber(s?.pendingTasks)}
+                    </p>
                   </div>
                 </div>
               </>
@@ -238,7 +267,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="flex-1 space-y-1">
             {activities.isPending ? (
-              Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
+              Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))
             ) : (activities.data || []).length === 0 ? (
               <EmptyState
                 icon={PhoneCall}
@@ -252,14 +283,20 @@ export default function DashboardPage() {
               (activities.data || []).slice(0, 7).map((activity) => {
                 const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
                 return (
-                  <div key={activity.id} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/50">
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/50"
+                  >
                     <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Icon className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{activity.subject}</p>
+                      <p className="truncate text-sm font-medium">
+                        {activity.subject}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {activity.userName} · {formatRelative(activity.createdAt)}
+                        {activity.userName} ·{" "}
+                        {formatRelative(activity.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -281,7 +318,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="flex-1 space-y-2">
             {tasks.isPending ? (
-              Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+              Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))
             ) : (tasks.data || []).length === 0 ? (
               <EmptyState
                 icon={ListChecks}
@@ -295,13 +334,16 @@ export default function DashboardPage() {
               (tasks.data || []).slice(0, 5).map((task) => (
                 <div key={task.id} className="rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium">{task.title}</p>
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {task.title}
+                    </p>
                     <StatusBadge value={task.priority} options={PRIORITIES} />
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <StatusBadge value={task.status} options={TASK_STATUSES} />
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <CalendarDays className="h-3 w-3" /> {formatDate(task.dueDate)}
+                      <CalendarDays className="h-3 w-3" />{" "}
+                      {formatDate(task.dueDate)}
                     </p>
                   </div>
                 </div>
@@ -319,10 +361,15 @@ export default function DashboardPage() {
             height={280}
           >
             <DonutChart
-              data={(pipeline.data || []).map((p) => ({ name: p.stage, value: p.count }))}
+              data={(pipeline.data || []).map((p) => ({
+                name: p.stage,
+                value: p.count,
+              }))}
               emptyMessage="No deals yet — create your first deal to see the stage breakdown."
               centerLabel={{
-                value: formatNumber((pipeline.data || []).reduce((a, p) => a + p.count, 0)),
+                value: formatNumber(
+                  (pipeline.data || []).reduce((a, p) => a + p.count, 0),
+                ),
                 label: "deals",
               }}
             />
@@ -331,7 +378,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Calendar CTA */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         <Card className="bg-gradient-to-r from-primary/10 via-transparent to-transparent">
           <CardContent className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4">

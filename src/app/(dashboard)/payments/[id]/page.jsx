@@ -87,14 +87,14 @@ export default function PaymentDetailPage() {
                   <ReceiptRow label="Receipt #">
                     <span className="tabular-nums">{payment?.number ?? "—"}</span>
                   </ReceiptRow>
-                  <ReceiptRow label="Customer">{payment?.customerName ?? "—"}</ReceiptRow>
+                  <ReceiptRow label="Customer">{payment?.invoice?.customer?.name ?? "—"}</ReceiptRow>
                   <ReceiptRow label="Invoice">
                     {payment?.invoiceId ? (
                       <Link
                         href={`/invoices/${payment.invoiceId}`}
                         className="tabular-nums text-primary hover:underline"
                       >
-                        {payment.invoiceNumber ?? payment.invoiceId}
+                        {payment.invoice.invoiceNumber ?? payment.invoiceId}
                       </Link>
                     ) : (
                       "—"

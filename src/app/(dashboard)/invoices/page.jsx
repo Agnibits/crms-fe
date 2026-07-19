@@ -2,7 +2,13 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Download, FileText, Wallet, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  Download,
+  FileText,
+  Wallet,
+  TrendingUp,
+} from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -30,20 +36,38 @@ const isOverdue = (inv) =>
 export default function InvoicesPage() {
   const router = useRouter();
   const t = useTableState();
-  const { data, isPending, error, refetch } = invoiceHooks.useList(t.queryParams);
+  const { data, isPending, error, refetch } = invoiceHooks.useList(
+    t.queryParams,
+  );
 
   // Wide slice for the summary cards (independent of table pagination/filters).
   const summary = invoiceHooks.useList({ limit: 100 });
 
   const stats = useMemo(() => {
     const items = summary.data?.items ?? [];
+    const invoiced = items.reduce(
+      (acc, inv) => acc + Number(inv.total ?? 0),
+      0,
+    );
+    const collected = items.reduce(
+      (acc, inv) => acc + Number(inv.amountPaid ?? 0),
+      0,
+    );
+    const outstanding = invoiced - collected;
+    const overdueCount = items.filter(isOverdue).length;
     return {
-      invoiced: items.reduce((acc, inv) => acc + (inv.total ?? 0), 0),
-      collected: items.reduce((acc, inv) => acc + (inv.amountPaid ?? 0), 0),
-      outstanding: items.reduce((acc, inv) => acc + (inv.balance ?? 0), 0),
-      overdueCount: items.filter(isOverdue).length,
+      invoiced,
+      collected,
+      // outstanding: items.reduce(
+      //   (acc, inv) => acc + Number(inv.balance ?? 0),
+      //   0,
+      // ),
+      outstanding,
+      overdueCount,
     };
   }, [summary.data]);
+
+  console.log("states", summary);
 
   const columns = useMemo(
     () => [
@@ -51,10 +75,16 @@ export default function InvoicesPage() {
         accessorKey: "number",
         header: "Invoice #",
         cell: ({ row }) => (
-          <span className="font-medium tabular-nums">{row.original.number}</span>
+          <span className="font-medium tabular-nums">
+            {row.original?.invoiceNumber ?? "-"}
+          </span>
         ),
       },
-      { accessorKey: "customerName", header: "Customer" },
+      {
+        accessorKey: "customerName",
+        header: "Customer",
+        cell: ({ row }) => <span>{row.original?.customer?.name ?? "-"}</span>,
+      },
       {
         accessorKey: "status",
         header: "Status",
@@ -66,7 +96,7 @@ export default function InvoicesPage() {
         accessorKey: "total",
         header: () => <span className="block text-right">Total</span>,
         cell: ({ row }) => (
-          <span className="block text-right tabular-nums">
+          <span className="block text-start tabular-nums">
             {formatCurrency(row.original.total)}
           </span>
         ),
@@ -75,7 +105,7 @@ export default function InvoicesPage() {
         accessorKey: "amountPaid",
         header: () => <span className="block text-right">Paid</span>,
         cell: ({ row }) => (
-          <span className="block text-right tabular-nums">
+          <span className="block text-start tabular-nums">
             {formatCurrency(row.original.amountPaid)}
           </span>
         ),
@@ -86,8 +116,8 @@ export default function InvoicesPage() {
         cell: ({ row }) => (
           <span
             className={cn(
-              "block text-right tabular-nums",
-              (row.original.balance ?? 0) > 0 && "font-medium"
+              "block text-start tabular-nums",
+              (row.original.balance ?? 0) > 0 && "font-medium",
             )}
           >
             {formatCurrency(row.original.balance)}
@@ -100,7 +130,8 @@ export default function InvoicesPage() {
         cell: ({ row }) => (
           <span
             className={cn(
-              isOverdue(row.original) && "font-medium text-red-600 dark:text-red-400"
+              isOverdue(row.original) &&
+                "font-medium text-red-600 dark:text-red-400",
             )}
           >
             {formatDate(row.original.dueDate)}
@@ -108,7 +139,7 @@ export default function InvoicesPage() {
         ),
       },
     ],
-    []
+    [],
   );
 
   return (

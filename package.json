@@ -4,7 +4,7 @@
   "private": true,
   "description": "Enterprise CRM + Sales Automation frontend built with Next.js 15, React 19, Tailwind CSS and shadcn/ui",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
