@@ -10,7 +10,7 @@ import {
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES, LEAD_SOURCES } from "@/constants/options";
+import { LEAD_STAGES_PICKABLE, LEAD_SOURCES } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
 import { useUsersOptions } from "./useUsersOptions";
 
@@ -93,7 +93,7 @@ export default function LeadForm({
             name="stage"
             label="Stage"
             required
-            options={LEAD_STAGES}
+            options={LEAD_STAGES_PICKABLE}
             error={errors.stage}
           />
           <FormSelect

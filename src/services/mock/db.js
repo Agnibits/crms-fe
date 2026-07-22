@@ -104,7 +104,7 @@ const contacts = Array.from({ length: 70 }, (_, i) => {
 });
 
 /* ── Leads / Opportunities / Deals ────────────────────────────── */
-const LEAD_STAGES = ["new","contacted","qualified","proposal","negotiation","won","lost"];
+const LEAD_STAGES = ["new","contacted","qualified","unqualified","converted","lost"];
 const leads = Array.from({ length: 80 }, (_, i) => {
   const name = person();
   const company = pick(COMPANIES);

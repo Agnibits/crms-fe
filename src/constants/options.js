@@ -1,14 +1,19 @@
 /** Shared enumerations for statuses, stages, priorities and badge colors. */
 
+// Lead lifecycle = qualification only (mirrors the backend LeadStatus enum).
+// Proposal/negotiation/won live on the deal pipeline — a qualified lead is
+// converted into a deal via the Convert flow instead of being "won" here.
 export const LEAD_STAGES = [
   { value: "new", label: "New", color: "blue" },
   { value: "contacted", label: "Contacted", color: "cyan" },
   { value: "qualified", label: "Qualified", color: "violet" },
-  { value: "proposal", label: "Proposal", color: "amber" },
-  { value: "negotiation", label: "Negotiation", color: "orange" },
-  { value: "won", label: "Won", color: "green" },
+  { value: "unqualified", label: "Unqualified", color: "gray" },
+  { value: "converted", label: "Converted", color: "green" },
   { value: "lost", label: "Lost", color: "red" },
 ];
+
+// Stages a user may set by hand — "converted" only happens via the Convert flow.
+export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "converted");
 
 export const LEAD_SOURCES = [
   { value: "website", label: "Website" },

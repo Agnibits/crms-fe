@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
-import { LEAD_STAGES, LEAD_SOURCES, findOption } from "@/constants/options";
+import { LEAD_STAGES, LEAD_STAGES_PICKABLE, LEAD_SOURCES, findOption } from "@/constants/options";
 import { formatCompactCurrency, formatCurrency, getInitials } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import { leadHooks } from "./hooks";
@@ -132,10 +132,12 @@ export default function LeadKanban() {
   );
 
   const items = data?.items ?? [];
+  // Converted leads live on as customers/deals — the board only shows stages a
+  // lead can be dragged into.
   const grouped = useMemo(() => {
-    const map = Object.fromEntries(LEAD_STAGES.map((s) => [s.value, []]));
+    const map = Object.fromEntries(LEAD_STAGES_PICKABLE.map((s) => [s.value, []]));
     items.forEach((lead) => {
-      (map[lead.stage] ?? (map[lead.stage] = [])).push(lead);
+      map[lead.stage]?.push(lead);
     });
     return map;
   }, [items]);
@@ -153,7 +155,7 @@ export default function LeadKanban() {
   if (isPending) {
     return (
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {LEAD_STAGES.map((stage) => (
+        {LEAD_STAGES_PICKABLE.map((stage) => (
           <div key={stage.value} className="w-72 min-w-72 shrink-0 space-y-2 rounded-xl border bg-muted/40 p-2">
             <Skeleton className="h-8 w-full" />
             {Array.from({ length: 3 }).map((_, i) => (
@@ -168,7 +170,7 @@ export default function LeadKanban() {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex items-start gap-4 overflow-x-auto pb-4">
-        {LEAD_STAGES.map((stage) => (
+        {LEAD_STAGES_PICKABLE.map((stage) => (
           <StageColumn
             key={stage.value}
             stage={stage}

@@ -175,8 +175,8 @@ export default function LeadsPage() {
             toolbar={
               <>
                 <Select
-                  value={t.filters.stage ?? "all"}
-                  onValueChange={(v) => t.setFilter("stage", v)}
+                  value={t.filters.status ?? "all"}
+                  onValueChange={(v) => t.setFilter("status", v)}
                 >
                   <SelectTrigger className="w-36" aria-label="Filter by stage">
                     <SelectValue placeholder="Stage" />
