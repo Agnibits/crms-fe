@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import {
   ArrowLeft,
   Building2,
   CalendarDays,
+  ChevronDown,
   Mail,
   MessageSquare,
   Pencil,
   PhoneCall,
   StickyNote,
   Trash2,
+  Trophy,
   Video,
+  XCircle,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -24,10 +29,26 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { opportunityHooks } from "@/features/opportunities/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useStageOptions } from "@/features/opportunities/useStageOptions";
+import { opportunityService } from "@/services/opportunity.service";
+import { toastError } from "@/services/api";
+import { QUERY_KEYS } from "@/constants/app";
 import { formatCurrency, formatDate, formatRelative } from "@/utils/format";
+
+const STATUS_OPTIONS = [
+  { value: "WON", label: "Won", color: "green" },
+  { value: "LOST", label: "Lost", color: "red" },
+];
 
 const ACTIVITY_ICONS = {
   call: PhoneCall,
@@ -89,7 +110,36 @@ export default function OpportunityDetailPage() {
   const remove = opportunityHooks.useRemove();
   const { usersById } = useUsersOptions();
   const { stageOptions } = useStageOptions();
+  const patch = opportunityHooks.usePatch();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [winOpen, setWinOpen] = useState(false);
+  const [loseOpen, setLoseOpen] = useState(false);
+
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.opportunities });
+  const move = useMutation({
+    mutationFn: (stageId) => opportunityService.moveStage(id, stageId),
+    onSuccess: invalidate,
+    onError: (e) => toastError(e, "Failed to move stage"),
+  });
+  const win = useMutation({
+    mutationFn: () => opportunityService.win(id),
+    onSuccess: () => {
+      toast.success("Deal marked as won");
+      invalidate();
+      setWinOpen(false);
+    },
+    onError: (e) => toastError(e, "Failed to mark deal as won"),
+  });
+  const lose = useMutation({
+    mutationFn: () => opportunityService.lose(id),
+    onSuccess: () => {
+      toast.success("Deal marked as lost");
+      invalidate();
+      setLoseOpen(false);
+    },
+    onError: (e) => toastError(e, "Failed to mark deal as lost"),
+  });
 
   if (isPending) {
     return (
@@ -104,6 +154,7 @@ export default function OpportunityDetailPage() {
   if (!opportunity) return <EmptyState title="Deal not found" />;
 
   const owner = usersById[opportunity.ownerId];
+  const isOpen = opportunity.status === "OPEN";
 
   return (
     <div className="space-y-6">
@@ -124,6 +175,16 @@ export default function OpportunityDetailPage() {
         description={opportunity.customerName}
         actions={
           <>
+            {isOpen && (
+              <>
+                <Button variant="outline" onClick={() => setLoseOpen(true)}>
+                  <XCircle /> Mark Lost
+                </Button>
+                <Button onClick={() => setWinOpen(true)}>
+                  <Trophy /> Mark Won
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               onClick={() => router.push(`/deals/${opportunity.id}/edit`)}
@@ -143,7 +204,35 @@ export default function OpportunityDetailPage() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-lg font-semibold">{opportunity.name}</p>
-              <StatusBadge value={opportunity.stage} options={stageOptions} />
+              {isOpen ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Change stage"
+                      className="inline-flex cursor-pointer items-center gap-0.5"
+                    >
+                      <StatusBadge value={opportunity.stage} options={stageOptions} />
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuLabel>Move to stage</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {stageOptions.map((s) => (
+                      <DropdownMenuItem
+                        key={s.id}
+                        disabled={s.value === opportunity.stage || move.isPending}
+                        onClick={() => move.mutate(s.id)}
+                      >
+                        {s.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <StatusBadge value={opportunity.status} options={STATUS_OPTIONS} />
+              )}
             </div>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" /> {opportunity.customerName}
@@ -225,9 +314,23 @@ export default function OpportunityDetailPage() {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Expected Close</span>
-                  <span className="font-medium">
-                    {formatDate(opportunity.expectedCloseDate)}
-                  </span>
+                  {/* Inline edit — saving a forecast date shouldn't need the Edit form. */}
+                  <input
+                    type="date"
+                    key={opportunity.expectedCloseDate || "unset"}
+                    defaultValue={
+                      opportunity.expectedCloseDate
+                        ? String(opportunity.expectedCloseDate).slice(0, 10)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      e.target.value &&
+                      patch.mutate({ id: opportunity.id, closeDate: e.target.value })
+                    }
+                    disabled={patch.isPending}
+                    aria-label="Expected close date"
+                    className="rounded-md border bg-background px-2 py-1 text-sm font-medium"
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Owner</span>
@@ -254,6 +357,25 @@ export default function OpportunityDetailPage() {
         </TabsContent>
       </Tabs>
 
+      <ConfirmDialog
+        open={winOpen}
+        onOpenChange={setWinOpen}
+        title="Mark deal as won?"
+        description={`${opportunity.name} (${formatCurrency(opportunity.amount)}) will be closed as won and counted in revenue reports.`}
+        confirmLabel="Mark Won"
+        loading={win.isPending}
+        onConfirm={() => win.mutate()}
+      />
+      <ConfirmDialog
+        open={loseOpen}
+        onOpenChange={setLoseOpen}
+        destructive
+        title="Mark deal as lost?"
+        description={`${opportunity.name} will be closed as lost. You can still see it in the list and reports.`}
+        confirmLabel="Mark Lost"
+        loading={lose.isPending}
+        onConfirm={() => lose.mutate()}
+      />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

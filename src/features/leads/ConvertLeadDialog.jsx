@@ -14,10 +14,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/utils/format";
 import { getDefaultPipeline } from "@/services/opportunity.service";
 import { leadHooks } from "./hooks";
+
+/** yyyy-MM-dd, `days` from today — sensible default for expected close. */
+function dateInDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 /**
  * Confirms converting a lead into a customer, optionally creating a deal in
@@ -27,6 +35,7 @@ import { leadHooks } from "./hooks";
 export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
   const router = useRouter();
   const [withDeal, setWithDeal] = useState(true);
+  const [closeDate, setCloseDate] = useState(() => dateInDays(30));
 
   const { data: pipeline } = useQuery({
     queryKey: ["pipelines", "default"],
@@ -51,7 +60,12 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
   const handleConvert = () => {
     const payload =
       withDeal && canCreateDeal
-        ? { createOpportunity: true, pipelineId: pipeline.id, stageId: firstStage.id }
+        ? {
+            createOpportunity: true,
+            pipelineId: pipeline.id,
+            stageId: firstStage.id,
+            closeDate: closeDate || undefined,
+          }
         : {};
     convert.mutate({ id: lead.id, action: "convert", payload });
   };
@@ -96,7 +110,7 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
             disabled={!canCreateDeal}
             onCheckedChange={(v) => setWithDeal(Boolean(v))}
           />
-          <div className="space-y-1">
+          <div className="flex-1 space-y-2">
             <Label htmlFor="convert-with-deal" className="cursor-pointer">
               Create a deal in the pipeline
             </Label>
@@ -105,6 +119,20 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
                 ? `Starts in "${firstStage.name}" (${pipeline.name}) with ${formatCurrency(lead.value)} — track it on the Deals board.`
                 : "No default pipeline found — the lead will convert to a customer only."}
             </p>
+            {withDeal && canCreateDeal && (
+              <div className="space-y-1 pt-1">
+                <Label htmlFor="convert-close-date" className="text-xs text-muted-foreground">
+                  Expected close date
+                </Label>
+                <Input
+                  id="convert-close-date"
+                  type="date"
+                  className="w-44"
+                  value={closeDate}
+                  onChange={(e) => setCloseDate(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
 

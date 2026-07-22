@@ -67,4 +67,7 @@ export const opportunityService = {
     const res = await api.patch(`${ENDPOINTS.opportunities}/${id}/move-stage`, { stageId });
     return unwrap(res);
   },
+  win: async (id) => unwrap(await api.patch(`${ENDPOINTS.opportunities}/${id}/win`)),
+  lose: async (id, lostReason) =>
+    unwrap(await api.patch(`${ENDPOINTS.opportunities}/${id}/lose`, lostReason ? { lostReason } : {})),
 };
