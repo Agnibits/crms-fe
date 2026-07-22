@@ -7,6 +7,7 @@ import {
   Building2,
   ChevronDown,
   ClipboardList,
+  Handshake,
   Mail,
   MapPin,
   Merge,
@@ -221,9 +222,27 @@ export default function LeadDetailPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button onClick={() => setConvertOpen(true)}>
-              <UserCheck /> Convert to Customer
-            </Button>
+            {lead.stage === "converted" ? (
+              <>
+                {lead.convertedCustomerId && (
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/customers/${lead.convertedCustomerId}`)}
+                  >
+                    <UserCheck /> View Customer
+                  </Button>
+                )}
+                {lead.convertedOpportunityId && (
+                  <Button onClick={() => router.push(`/deals/${lead.convertedOpportunityId}`)}>
+                    <Handshake /> View Deal
+                  </Button>
+                )}
+              </>
+            ) : (
+              <Button onClick={() => setConvertOpen(true)}>
+                <UserCheck /> Convert to Customer
+              </Button>
+            )}
             <Button variant="outline" onClick={() => router.push(`/leads/${lead.id}/edit`)}>
               <Pencil /> Edit
             </Button>
