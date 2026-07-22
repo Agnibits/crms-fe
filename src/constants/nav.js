@@ -3,7 +3,6 @@ import {
   Users,
   Contact,
   Target,
-  TrendingUp,
   Handshake,
   Package,
   FileText,
@@ -60,7 +59,8 @@ export const NAV_SECTIONS = [
       { label: "Customers", href: "/customers", icon: Users, roles: [ADMIN, MANAGER, SALES, SUPPORT] },
       { label: "Contacts", href: "/contacts", icon: Contact, roles: [ADMIN, MANAGER, SALES, SUPPORT] },
       { label: "Leads", href: "/leads", icon: Target, roles: [ADMIN, MANAGER, SALES] },
-      { label: "Opportunities", href: "/opportunities", icon: TrendingUp, roles: [ADMIN, MANAGER, SALES] },
+      // One pipeline module: "Deals" (opportunity-backed). The legacy Deal
+      // module was merged into it — line items live in Quotes.
       { label: "Deals", href: "/deals", icon: Handshake, roles: [ADMIN, MANAGER, SALES] },
       { label: "Activities", href: "/activities", icon: PhoneCall, roles: [ADMIN, MANAGER, SALES, SUPPORT] },
     ],

@@ -20,7 +20,7 @@ export default function OpportunityForm({
   defaultValues,
   onSubmit,
   submitting = false,
-  submitLabel = "Save Opportunity",
+  submitLabel = "Save Deal",
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
@@ -68,7 +68,7 @@ export default function OpportunityForm({
           <FormInput
             register={register}
             name="name"
-            label="Opportunity Name"
+            label="Deal Name"
             placeholder="e.g. Acme Corp — Expansion"
             required
             error={errors.name}

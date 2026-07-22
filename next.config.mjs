@@ -73,6 +73,13 @@ const nextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // Opportunities was merged into Deals (one pipeline module).
+    return [
+      { source: "/opportunities", destination: "/deals", permanent: true },
+      { source: "/opportunities/:path*", destination: "/deals/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
