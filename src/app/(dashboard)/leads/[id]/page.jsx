@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Building2,
+  ChevronDown,
+  ClipboardList,
   Mail,
   MapPin,
   Merge,
@@ -38,9 +40,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ConvertLeadDialog from "@/features/leads/ConvertLeadDialog";
 import MergeLeadsDialog from "@/features/leads/MergeLeadsDialog";
+import LogActivityDialog from "@/features/leads/LogActivityDialog";
 import { leadHooks } from "@/features/leads/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
-import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATINGS, findOption } from "@/constants/options";
+import {
+  LEAD_STAGES,
+  LEAD_STAGES_PICKABLE,
+  LEAD_SOURCES,
+  LEAD_RATINGS,
+  findOption,
+} from "@/constants/options";
 import { formatCurrency, formatDate, formatRelative, getInitials } from "@/utils/format";
 
 const ACTIVITY_ICONS = {
@@ -118,6 +127,13 @@ export default function LeadDetailPage() {
   const [convertOpen, setConvertOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+  const [logType, setLogType] = useState("call");
+
+  const openLog = (type) => {
+    setLogType(type);
+    setLogOpen(true);
+  };
 
   if (isPending) {
     return (
@@ -155,6 +171,9 @@ export default function LeadDetailPage() {
         description={lead.company}
         actions={
           <>
+            <Button variant="outline" onClick={() => openLog("call")}>
+              <ClipboardList /> Log Activity
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -213,7 +232,35 @@ export default function LeadDetailPage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-lg font-semibold">{lead.name}</p>
-                <StatusBadge value={lead.stage} options={LEAD_STAGES} />
+                {lead.stage === "converted" ? (
+                  <StatusBadge value={lead.stage} options={LEAD_STAGES} />
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Change stage"
+                        className="inline-flex cursor-pointer items-center gap-0.5"
+                      >
+                        <StatusBadge value={lead.stage} options={LEAD_STAGES} />
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuLabel>Move to stage</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {LEAD_STAGES_PICKABLE.map((s) => (
+                        <DropdownMenuItem
+                          key={s.value}
+                          disabled={s.value === lead.stage}
+                          onClick={() => patch.mutate({ id: lead.id, stage: s.value })}
+                        >
+                          {s.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
               <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
                 <Building2 className="h-3.5 w-3.5" /> {lead.company}
@@ -265,14 +312,43 @@ export default function LeadDetailPage() {
                   <Mail className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="truncate text-sm font-medium">{lead.email || "—"}</p>
+                    {lead.email ? (
+                      <a
+                        href={`mailto:${lead.email}`}
+                        className="block truncate text-sm font-medium text-primary hover:underline"
+                      >
+                        {lead.email}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium">—</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Phone</p>
-                    <p className="text-sm font-medium">{lead.phone || "—"}</p>
+                    {lead.phone ? (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`tel:${lead.phone}`}
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          {lead.phone}
+                        </a>
+                        <a
+                          href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Chat on WhatsApp"
+                          className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
+                        >
+                          <MessageSquare className="h-3 w-3" /> WhatsApp
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-medium">—</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -321,8 +397,16 @@ export default function LeadDetailPage() {
 
         <TabsContent value="timeline" className="mt-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Activity Timeline</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => openLog("call")}>
+                  <PhoneCall /> Log Call
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openLog("note")}>
+                  <StickyNote /> Add Note
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Timeline query={timeline} />
@@ -333,6 +417,7 @@ export default function LeadDetailPage() {
 
       <ConvertLeadDialog lead={lead} open={convertOpen} onOpenChange={setConvertOpen} />
       <MergeLeadsDialog lead={lead} open={mergeOpen} onOpenChange={setMergeOpen} />
+      <LogActivityDialog lead={lead} open={logOpen} onOpenChange={setLogOpen} defaultType={logType} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
