@@ -117,7 +117,7 @@ const leads = Array.from({ length: 80 }, (_, i) => {
     stage: pick(LEAD_STAGES),
     source: pick(["website","referral","social","email","cold_call","event","other"]),
     value: money(2_000, 250_000),
-    score: int(10, 98),
+    rating: pick(["hot","warm","cold"]),
     ownerId: owner().id,
     city: pick(CITIES),
     notes: "",

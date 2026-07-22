@@ -22,14 +22,7 @@ export const leadSchema = z
       .min(0, "Value cannot be negative")
       .optional()
   ),
-  score: z.preprocess(
-    emptyToUndefined,
-    z
-      .number({ invalid_type_error: "Enter a valid score" })
-      .min(0, "Score must be between 0 and 100")
-      .max(100, "Score must be between 0 and 100")
-      .optional()
-  ),
+  rating: z.enum(["hot", "warm", "cold"]).optional(),
   ownerId: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),

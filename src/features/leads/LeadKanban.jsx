@@ -13,10 +13,9 @@ import {
 import { Building2, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
-import { LEAD_STAGES, LEAD_STAGES_PICKABLE, LEAD_SOURCES, findOption } from "@/constants/options";
+import { LEAD_STAGES, LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS, findOption } from "@/constants/options";
 import { formatCompactCurrency, formatCurrency, getInitials } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import { leadHooks } from "./hooks";
@@ -61,9 +60,8 @@ function LeadCard({ lead, owner }) {
           {findOption(LEAD_SOURCES, lead.source)?.label ?? lead.source}
         </Badge>
       </div>
-      <div className="mt-2 flex items-center gap-2">
-        <Progress value={lead.score} className="h-1.5 flex-1" />
-        <span className="text-xs tabular-nums text-muted-foreground">{lead.score}</span>
+      <div className="mt-2">
+        <StatusBadge value={lead.rating} options={LEAD_RATINGS} className="text-[10px]" />
       </div>
       {owner && (
         <div className="mt-2 flex items-center gap-1.5">

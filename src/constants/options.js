@@ -15,6 +15,14 @@ export const LEAD_STAGES = [
 // Stages a user may set by hand — "converted" only happens via the Convert flow.
 export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "converted");
 
+// Gut-feel lead temperature (backend LeadRating). Replaces the old manual
+// 0–100 score input — real scoring should be computed, not typed.
+export const LEAD_RATINGS = [
+  { value: "hot", label: "🔥 Hot", color: "red" },
+  { value: "warm", label: "Warm", color: "amber" },
+  { value: "cold", label: "❄️ Cold", color: "cyan" },
+];
+
 // Ordered roughly by how often each channel shows up in this market —
 // paid (advertisement) and inbound (incoming_call, walk_in) channels are kept
 // separate from their organic/outbound cousins so channel ROI stays visible.

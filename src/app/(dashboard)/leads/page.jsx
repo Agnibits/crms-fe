@@ -18,7 +18,6 @@ import DataTable, { selectionColumn } from "@/components/tables/DataTable";
 import StatusBadge from "@/components/common/StatusBadge";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -36,7 +35,7 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { leadHooks } from "@/features/leads/hooks";
 import LeadKanban from "@/features/leads/LeadKanban";
-import { LEAD_STAGES, LEAD_SOURCES, findOption } from "@/constants/options";
+import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATINGS, findOption } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatDate } from "@/utils/format";
 
@@ -76,16 +75,9 @@ export default function LeadsPage() {
         ),
       },
       {
-        accessorKey: "score",
-        header: "Score",
-        cell: ({ row }) => (
-          <div className="flex w-24 items-center gap-2">
-            <Progress value={row.original.score} className="h-1.5 flex-1" />
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {row.original.score}
-            </span>
-          </div>
-        ),
+        accessorKey: "rating",
+        header: "Rating",
+        cell: ({ row }) => <StatusBadge value={row.original.rating} options={LEAD_RATINGS} />,
       },
       {
         accessorKey: "ownerId",
@@ -220,7 +212,7 @@ export default function LeadsPage() {
                     { key: "stage", label: "Stage" },
                     { key: "source", label: "Source" },
                     { key: "value", label: "Value" },
-                    { key: "score", label: "Score" },
+                    { key: "rating", label: "Rating" },
                     { key: "city", label: "City" },
                     { key: "createdAt", label: "Created At" },
                   ])

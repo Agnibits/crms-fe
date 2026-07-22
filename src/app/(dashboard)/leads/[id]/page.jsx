@@ -27,7 +27,6 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -41,7 +40,7 @@ import ConvertLeadDialog from "@/features/leads/ConvertLeadDialog";
 import MergeLeadsDialog from "@/features/leads/MergeLeadsDialog";
 import { leadHooks } from "@/features/leads/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
-import { LEAD_STAGES, LEAD_SOURCES, findOption } from "@/constants/options";
+import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATINGS, findOption } from "@/constants/options";
 import { formatCurrency, formatDate, formatRelative, getInitials } from "@/utils/format";
 
 const ACTIVITY_ICONS = {
@@ -229,10 +228,9 @@ export default function LeadDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Lead Score</p>
-              <div className="mt-2 flex items-center gap-2">
-                <Progress value={lead.score} className="h-2 flex-1" />
-                <span className="text-sm font-medium tabular-nums">{lead.score}</span>
+              <p className="text-xs text-muted-foreground">Rating</p>
+              <div className="mt-1">
+                <StatusBadge value={lead.rating} options={LEAD_RATINGS} />
               </div>
             </div>
             <div>

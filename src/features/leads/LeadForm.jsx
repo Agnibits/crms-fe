@@ -10,7 +10,7 @@ import {
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES_PICKABLE, LEAD_SOURCES } from "@/constants/options";
+import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
 import { useUsersOptions } from "./useUsersOptions";
 
@@ -42,7 +42,7 @@ export default function LeadForm({
       stage: "new",
       source: "website",
       value: "",
-      score: "",
+      rating: "warm",
       ownerId: "",
       city: "",
       notes: "",
@@ -112,15 +112,13 @@ export default function LeadForm({
             min={0}
             error={errors.value}
           />
-          <FormNumber
-            register={register}
-            name="score"
-            label="Lead Score"
-            placeholder="0–100"
-            min={0}
-            max={100}
-            hint="How likely this lead is to convert (0–100)."
-            error={errors.score}
+          <FormSelect
+            control={control}
+            name="rating"
+            label="Rating"
+            options={LEAD_RATINGS}
+            hint="Gut feel: how hot is this lead right now?"
+            error={errors.rating}
           />
           <FormSelect
             control={control}
