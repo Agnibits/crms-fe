@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
   PointerSensor,
@@ -53,7 +54,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
 import { opportunityHooks } from "@/features/opportunities/hooks";
-import { DEAL_STAGES } from "@/constants/options";
+import { opportunityService } from "@/services/opportunity.service";
+import { useStageOptions } from "@/features/opportunities/useStageOptions";
+import { toastError } from "@/services/api";
+import { QUERY_KEYS } from "@/constants/app";
 import { exportToCsv } from "@/utils/export";
 import {
   formatCompactCurrency,
@@ -64,7 +68,6 @@ import {
 } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
-const OPEN_STAGES = ["qualification", "needs_analysis", "proposal", "negotiation"];
 
 /* ── Pipeline board (drag & drop) ─────────────────────────────── */
 
@@ -117,14 +120,14 @@ function OpportunityCard({ opportunity }) {
 }
 
 function PipelineColumn({ stage, opportunities }) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage.value });
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const total = opportunities.reduce((acc, o) => acc + (o.amount || 0), 0);
 
   return (
     <div className="flex w-72 min-w-72 shrink-0 flex-col rounded-xl border bg-muted/40">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <StatusBadge value={stage.value} options={DEAL_STAGES} />
+          <StatusBadge value={stage.value} options={[stage]} />
           <span className="text-xs font-medium text-muted-foreground">
             {opportunities.length}
           </span>
@@ -152,38 +155,44 @@ function PipelineColumn({ stage, opportunities }) {
   );
 }
 
-function PipelineBoard({ items, isPending, error, refetch }) {
-  const patch = opportunityHooks.usePatch();
+function PipelineBoard({ items, stages, isPending, error, refetch }) {
+  const queryClient = useQueryClient();
+  const move = useMutation({
+    // Move-stage keeps probability and WON/LOST status in sync server-side.
+    mutationFn: ({ id, stageId }) => opportunityService.moveStage(id, stageId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.opportunities }),
+    onError: (e) => toastError(e, "Failed to move deal"),
+  });
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
   const grouped = useMemo(() => {
-    const map = Object.fromEntries(DEAL_STAGES.map((s) => [s.value, []]));
+    const map = Object.fromEntries(stages.map((s) => [s.value, []]));
     items.forEach((opp) => {
-      (map[opp.stage] ?? (map[opp.stage] = [])).push(opp);
+      map[opp.stage]?.push(opp);
     });
     return map;
-  }, [items]);
+  }, [items, stages]);
 
   function handleDragEnd({ active, over }) {
     if (!over) return;
     const opp = items.find((o) => o.id === active.id);
-    if (opp && opp.stage !== over.id) {
-      patch.mutate({ id: active.id, stage: over.id });
+    if (opp && opp.stageId !== over.id) {
+      move.mutate({ id: active.id, stageId: over.id });
     }
   }
 
   if (error) return <ErrorState error={error} onRetry={refetch} />;
 
-  if (isPending) {
+  if (isPending || !stages.length) {
     return (
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {DEAL_STAGES.map((stage) => (
-          <div key={stage.value} className="w-72 min-w-72 shrink-0 space-y-2 rounded-xl border bg-muted/40 p-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="w-72 min-w-72 shrink-0 space-y-2 rounded-xl border bg-muted/40 p-2">
             <Skeleton className="h-8 w-full" />
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+            {Array.from({ length: 3 }).map((_, j) => (
+              <Skeleton key={j} className="h-24 w-full" />
             ))}
           </div>
         ))}
@@ -194,9 +203,9 @@ function PipelineBoard({ items, isPending, error, refetch }) {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex items-start gap-4 overflow-x-auto pb-4">
-        {DEAL_STAGES.map((stage) => (
+        {stages.map((stage) => (
           <PipelineColumn
-            key={stage.value}
+            key={stage.id}
             stage={stage}
             opportunities={grouped[stage.value] ?? []}
           />
@@ -220,23 +229,27 @@ export default function OpportunitiesPage() {
 
   const allItems = all.data?.items ?? [];
 
+  // The company's actual pipeline drives columns, badges and the stage filter.
+  const { stageOptions } = useStageOptions();
+
   const forecast = useMemo(() => {
-    const open = allItems.filter((o) => OPEN_STAGES.includes(o.stage));
+    // Status is authoritative (OPEN/WON/LOST) — stage names are per-company.
+    const open = allItems.filter((o) => o.status === "OPEN");
     const totalPipeline = open.reduce((acc, o) => acc + (o.amount || 0), 0);
     const weighted = open.reduce(
       (acc, o) => acc + ((o.amount || 0) * (o.probability || 0)) / 100,
       0
     );
 
-    // Win rate this quarter: closed opportunities expected to close this quarter.
+    // Win rate this quarter, from deals closed (won or lost) this quarter.
     const now = new Date();
     const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
     const closedThisQuarter = allItems.filter((o) => {
-      if (!["closed_won", "closed_lost"].includes(o.stage)) return false;
-      const date = new Date(o.expectedCloseDate);
+      if (o.status !== "WON" && o.status !== "LOST") return false;
+      const date = new Date(o.expectedCloseDate || o.updatedAt);
       return date >= quarterStart && date <= now;
     });
-    const won = closedThisQuarter.filter((o) => o.stage === "closed_won").length;
+    const won = closedThisQuarter.filter((o) => o.status === "WON").length;
     const winRate =
       closedThisQuarter.length > 0 ? (won / closedThisQuarter.length) * 100 : 0;
 
@@ -255,7 +268,7 @@ export default function OpportunitiesPage() {
       {
         accessorKey: "stage",
         header: "Stage",
-        cell: ({ row }) => <StatusBadge value={row.original.stage} options={DEAL_STAGES} />,
+        cell: ({ row }) => <StatusBadge value={row.original.stage} options={stageOptions} />,
       },
       {
         accessorKey: "amount",
@@ -325,7 +338,7 @@ export default function OpportunitiesPage() {
         ),
       },
     ],
-    [router]
+    [router, stageOptions]
   );
 
   return (
@@ -403,16 +416,16 @@ export default function OpportunitiesPage() {
             emptyDescription="Try adjusting your search or filters, or add a new deal."
             toolbar={
               <Select
-                value={t.filters.stage ?? "all"}
-                onValueChange={(v) => t.setFilter("stage", v)}
+                value={t.filters.stageId ?? "all"}
+                onValueChange={(v) => t.setFilter("stageId", v)}
               >
                 <SelectTrigger className="w-40" aria-label="Filter by stage">
                   <SelectValue placeholder="Stage" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All stages</SelectItem>
-                  {DEAL_STAGES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
+                  {stageOptions.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
                       {s.label}
                     </SelectItem>
                   ))}
@@ -455,6 +468,7 @@ export default function OpportunitiesPage() {
         <TabsContent value="pipeline" className="mt-4">
           <PipelineBoard
             items={allItems}
+            stages={stageOptions}
             isPending={all.isPending}
             error={all.error}
             refetch={all.refetch}

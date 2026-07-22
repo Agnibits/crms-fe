@@ -10,10 +10,10 @@ import {
   FormNumber,
   FormSelect,
 } from "@/components/forms/fields";
-import { DEAL_STAGES } from "@/constants/options";
 import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useCustomerOptions } from "@/features/contacts/hooks";
+import { useStageOptions } from "./useStageOptions";
 
 /** Shared create/edit opportunity form. */
 export default function OpportunityForm({
@@ -25,6 +25,7 @@ export default function OpportunityForm({
 }) {
   const { options: userOptions } = useUsersOptions();
   const customers = useCustomerOptions();
+  const { stageOptions } = useStageOptions();
 
   const {
     register,
@@ -37,7 +38,7 @@ export default function OpportunityForm({
       name: "",
       customerId: "",
       customerName: "",
-      stage: "qualification",
+      stage: "",
       amount: "",
       probability: "",
       expectedCloseDate: "",
@@ -89,7 +90,7 @@ export default function OpportunityForm({
             name="stage"
             label="Stage"
             required
-            options={DEAL_STAGES}
+            options={stageOptions}
             error={errors.stage}
           />
           <FormNumber

@@ -26,7 +26,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { opportunityHooks } from "@/features/opportunities/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
-import { DEAL_STAGES } from "@/constants/options";
+import { useStageOptions } from "@/features/opportunities/useStageOptions";
 import { formatCurrency, formatDate, formatRelative } from "@/utils/format";
 
 const ACTIVITY_ICONS = {
@@ -88,6 +88,7 @@ export default function OpportunityDetailPage() {
   const timeline = opportunityHooks.useSub(id, "timeline");
   const remove = opportunityHooks.useRemove();
   const { usersById } = useUsersOptions();
+  const { stageOptions } = useStageOptions();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (isPending) {
@@ -142,7 +143,7 @@ export default function OpportunityDetailPage() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-lg font-semibold">{opportunity.name}</p>
-              <StatusBadge value={opportunity.stage} options={DEAL_STAGES} />
+              <StatusBadge value={opportunity.stage} options={stageOptions} />
             </div>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" /> {opportunity.customerName}
@@ -199,7 +200,7 @@ export default function OpportunityDetailPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Stage</span>
-                  <StatusBadge value={opportunity.stage} options={DEAL_STAGES} />
+                  <StatusBadge value={opportunity.stage} options={stageOptions} />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Amount</span>

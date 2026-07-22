@@ -62,4 +62,9 @@ export const opportunityService = {
   ...mapped,
   create: async (payload) => base.create(await toBackend(payload)),
   update: async (id, payload) => base.update(id, await toBackend(payload)),
+  /** Move to another stage — backend syncs probability and WON/LOST status. */
+  moveStage: async (id, stageId) => {
+    const res = await api.patch(`${ENDPOINTS.opportunities}/${id}/move-stage`, { stageId });
+    return unwrap(res);
+  },
 };
