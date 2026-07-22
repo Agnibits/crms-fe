@@ -15,12 +15,19 @@ export const LEAD_STAGES = [
 // Stages a user may set by hand — "converted" only happens via the Convert flow.
 export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "converted");
 
+// Ordered roughly by how often each channel shows up in this market —
+// paid (advertisement) and inbound (incoming_call, walk_in) channels are kept
+// separate from their organic/outbound cousins so channel ROI stays visible.
 export const LEAD_SOURCES = [
   { value: "website", label: "Website" },
+  { value: "whatsapp", label: "WhatsApp" },
   { value: "referral", label: "Referral" },
   { value: "social", label: "Social Media" },
+  { value: "advertisement", label: "Advertisement" },
   { value: "email", label: "Email Campaign" },
   { value: "cold_call", label: "Cold Call" },
+  { value: "incoming_call", label: "Incoming Call" },
+  { value: "walk_in", label: "Walk-in" },
   { value: "event", label: "Event" },
   { value: "other", label: "Other" },
 ];
