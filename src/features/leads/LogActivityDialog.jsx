@@ -29,10 +29,18 @@ import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
 
 /**
- * Quick "log a call / add a note" dialog for a lead's timeline.
- *   <LogActivityDialog lead={lead} open={open} onOpenChange={setOpen} defaultType="call" />
+ * Quick "log a call / add a note" dialog for a record's timeline.
+ * Works for any entity with a timeline — leads and deals today.
+ *   <LogActivityDialog entity={lead} relatedType="LEAD" queryKey={QUERY_KEYS.leads} … />
  */
-export default function LogActivityDialog({ lead, open, onOpenChange, defaultType = "call" }) {
+export default function LogActivityDialog({
+  entity,
+  relatedType = "LEAD",
+  queryKey = QUERY_KEYS.leads,
+  open,
+  onOpenChange,
+  defaultType = "call",
+}) {
   const queryClient = useQueryClient();
   const [type, setType] = useState(defaultType);
   const [subject, setSubject] = useState("");
@@ -53,20 +61,20 @@ export default function LogActivityDialog({ lead, open, onOpenChange, defaultTyp
         type,
         subject: subject.trim(),
         description: description.trim() || undefined,
-        relatedType: "LEAD",
-        relatedId: lead.id,
+        relatedType,
+        relatedId: entity.id,
         completedAt: new Date().toISOString(),
       }),
     onSuccess: () => {
       toast.success("Activity logged");
-      queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.leads, "detail", lead.id, "timeline"] });
+      queryClient.invalidateQueries({ queryKey: [...queryKey, "detail", entity.id, "timeline"] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activities });
       onOpenChange(false);
     },
     onError: (error) => toastError(error, "Failed to log activity"),
   });
 
-  if (!lead) return null;
+  if (!entity) return null;
   const canSave = subject.trim().length > 0 && !create.isPending;
 
   return (
@@ -77,7 +85,7 @@ export default function LogActivityDialog({ lead, open, onOpenChange, defaultTyp
             <ClipboardList className="h-5 w-5 text-primary" /> Log Activity
           </DialogTitle>
           <DialogDescription>
-            Record a touchpoint with {lead.name} — it shows up on the timeline.
+            Record a touchpoint with {entity.name} — it shows up on the timeline.
           </DialogDescription>
         </DialogHeader>
 

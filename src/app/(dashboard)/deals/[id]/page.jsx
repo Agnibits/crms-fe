@@ -9,14 +9,10 @@ import {
   Building2,
   CalendarDays,
   ChevronDown,
-  Mail,
-  MessageSquare,
+  ClipboardList,
   Pencil,
-  PhoneCall,
-  StickyNote,
   Trash2,
   Trophy,
-  Video,
   XCircle,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
@@ -37,6 +33,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ActivityTimeline from "@/components/common/ActivityTimeline";
+import LogActivityDialog from "@/features/leads/LogActivityDialog";
 import { opportunityHooks } from "@/features/opportunities/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useStageOptions } from "@/features/opportunities/useStageOptions";
@@ -50,57 +48,6 @@ const STATUS_OPTIONS = [
   { value: "LOST", label: "Lost", color: "red" },
 ];
 
-const ACTIVITY_ICONS = {
-  call: PhoneCall,
-  meeting: Video,
-  email: Mail,
-  note: StickyNote,
-  whatsapp: MessageSquare,
-  sms: MessageSquare,
-};
-
-function Timeline({ query }) {
-  if (query.isPending) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
-        ))}
-      </div>
-    );
-  }
-  if (query.error) return <ErrorState error={query.error} onRetry={query.refetch} />;
-
-  const items = query.data ?? [];
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        title="No activity yet"
-        description="Calls, meetings, emails and notes related to this deal will appear here."
-      />
-    );
-  }
-  return (
-    <div className="space-y-1">
-      {items.map((activity) => {
-        const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
-        return (
-          <div key={activity.id} className="flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Icon className="h-3.5 w-3.5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{activity.subject}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {activity.userName} · {formatRelative(activity.createdAt)}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function OpportunityDetailPage() {
   const { id } = useParams();
@@ -114,6 +61,7 @@ export default function OpportunityDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [winOpen, setWinOpen] = useState(false);
   const [loseOpen, setLoseOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.opportunities });
@@ -175,6 +123,9 @@ export default function OpportunityDetailPage() {
         description={opportunity.customerName}
         actions={
           <>
+            <Button variant="outline" onClick={() => setLogOpen(true)}>
+              <ClipboardList /> Log Activity
+            </Button>
             {isOpen && (
               <>
                 <Button variant="outline" onClick={() => setLoseOpen(true)}>
@@ -351,12 +302,22 @@ export default function OpportunityDetailPage() {
               <CardTitle className="text-base">Activity Timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <Timeline query={timeline} />
+              <ActivityTimeline
+                query={timeline}
+                emptyDescription="The deal's full history — including its time as a lead — will appear here."
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
+      <LogActivityDialog
+        entity={opportunity}
+        relatedType="OPPORTUNITY"
+        queryKey={QUERY_KEYS.opportunities}
+        open={logOpen}
+        onOpenChange={setLogOpen}
+      />
       <ConfirmDialog
         open={winOpen}
         onOpenChange={setWinOpen}

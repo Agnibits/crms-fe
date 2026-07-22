@@ -39,6 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ActivityTimeline from "@/components/common/ActivityTimeline";
 import ConvertLeadDialog from "@/features/leads/ConvertLeadDialog";
 import MergeLeadsDialog from "@/features/leads/MergeLeadsDialog";
 import LogActivityDialog from "@/features/leads/LogActivityDialog";
@@ -53,96 +54,7 @@ import {
 } from "@/constants/options";
 import { formatCurrency, formatDate, formatRelative, getInitials } from "@/utils/format";
 
-const ACTIVITY_ICONS = {
-  call: PhoneCall,
-  meeting: Video,
-  email: Mail,
-  note: StickyNote,
-  whatsapp: MessageSquare,
-  sms: MessageSquare,
-};
 
-/**
- * Timeline entry body: keeps the author's line breaks, collapses long
- * entries behind a Show more toggle so the timeline stays scannable.
- */
-function TimelineBody({ text }) {
-  const [expanded, setExpanded] = useState(false);
-  if (!text) return null;
-  const isLong = text.length > 220 || text.split("\n").length > 3;
-  return (
-    <div className="mt-1">
-      <p
-        className={`whitespace-pre-wrap text-sm text-muted-foreground ${
-          !expanded && isLong ? "line-clamp-3" : ""
-        }`}
-      >
-        {text}
-      </p>
-      {isLong && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-1 text-xs font-medium text-primary hover:underline"
-        >
-          {expanded ? "Show less" : "Show more"}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Timeline({ query }) {
-  if (query.isPending) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
-        ))}
-      </div>
-    );
-  }
-  if (query.error) return <ErrorState error={query.error} onRetry={query.refetch} />;
-
-  const items = query.data ?? [];
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        title="No activity yet"
-        description="Calls, meetings, emails and notes related to this lead will appear here."
-      />
-    );
-  }
-  return (
-    <div className="space-y-1">
-      {items.map((item, i) => {
-        // Backend timeline items are { kind: 'activity'|'note', at, data }.
-        const rec = item.data ?? item;
-        const isNote = item.kind === "note";
-        const Icon = isNote ? StickyNote : ACTIVITY_ICONS[rec.type] || StickyNote;
-        const title = isNote ? rec.title || "Note" : rec.subject;
-        const body = isNote ? rec.content : rec.description;
-        const who = rec.userName || [rec.user?.firstName, rec.user?.lastName].filter(Boolean).join(" ");
-        const when = item.at || rec.createdAt;
-        return (
-          <div key={rec.id ?? i} className="flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Icon className="h-3.5 w-3.5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{title}</p>
-              <TimelineBody text={body} />
-              <p className="mt-1 text-xs text-muted-foreground/80">
-                {who ? `${who} · ` : ""}
-                {formatRelative(when)}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -448,7 +360,10 @@ export default function LeadDetailPage() {
               <CardTitle className="text-base">Activity Timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <Timeline query={timeline} />
+              <ActivityTimeline
+                query={timeline}
+                emptyDescription="Calls, meetings, emails and notes related to this lead will appear here."
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -456,7 +371,7 @@ export default function LeadDetailPage() {
 
       <ConvertLeadDialog lead={lead} open={convertOpen} onOpenChange={setConvertOpen} />
       <MergeLeadsDialog lead={lead} open={mergeOpen} onOpenChange={setMergeOpen} />
-      <LogActivityDialog lead={lead} open={logOpen} onOpenChange={setLogOpen} defaultType={logType} />
+      <LogActivityDialog entity={lead} open={logOpen} onOpenChange={setLogOpen} defaultType={logType} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
