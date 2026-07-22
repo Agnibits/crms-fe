@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Download, FileText, Wallet, TrendingUp } from "lucide-react";
+import { AlertTriangle, Download, FileText, Plus, Wallet, TrendingUp } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -116,6 +116,11 @@ export default function InvoicesPage() {
       <PageHeader
         title="Invoices"
         description="Track billing, collections and outstanding balances."
+        actions={
+          <Button onClick={() => router.push("/invoices/new")}>
+            <Plus /> Add Invoice
+          </Button>
+        }
       />
 
       {/* Summary cards */}

@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ClipboardList,
   Pencil,
+  Receipt,
   Trash2,
   Trophy,
   XCircle,
@@ -123,6 +124,20 @@ export default function OpportunityDetailPage() {
         description={opportunity.customerName}
         actions={
           <>
+            {/* A won deal's next step is billing — hand off prefilled. */}
+            {opportunity.status === "WON" && opportunity.customerId && (
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/invoices/new?customerId=${opportunity.customerId}&amount=${
+                      opportunity.amount || ""
+                    }&description=${encodeURIComponent(opportunity.name || "")}`
+                  )
+                }
+              >
+                <Receipt /> Create Invoice
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setLogOpen(true)}>
               <ClipboardList /> Log Activity
             </Button>
