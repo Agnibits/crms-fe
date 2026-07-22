@@ -125,7 +125,8 @@ export default function LeadForm({
             name="ownerId"
             label="Owner"
             options={userOptions}
-            placeholder="Assign an owner…"
+            placeholder="Defaults to you"
+            hint="Who follows up on this lead. Left empty = assigned to you."
             error={errors.ownerId}
           />
           <FormInput
