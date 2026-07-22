@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,18 +39,83 @@ export function FieldWrapper({ label, name, error, required, hint, children, cla
   );
 }
 
-export function FormInput({ register, name, label, error, required, hint, className, suggestions, ...props }) {
-  const listId = suggestions?.length ? `${name}-suggestions` : undefined;
+export function FormInput({ register, name, label, error, required, hint, className, ...props }) {
   return (
     <FieldWrapper {...{ label, name, error, required, hint, className }}>
-      <Input id={name} aria-invalid={!!error} list={listId} {...register(name)} {...props} />
-      {listId && (
-        <datalist id={listId}>
-          {suggestions.map((s) => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
-      )}
+      <Input id={name} aria-invalid={!!error} {...register(name)} {...props} />
+    </FieldWrapper>
+  );
+}
+
+/**
+ * Free-text input with typeahead suggestions. Unlike a native datalist, the
+ * dropdown only opens once the user starts typing (and never mixes in browser
+ * autofill history), and any custom value can still be entered.
+ */
+export function FormAutocomplete({
+  control,
+  name,
+  label,
+  error,
+  required,
+  hint,
+  className,
+  suggestions = [],
+  ...props
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <FieldWrapper {...{ label, name, error, required, hint, className }}>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field }) => {
+          const q = String(field.value ?? "").trim().toLowerCase();
+          const matches = q
+            ? suggestions
+                .filter((s) => s.toLowerCase().includes(q) && s.toLowerCase() !== q)
+                .slice(0, 8)
+            : [];
+          return (
+            <div className="relative">
+              <Input
+                id={name}
+                aria-invalid={!!error}
+                autoComplete="off"
+                {...props}
+                value={field.value ?? ""}
+                onChange={(e) => {
+                  field.onChange(e);
+                  setOpen(true);
+                }}
+                onBlur={() => {
+                  field.onBlur();
+                  // Delay so a click on a suggestion lands before the list closes.
+                  setTimeout(() => setOpen(false), 150);
+                }}
+              />
+              {open && matches.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+                  {matches.map((s) => (
+                    <button
+                      type="button"
+                      key={s}
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        field.onChange(s);
+                        setOpen(false);
+                      }}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }}
+      />
     </FieldWrapper>
   );
 }

@@ -1,17 +1,20 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  FormAutocomplete,
   FormInput,
   FormNumber,
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS, CITY_SUGGESTIONS } from "@/constants/options";
+import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
+import { leadService } from "@/services/lead.service";
 import { useUsersOptions } from "./useUsersOptions";
 
 /**
@@ -26,6 +29,13 @@ export default function LeadForm({
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
+
+  // Cities this company has already used — real data, not a hardcoded list.
+  const { data: citySuggestions = [] } = useQuery({
+    queryKey: ["leads", "cities"],
+    queryFn: ({ signal }) => leadService.cities({ signal }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const {
     register,
@@ -129,12 +139,12 @@ export default function LeadForm({
             hint="Who follows up on this lead. Left empty = assigned to you."
             error={errors.ownerId}
           />
-          <FormInput
-            register={register}
+          <FormAutocomplete
+            control={control}
             name="city"
             label="City"
             placeholder="e.g. Kathmandu"
-            suggestions={CITY_SUGGESTIONS}
+            suggestions={citySuggestions}
             error={errors.city}
           />
           <FormTextarea

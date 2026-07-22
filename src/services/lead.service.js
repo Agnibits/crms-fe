@@ -1,5 +1,6 @@
 "use client";
 
+import { api, unwrap } from "./api";
 import { createCrudService } from "./crud.factory";
 import { ENDPOINTS } from "@/constants/endpoints";
 import { makeMapper, withMapping } from "./crudMap";
@@ -23,4 +24,11 @@ const mapper = makeMapper({
   ],
 });
 
-export const leadService = withMapping(base, mapper);
+export const leadService = {
+  ...withMapping(base, mapper),
+  /** Distinct cities this company's leads already use (city typeahead). */
+  async cities({ signal } = {}) {
+    const res = await api.get(`${ENDPOINTS.leads}/cities`, { signal });
+    return unwrap(res) ?? [];
+  },
+};
