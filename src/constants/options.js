@@ -18,9 +18,9 @@ export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "conve
 // Gut-feel lead temperature (backend LeadRating). Replaces the old manual
 // 0–100 score input — real scoring should be computed, not typed.
 export const LEAD_RATINGS = [
-  { value: "hot", label: "🔥 Hot", color: "red" },
+  { value: "hot", label: "Hot", color: "red" },
   { value: "warm", label: "Warm", color: "amber" },
-  { value: "cold", label: "❄️ Cold", color: "cyan" },
+  { value: "cold", label: "Cold", color: "cyan" },
 ];
 
 // Ordered roughly by how often each channel shows up in this market —
