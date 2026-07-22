@@ -20,6 +20,11 @@ async function defaultPipeline() {
   return _pipeline;
 }
 
+/** Default pipeline (with stages) — shared with the lead Convert flow. */
+export function getDefaultPipeline() {
+  return defaultPipeline();
+}
+
 function fromBackend(o) {
   if (!o || typeof o !== "object") return o;
   return {
