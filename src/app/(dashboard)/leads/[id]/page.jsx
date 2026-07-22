@@ -397,16 +397,8 @@ export default function LeadDetailPage() {
 
         <TabsContent value="timeline" className="mt-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader>
               <CardTitle className="text-base">Activity Timeline</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => openLog("call")}>
-                  <PhoneCall /> Log Call
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => openLog("note")}>
-                  <StickyNote /> Add Note
-                </Button>
-              </div>
             </CardHeader>
             <CardContent>
               <Timeline query={timeline} />
