@@ -38,10 +38,18 @@ export function FieldWrapper({ label, name, error, required, hint, children, cla
   );
 }
 
-export function FormInput({ register, name, label, error, required, hint, className, ...props }) {
+export function FormInput({ register, name, label, error, required, hint, className, suggestions, ...props }) {
+  const listId = suggestions?.length ? `${name}-suggestions` : undefined;
   return (
     <FieldWrapper {...{ label, name, error, required, hint, className }}>
-      <Input id={name} aria-invalid={!!error} {...register(name)} {...props} />
+      <Input id={name} aria-invalid={!!error} list={listId} {...register(name)} {...props} />
+      {listId && (
+        <datalist id={listId}>
+          {suggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      )}
     </FieldWrapper>
   );
 }

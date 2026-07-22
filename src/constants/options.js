@@ -15,6 +15,15 @@ export const LEAD_STAGES = [
 // Stages a user may set by hand — "converted" only happens via the Convert flow.
 export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "converted");
 
+// Typeahead suggestions for city inputs (datalist) — free text stays allowed,
+// so localities like "Kalanki" can still be typed as-is.
+export const CITY_SUGGESTIONS = [
+  "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Biratnagar", "Birgunj",
+  "Bharatpur", "Butwal", "Dharan", "Hetauda", "Nepalgunj", "Itahari",
+  "Janakpur", "Dhangadhi", "Ghorahi", "Tulsipur", "Birtamod", "Damak",
+  "Kirtipur", "Banepa", "Dhulikhel", "Gorkha", "Palpa", "Ilam", "Baglung",
+];
+
 // Gut-feel lead temperature (backend LeadRating). Replaces the old manual
 // 0–100 score input — real scoring should be computed, not typed.
 export const LEAD_RATINGS = [

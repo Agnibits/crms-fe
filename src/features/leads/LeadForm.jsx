@@ -10,7 +10,7 @@ import {
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/options";
+import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS, CITY_SUGGESTIONS } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
 import { useUsersOptions } from "./useUsersOptions";
 
@@ -133,7 +133,8 @@ export default function LeadForm({
             register={register}
             name="city"
             label="City"
-            placeholder="e.g. Pune"
+            placeholder="e.g. Kathmandu"
+            suggestions={CITY_SUGGESTIONS}
             error={errors.city}
           />
           <FormTextarea
