@@ -61,6 +61,36 @@ const ACTIVITY_ICONS = {
   sms: MessageSquare,
 };
 
+/**
+ * Timeline entry body: keeps the author's line breaks, collapses long
+ * entries behind a Show more toggle so the timeline stays scannable.
+ */
+function TimelineBody({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  const isLong = text.length > 220 || text.split("\n").length > 3;
+  return (
+    <div className="mt-1">
+      <p
+        className={`whitespace-pre-wrap text-sm text-muted-foreground ${
+          !expanded && isLong ? "line-clamp-3" : ""
+        }`}
+      >
+        {text}
+      </p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1 text-xs font-medium text-primary hover:underline"
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Timeline({ query }) {
   if (query.isPending) {
     return (
@@ -100,10 +130,8 @@ function Timeline({ query }) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{title}</p>
-              {body && (
-                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{body}</p>
-              )}
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <TimelineBody text={body} />
+              <p className="mt-1 text-xs text-muted-foreground/80">
                 {who ? `${who} · ` : ""}
                 {formatRelative(when)}
               </p>
