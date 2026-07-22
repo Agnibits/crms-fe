@@ -31,6 +31,7 @@ import { useInvoicePdf } from "@/features/invoices/useInvoicePdf";
 import { invoiceHooks } from "@/features/invoices/hooks";
 import RecordPaymentDialog from "@/features/payments/RecordPaymentDialog";
 import { INVOICE_STATUSES, PAYMENT_METHODS, findOption } from "@/constants/options";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { formatCurrency, formatDate } from "@/utils/format";
 
 export default function InvoiceDetailPage() {
@@ -40,6 +41,7 @@ export default function InvoiceDetailPage() {
 
   // /invoices/:id/detail carries customer + items + payments in one response.
   const { data: invoice, isPending, error, refetch } = invoiceHooks.useDetail(id);
+  const { company } = useMyCompany();
   const { downloadPdf, isGenerating } = useInvoicePdf();
 
   const sendInvoice = invoiceHooks.useAction({
@@ -131,7 +133,7 @@ export default function InvoiceDetailPage() {
                 </div>
               </CardContent>
             ) : (
-              <InvoiceDocument invoice={invoice} />
+              <InvoiceDocument invoice={invoice} company={company} />
             )}
           </Card>
         </TabsContent>
