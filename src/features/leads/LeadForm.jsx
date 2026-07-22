@@ -69,8 +69,7 @@ export default function LeadForm({
             register={register}
             name="company"
             label="Company"
-            placeholder="e.g. Acme Corp"
-            required
+            placeholder="e.g. Acme Corp (optional)"
             error={errors.company}
           />
           <FormInput
@@ -79,14 +78,14 @@ export default function LeadForm({
             type="email"
             label="Email"
             placeholder="name@company.com"
-            required
+            hint="Email or phone — at least one is required."
             error={errors.email}
           />
           <FormInput
             register={register}
             name="phone"
             label="Phone"
-            placeholder="+91 98765 43210"
+            placeholder="+977 98XXXXXXXX"
             error={errors.phone}
           />
           <FormSelect
@@ -109,8 +108,7 @@ export default function LeadForm({
             register={register}
             name="value"
             label="Estimated Value"
-            placeholder="0"
-            required
+            placeholder="e.g. 50,000 (optional)"
             min={0}
             error={errors.value}
           />
