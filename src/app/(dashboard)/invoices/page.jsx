@@ -64,31 +64,27 @@ export default function InvoicesPage() {
       },
       {
         accessorKey: "total",
-        header: () => <span className="block text-right">Total</span>,
+        header: "Total",
+        meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="block text-right tabular-nums">
-            {formatCurrency(row.original.total)}
-          </span>
+          <span className="tabular-nums">{formatCurrency(row.original.total)}</span>
         ),
       },
       {
         accessorKey: "amountPaid",
-        header: () => <span className="block text-right">Paid</span>,
+        header: "Paid",
+        meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="block text-right tabular-nums">
-            {formatCurrency(row.original.amountPaid)}
-          </span>
+          <span className="tabular-nums">{formatCurrency(row.original.amountPaid)}</span>
         ),
       },
       {
         accessorKey: "balance",
-        header: () => <span className="block text-right">Balance</span>,
+        header: "Balance",
+        meta: { align: "right" },
         cell: ({ row }) => (
           <span
-            className={cn(
-              "block text-right tabular-nums",
-              (row.original.balance ?? 0) > 0 && "font-medium"
-            )}
+            className={cn("tabular-nums", (row.original.balance ?? 0) > 0 && "font-medium")}
           >
             {formatCurrency(row.original.balance)}
           </span>

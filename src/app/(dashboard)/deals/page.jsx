@@ -273,6 +273,7 @@ export default function OpportunitiesPage() {
       {
         accessorKey: "amount",
         header: "Amount",
+        meta: { align: "right" },
         cell: ({ row }) => (
           <span className="tabular-nums">{formatCurrency(row.original.amount)}</span>
         ),

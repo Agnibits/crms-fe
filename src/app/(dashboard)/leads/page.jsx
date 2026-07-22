@@ -70,6 +70,7 @@ export default function LeadsPage() {
       {
         accessorKey: "value",
         header: "Value",
+        meta: { align: "right" },
         cell: ({ row }) => (
           <span className="tabular-nums">{formatCurrency(row.original.value)}</span>
         ),
