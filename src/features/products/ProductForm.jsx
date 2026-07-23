@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,6 +12,7 @@ import {
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
+import CategoriesDialog from "@/features/products/CategoriesDialog";
 import { productSchema } from "@/validations/product.schema";
 import { productCategoryHooks, useProductUnits } from "@/features/products/hooks";
 
@@ -35,6 +37,7 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
     label: c.name,
   }));
   const { data: unitOptions = [] } = useProductUnits();
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   const {
     register,
@@ -103,15 +106,31 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
               placeholder="Auto-generated if left blank"
             />
           )}
-          <FormSelect
-            control={control}
-            name="categoryId"
-            label="Category"
-            error={errors.categoryId}
-            options={categoryOptions}
-            placeholder={categories.isPending ? "Loading categories…" : "Select category"}
-            disabled={categories.isPending}
-          />
+          <div className="space-y-1.5">
+            <FormSelect
+              control={control}
+              name="categoryId"
+              label="Category"
+              error={errors.categoryId}
+              options={categoryOptions}
+              placeholder={
+                categories.isPending
+                  ? "Loading categories…"
+                  : categoryOptions.length
+                    ? "Select category"
+                    : "No categories yet"
+              }
+              disabled={categories.isPending}
+            />
+            <button
+              type="button"
+              onClick={() => setCategoriesOpen(true)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <Plus className="h-3 w-3" />
+              {categoryOptions.length ? "New category" : "Create your first category"}
+            </button>
+          </div>
           <FormSelect
             control={control}
             name="unit"
@@ -204,6 +223,8 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
           {submitLabel}
         </Button>
       </div>
+
+      <CategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
     </form>
   );
 }
