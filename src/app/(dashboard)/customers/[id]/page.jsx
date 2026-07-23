@@ -28,6 +28,7 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import UserAvatar from "@/components/common/UserAvatar";
 import ActivityTimeline from "@/components/common/ActivityTimeline";
+import TagEditor from "@/components/common/TagEditor";
 import LogActivityDialog from "@/features/leads/LogActivityDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -242,6 +243,8 @@ export default function CustomerDetailPage() {
                   </a>
                 )}
               </div>
+              {/* Tags — segment this account (VIP, reseller, region…) */}
+              <TagEditor entityType="CUSTOMER" entityId={id} className="mt-3" />
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3 rounded-lg border p-3">
@@ -343,9 +346,6 @@ export default function CustomerDetailPage() {
                 </DefItem>
                 <DefItem label="Employees">
                   {customer.employees > 0 ? formatNumber(customer.employees) : "—"}
-                </DefItem>
-                <DefItem label="Tags">
-                  {customer.tags?.length ? customer.tags.join(", ") : "—"}
                 </DefItem>
                 <DefItem label="Created">{formatDate(customer.createdAt)}</DefItem>
                 <DefItem label="Last updated">{formatDate(customer.updatedAt)}</DefItem>
