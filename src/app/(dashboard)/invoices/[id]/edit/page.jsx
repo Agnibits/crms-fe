@@ -51,6 +51,7 @@ export default function EditInvoicePage() {
         defaultValues={{
           customerId: invoice.customerId ?? "",
           dueDate: invoice.dueDate ? String(invoice.dueDate).slice(0, 10) : "",
+          notes: invoice.notes ?? "",
           items: (invoice.items ?? []).map((it) => ({
             description: it.description ?? "",
             quantity: Number(it.quantity) || 1,

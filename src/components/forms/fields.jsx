@@ -167,12 +167,14 @@ export function FormSelect({
   placeholder = "Select…",
   className,
   disabled,
+  rules,
 }) {
   return (
     <FieldWrapper {...{ label, name, error, required, hint, className }}>
       <Controller
         control={control}
         name={name}
+        rules={rules}
         render={({ field }) => (
           <Select
             value={field.value ? String(field.value) : undefined}

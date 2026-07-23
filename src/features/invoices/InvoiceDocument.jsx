@@ -176,6 +176,16 @@ export default function InvoiceDocument({ invoice, company }) {
         </dl>
       </div>
 
+      {/* Notes */}
+      {invoice.notes && (
+        <div className="mt-6 rounded-lg border bg-muted/40 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Notes
+          </p>
+          <p className="mt-1 whitespace-pre-wrap text-sm">{invoice.notes}</p>
+        </div>
+      )}
+
       {/* Footer — the payment line must match the invoice's state */}
       <div className="mt-8 border-t pt-4 text-center text-xs text-muted-foreground">
         {invoice.status === "paid" ? (

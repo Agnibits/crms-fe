@@ -16,7 +16,7 @@ const base = createCrudService(ENDPOINTS.invoices);
 const inner = makeMapper({
   enums: ["status"],
   // Derived labels (number/customerName/balance) are never written back.
-  allow: ["customerId", "orderId", "dueDate", "currency", "status", "discount", "tax", "items"],
+  allow: ["customerId", "orderId", "dueDate", "currency", "status", "discount", "tax", "items", "notes"],
 });
 
 const mapper = {

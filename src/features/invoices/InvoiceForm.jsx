@@ -1,12 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormDatePicker, FormSelect } from "@/components/forms/fields";
+import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fields";
 import { useCustomerOptions } from "@/features/contacts/hooks";
 import { formatCurrency } from "@/utils/format";
 
@@ -33,7 +34,9 @@ export default function InvoiceForm({
   // Edit mode: the backend doesn't change an invoice's customer on update.
   lockCustomer = false,
 }) {
+  const router = useRouter();
   const customers = useCustomerOptions();
+  const noCustomers = !customers.isPending && customers.options.length === 0;
 
   const {
     register,
@@ -45,6 +48,7 @@ export default function InvoiceForm({
     defaultValues: {
       customerId: "",
       dueDate: dateInDays(15),
+      notes: "",
       items: [{ ...EMPTY_ITEM }],
       ...defaultValues,
     },
@@ -67,6 +71,7 @@ export default function InvoiceForm({
     onSubmit({
       customerId: values.customerId,
       dueDate: values.dueDate || undefined,
+      notes: values.notes?.trim() || undefined,
       items: values.items
         .filter((it) => it.description.trim() && Number(it.unitPrice) > 0)
         .map((it) => ({
@@ -86,24 +91,44 @@ export default function InvoiceForm({
         <CardHeader>
           <CardTitle className="text-base">Invoice Details</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <FormSelect
-            control={control}
-            name="customerId"
-            label="Customer"
-            required
-            options={customers.options}
-            placeholder="Select a customer…"
-            disabled={lockCustomer}
-            hint={lockCustomer ? "The customer can't be changed on an existing invoice." : undefined}
-            error={errors.customerId}
-          />
-          <FormDatePicker
-            register={register}
-            name="dueDate"
-            label="Due Date"
-            error={errors.dueDate}
-          />
+        <CardContent className="space-y-4">
+          {noCustomers && !lockCustomer && (
+            <div className="flex flex-col gap-2 rounded-lg border border-dashed p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-muted-foreground">
+                You have no customers yet — add one before billing.
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => router.push("/customers/new")}
+              >
+                <UserPlus /> New Customer
+              </Button>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormSelect
+              control={control}
+              name="customerId"
+              label="Customer"
+              required
+              rules={{ required: "Select a customer" }}
+              options={customers.options}
+              placeholder={noCustomers ? "No customers yet" : "Select a customer…"}
+              disabled={lockCustomer}
+              hint={
+                lockCustomer ? "The customer can't be changed on an existing invoice." : undefined
+              }
+              error={errors.customerId}
+            />
+            <FormDatePicker
+              register={register}
+              name="dueDate"
+              label="Due Date"
+              error={errors.dueDate}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -129,8 +154,14 @@ export default function InvoiceForm({
                 {i === 0 && <Label>Description</Label>}
                 <Input
                   placeholder="e.g. CRM implementation"
-                  {...register(`items.${i}.description`, { required: true })}
+                  aria-invalid={!!errors.items?.[i]?.description}
+                  {...register(`items.${i}.description`, { required: "Required" })}
                 />
+                {errors.items?.[i]?.description && (
+                  <p className="text-xs font-medium text-destructive">
+                    {errors.items[i].description.message}
+                  </p>
+                )}
               </div>
               <div className="col-span-3 space-y-1.5 sm:col-span-2">
                 {i === 0 && <Label>Qty</Label>}
@@ -147,8 +178,17 @@ export default function InvoiceForm({
                   min={0}
                   step="0.01"
                   placeholder="0.00"
-                  {...register(`items.${i}.unitPrice`, { required: true })}
+                  aria-invalid={!!errors.items?.[i]?.unitPrice}
+                  {...register(`items.${i}.unitPrice`, {
+                    required: "Required",
+                    validate: (v) => Number(v) > 0 || "Must be > 0",
+                  })}
                 />
+                {errors.items?.[i]?.unitPrice && (
+                  <p className="text-xs font-medium text-destructive">
+                    {errors.items[i].unitPrice.message}
+                  </p>
+                )}
               </div>
               <div className="col-span-3 space-y-1.5 sm:col-span-2">
                 {i === 0 && <Label>Tax %</Label>}
@@ -191,6 +231,22 @@ export default function InvoiceForm({
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FormTextarea
+            register={register}
+            name="notes"
+            label=""
+            rows={3}
+            placeholder="Payment terms, bank details, or a thank-you note — shown on the invoice."
+            error={errors.notes}
+          />
         </CardContent>
       </Card>
 
