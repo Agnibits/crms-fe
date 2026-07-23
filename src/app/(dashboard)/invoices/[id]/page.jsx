@@ -8,6 +8,7 @@ import {
   HandCoins,
   Loader2,
   Mail,
+  Pencil,
   Printer,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
@@ -31,6 +32,7 @@ import { useInvoicePdf } from "@/features/invoices/useInvoicePdf";
 import { invoiceHooks } from "@/features/invoices/hooks";
 import RecordPaymentDialog from "@/features/payments/RecordPaymentDialog";
 import { INVOICE_STATUSES, PAYMENT_METHODS, findOption } from "@/constants/options";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { formatCurrency, formatDate } from "@/utils/format";
 
 export default function InvoiceDetailPage() {
@@ -40,6 +42,7 @@ export default function InvoiceDetailPage() {
 
   // /invoices/:id/detail carries customer + items + payments in one response.
   const { data: invoice, isPending, error, refetch } = invoiceHooks.useDetail(id);
+  const { company } = useMyCompany();
   const { downloadPdf, isGenerating } = useInvoicePdf();
 
   const sendInvoice = invoiceHooks.useAction({
@@ -80,6 +83,11 @@ export default function InvoiceDetailPage() {
             <Button variant="ghost" onClick={() => router.push("/invoices")}>
               <ArrowLeft /> Back
             </Button>
+            {invoice?.status === "draft" && (
+              <Button variant="outline" onClick={() => router.push(`/invoices/${id}/edit`)}>
+                <Pencil /> Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               disabled={isPending || isGenerating}
@@ -131,7 +139,7 @@ export default function InvoiceDetailPage() {
                 </div>
               </CardContent>
             ) : (
-              <InvoiceDocument invoice={invoice} />
+              <InvoiceDocument invoice={invoice} company={company} />
             )}
           </Card>
         </TabsContent>
@@ -172,10 +180,11 @@ export default function InvoiceDetailPage() {
                     {payments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium tabular-nums">
-                          {payment.number ?? "—"}
+                          {payment.paymentNumber ?? payment.number ?? "—"}
                         </TableCell>
                         <TableCell>
-                          {findOption(PAYMENT_METHODS, payment.method)?.label ??
+                          {findOption(PAYMENT_METHODS, String(payment.method ?? "").toLowerCase())
+                            ?.label ??
                             payment.method ??
                             "—"}
                         </TableCell>

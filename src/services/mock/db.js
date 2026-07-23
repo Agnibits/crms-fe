@@ -104,7 +104,7 @@ const contacts = Array.from({ length: 70 }, (_, i) => {
 });
 
 /* ── Leads / Opportunities / Deals ────────────────────────────── */
-const LEAD_STAGES = ["new","contacted","qualified","proposal","negotiation","won","lost"];
+const LEAD_STAGES = ["new","contacted","qualified","unqualified","converted","lost"];
 const leads = Array.from({ length: 80 }, (_, i) => {
   const name = person();
   const company = pick(COMPANIES);
@@ -117,7 +117,7 @@ const leads = Array.from({ length: 80 }, (_, i) => {
     stage: pick(LEAD_STAGES),
     source: pick(["website","referral","social","email","cold_call","event","other"]),
     value: money(2_000, 250_000),
-    score: int(10, 98),
+    rating: pick(["hot","warm","cold"]),
     ownerId: owner().id,
     city: pick(CITIES),
     notes: "",

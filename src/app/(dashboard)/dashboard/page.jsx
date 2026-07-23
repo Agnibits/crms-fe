@@ -281,7 +281,11 @@ export default function DashboardPage() {
               />
             ) : (
               (activities.data || []).slice(0, 7).map((activity) => {
-                const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
+                // Backend sends UPPERCASE types and a nested user object.
+                const Icon = ACTIVITY_ICONS[String(activity.type).toLowerCase()] || StickyNote;
+                const who =
+                  activity.userName ||
+                  [activity.user?.firstName, activity.user?.lastName].filter(Boolean).join(" ");
                 return (
                   <div
                     key={activity.id}
@@ -295,7 +299,7 @@ export default function DashboardPage() {
                         {activity.subject}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {activity.userName} ·{" "}
+                        {who ? `${who} · ` : ""}
                         {formatRelative(activity.createdAt)}
                       </p>
                     </div>

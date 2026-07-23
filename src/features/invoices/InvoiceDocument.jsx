@@ -1,8 +1,9 @@
 "use client";
 
-import { Flame } from "lucide-react";
+import { Building2 } from "lucide-react";
 import StatusBadge from "@/components/common/StatusBadge";
 import { INVOICE_STATUSES, findOption } from "@/constants/options";
+import { absoluteUploadUrl } from "@/services/normalize";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
@@ -18,11 +19,18 @@ const STAMP_STYLES = {
 /**
  * Print-friendly invoice document. Wrap in a Card for on-screen preview;
  * `window.print()` prints only this area (see the print CSS below).
+ * `company` is the ISSUING (tenant) company — the letterhead is theirs,
+ * never the platform's.
  */
-export default function InvoiceDocument({ invoice }) {
+export default function InvoiceDocument({ invoice, company }) {
   if (!invoice) return null;
 
   const statusLabel = findOption(INVOICE_STATUSES, invoice.status)?.label ?? invoice.status;
+  const sellerAddress = [company?.addressLine, company?.city, company?.country]
+    .filter(Boolean)
+    .join(", ");
+  const sellerContact = [company?.email, company?.phone].filter(Boolean).join(" · ");
+  const logoUrl = absoluteUploadUrl(company?.logoUrl);
 
   return (
     <div id="invoice-print-area" className="relative bg-card p-6 sm:p-10">
@@ -38,29 +46,36 @@ export default function InvoiceDocument({ invoice }) {
         }
       `}</style>
 
-      {/* Status stamp */}
+      {/* Status stamp — below the header block so it never covers the title */}
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute right-6 top-6 rotate-6 select-none rounded-md border-2 px-3 py-1 text-sm font-bold uppercase tracking-[0.2em] opacity-70 sm:right-10 sm:top-10",
+          "pointer-events-none absolute right-6 top-28 rotate-6 select-none rounded-md border-2 px-3 py-1 text-sm font-bold uppercase tracking-[0.2em] opacity-70 sm:right-10 sm:top-32",
           STAMP_STYLES[invoice.status] ?? STAMP_STYLES.draft
         )}
       >
         {statusLabel}
       </div>
 
-      {/* Brand header */}
+      {/* Letterhead: the issuing (tenant) company */}
       <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
-            <Flame className="h-6 w-6 text-primary" />
-          </div>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={`${company?.name ?? "Company"} logo`}
+              className="h-11 w-11 rounded-xl object-contain"
+            />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
+              <Building2 className="h-6 w-6 text-primary" />
+            </div>
+          )}
           <div>
-            <p className="text-lg font-bold tracking-tight">AgniBits CRM</p>
-            <p className="text-xs text-muted-foreground">
-              4th Floor, Tech Park One, Pune, India
-            </p>
-            <p className="text-xs text-muted-foreground">hello@agnibits.com · +91 9876543210</p>
+            <p className="text-lg font-bold tracking-tight">{company?.name ?? "—"}</p>
+            {sellerAddress && <p className="text-xs text-muted-foreground">{sellerAddress}</p>}
+            {sellerContact && <p className="text-xs text-muted-foreground">{sellerContact}</p>}
           </div>
         </div>
         <div className="sm:text-right">
@@ -100,6 +115,7 @@ export default function InvoiceDocument({ invoice }) {
               <th className="px-4 py-2.5 font-medium">Item</th>
               <th className="px-4 py-2.5 text-right font-medium">Qty</th>
               <th className="px-4 py-2.5 text-right font-medium">Unit Price</th>
+              <th className="px-4 py-2.5 text-right font-medium">Tax %</th>
               <th className="px-4 py-2.5 text-right font-medium">Amount</th>
             </tr>
           </thead>
@@ -109,12 +125,23 @@ export default function InvoiceDocument({ invoice }) {
                 <td className="px-4 py-2.5 font-medium">
                   {item.description || item.product?.name || "—"}
                 </td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{item.quantity}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums">
+                  {item.quantity}
+                  {item.unit ? ` ${item.unit}` : ""}
+                </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
                   {formatCurrency(item.unitPrice, invoice.currency)}
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
-                  {formatCurrency(item.total, invoice.currency)}
+                  {Number(item.taxRate ?? 0) > 0 ? `${Number(item.taxRate)}%` : "—"}
+                </td>
+                {/* Line amount is pre-tax; the tax summary lives in the totals block. */}
+                <td className="px-4 py-2.5 text-right tabular-nums">
+                  {formatCurrency(
+                    (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) -
+                      (Number(item.discount) || 0),
+                    invoice.currency
+                  )}
                 </td>
               </tr>
             ))}
@@ -152,13 +179,33 @@ export default function InvoiceDocument({ invoice }) {
         </dl>
       </div>
 
-      {/* Footer */}
+      {/* Notes */}
+      {invoice.notes && (
+        <div className="mt-6 rounded-lg border bg-muted/40 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Notes
+          </p>
+          <p className="mt-1 whitespace-pre-wrap text-sm">{invoice.notes}</p>
+        </div>
+      )}
+
+      {/* Footer — the payment line must match the invoice's state */}
       <div className="mt-8 border-t pt-4 text-center text-xs text-muted-foreground">
-        <p>
-          Payment due by <span className="font-medium">{formatDate(invoice.dueDate)}</span>. Thank
-          you for your business!
-        </p>
-        <p className="mt-1">AgniBits CRM · agnibits.com</p>
+        {invoice.status === "paid" ? (
+          <p>Paid in full. Thank you for your business!</p>
+        ) : invoice.status === "void" ? (
+          <p>This invoice has been cancelled.</p>
+        ) : (
+          <p>
+            Payment due by <span className="font-medium">{formatDate(invoice.dueDate)}</span>.
+            Thank you for your business!
+          </p>
+        )}
+        {(company?.name || company?.website) && (
+          <p className="mt-1">
+            {[company?.name, company?.website].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
     </div>
   );

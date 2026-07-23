@@ -192,12 +192,21 @@ export default function DataTable({
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort();
                     const sorted = header.column.getIsSorted();
+                    // meta.align="right" keeps numeric headers above their values.
+                    const alignRight = header.column.columnDef.meta?.align === "right";
                     return (
-                      <TableHead key={header.id} style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}>
+                      <TableHead
+                        key={header.id}
+                        style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                        className={cn(alignRight && "text-right")}
+                      >
                         {header.isPlaceholder ? null : canSort ? (
                           <button
                             type="button"
-                            className="inline-flex items-center gap-1 hover:text-foreground cursor-pointer"
+                            className={cn(
+                              "inline-flex items-center gap-1 hover:text-foreground cursor-pointer",
+                              alignRight && "w-full justify-end"
+                            )}
                             onClick={header.column.getToggleSortingHandler()}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
@@ -244,7 +253,10 @@ export default function DataTable({
                     onClick={() => onRowClick?.(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        className={cn(cell.column.columnDef.meta?.align === "right" && "text-right")}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}

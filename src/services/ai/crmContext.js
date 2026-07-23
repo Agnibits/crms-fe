@@ -50,10 +50,11 @@ export function buildCrmContext() {
     .slice(0, 6)
     .map((t) => `${t.title} — ${t.priority}, due ${t.dueDate.slice(0, 10)}`);
 
+  const ratingRank = { hot: 0, warm: 1, cold: 2 };
   const hotLeads = [...db.leads]
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => (ratingRank[a.rating] ?? 3) - (ratingRank[b.rating] ?? 3) || (b.value || 0) - (a.value || 0))
     .slice(0, 6)
-    .map((l) => `${l.name} (${l.company}) — score ${l.score}, ${labelOf(LEAD_STAGES, l.stage)}, ${money(l.value)}`);
+    .map((l) => `${l.name} (${l.company}) — ${l.rating || "unrated"}, ${labelOf(LEAD_STAGES, l.stage)}, ${money(l.value)}`);
 
   const overdueInvoices = db.invoices.filter(
     (i) => i.balance > 0 && new Date(i.dueDate).getTime() < now
@@ -80,7 +81,7 @@ ${closingSoon.length ? closingSoon.map((s) => "- " + s).join("\n") : "- none"}
 Top open deals by value:
 ${topOpenDeals.map((s) => "- " + s).join("\n")}
 
-Hottest leads (by score):
+Hottest leads (by rating):
 ${hotLeads.map((s) => "- " + s).join("\n")}
 
 Upcoming tasks:

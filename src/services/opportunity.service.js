@@ -16,6 +16,12 @@ async function defaultPipeline() {
   if (!_pipeline) _pipeline = unwrap(await api.get("/pipelines/default"));
   return _pipeline;
 }
+
+/** Default pipeline (with stages) — shared with the lead Convert flow. */
+export function getDefaultPipeline() {
+  return defaultPipeline();
+}
+
 function fromBackend(o) {
   if (!o || typeof o !== "object") return o;
   return {
@@ -84,4 +90,12 @@ export const opportunityService = {
   },
   create: async (payload) => base.create(await toBackend(payload)),
   update: async (id, payload) => base.update(id, await toBackend(payload)),
+  /** Move to another stage — backend syncs probability and WON/LOST status. */
+  moveStage: async (id, stageId) => {
+    const res = await api.patch(`${ENDPOINTS.opportunities}/${id}/move-stage`, { stageId });
+    return unwrap(res);
+  },
+  win: async (id) => unwrap(await api.patch(`${ENDPOINTS.opportunities}/${id}/win`)),
+  lose: async (id, lostReason) =>
+    unwrap(await api.patch(`${ENDPOINTS.opportunities}/${id}/lose`, lostReason ? { lostReason } : {})),
 };

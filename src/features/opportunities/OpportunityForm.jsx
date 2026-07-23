@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,26 +11,29 @@ import {
   FormNumber,
   FormSelect,
 } from "@/components/forms/fields";
-import { DEAL_STAGES } from "@/constants/options";
 import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useCustomerOptions } from "@/features/contacts/hooks";
+import { useStageOptions } from "./useStageOptions";
 
 /** Shared create/edit opportunity form. */
 export default function OpportunityForm({
   defaultValues,
   onSubmit,
   submitting = false,
-  submitLabel = "Save Opportunity",
+  submitLabel = "Save Deal",
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
   const customers = useCustomerOptions();
+  const { stageOptions } = useStageOptions();
 
   const {
     register,
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(opportunitySchema),
@@ -37,9 +41,8 @@ export default function OpportunityForm({
       name: "",
       customerId: "",
       customerName: "",
-      stage: "qualification",
+      stage: "",
       amount: "",
-      probability: "",
       expectedCloseDate: "",
       ownerId: "",
       ...defaultValues,
@@ -49,6 +52,15 @@ export default function OpportunityForm({
         : {}),
     },
   });
+
+  // New deals start at the first pipeline stage; probability follows the stage.
+  const selectedStage = watch("stage");
+  useEffect(() => {
+    if (!selectedStage && stageOptions.length) {
+      setValue("stage", stageOptions[0].value);
+    }
+  }, [selectedStage, stageOptions, setValue]);
+  const stageProbability = stageOptions.find((s) => s.value === selectedStage)?.probability;
 
   const submit = (values) => {
     const customerName =
@@ -62,13 +74,13 @@ export default function OpportunityForm({
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Opportunity Details</CardTitle>
+          <CardTitle className="text-base">Deal Details</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <FormInput
             register={register}
             name="name"
-            label="Opportunity Name"
+            label="Deal Name"
             placeholder="e.g. Acme Corp — Expansion"
             required
             error={errors.name}
@@ -89,27 +101,22 @@ export default function OpportunityForm({
             name="stage"
             label="Stage"
             required
-            options={DEAL_STAGES}
+            options={stageOptions}
+            hint={
+              stageProbability !== undefined
+                ? `Win probability: ${stageProbability}% (set by the stage)`
+                : undefined
+            }
             error={errors.stage}
           />
           <FormNumber
             register={register}
             name="amount"
             label="Amount"
-            placeholder="0"
+            placeholder="e.g. 150,000"
             required
             min={0}
             error={errors.amount}
-          />
-          <FormNumber
-            register={register}
-            name="probability"
-            label="Probability (%)"
-            placeholder="0–100"
-            required
-            min={0}
-            max={100}
-            error={errors.probability}
           />
           <FormDatePicker
             register={register}

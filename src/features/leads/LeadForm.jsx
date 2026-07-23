@@ -1,17 +1,20 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  FormAutocomplete,
   FormInput,
   FormNumber,
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATING } from "@/constants/options";
+import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
+import { leadService } from "@/services/lead.service";
 import { useUsersOptions } from "./useUsersOptions";
 
 /**
@@ -26,6 +29,13 @@ export default function LeadForm({
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
+
+  // Cities this company has already used — real data, not a hardcoded list.
+  const { data: citySuggestions = [] } = useQuery({
+    queryKey: ["leads", "cities"],
+    queryFn: ({ signal }) => leadService.cities({ signal }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const {
     register,
@@ -42,7 +52,7 @@ export default function LeadForm({
       stage: "new",
       source: "website",
       value: "",
-      score: "",
+      rating: "warm",
       ownerId: "",
       city: "",
       notes: "",
@@ -69,8 +79,7 @@ export default function LeadForm({
             register={register}
             name="company"
             label="Company"
-            placeholder="e.g. Acme Corp"
-            // required
+            placeholder="e.g. Acme Corp (optional)"
             error={errors.company}
           />
           <FormInput
@@ -79,14 +88,14 @@ export default function LeadForm({
             type="email"
             label="Email"
             placeholder="name@company.com"
-            // required
+            hint="Email or phone — at least one is required."
             error={errors.email}
           />
           <FormInput
             register={register}
             name="phone"
             label="Phone"
-            placeholder="+91 98765 43210"
+            placeholder="+977 98XXXXXXXX"
             error={errors.phone}
           />
           <FormSelect
@@ -94,7 +103,7 @@ export default function LeadForm({
             name="stage"
             label="Stage"
             required
-            options={LEAD_STAGES}
+            options={LEAD_STAGES_PICKABLE}
             error={errors.stage}
           />
           <FormSelect
@@ -109,30 +118,33 @@ export default function LeadForm({
             register={register}
             name="value"
             label="Estimated Value"
-            placeholder="e.g. 50,000"
+            placeholder="e.g. 50,000 (optional)"
+            min={0}
             error={errors.value}
           />
           <FormSelect
             control={control}
             name="rating"
             label="Rating"
-            placeholder="Rate your experience"
-            options={LEAD_RATING}
-            error={errors.score}
+            options={LEAD_RATINGS}
+            hint="Gut feel: how hot is this lead right now?"
+            error={errors.rating}
           />
           <FormSelect
             control={control}
             name="ownerId"
             label="Owner"
             options={userOptions}
-            placeholder="Assign an owner…"
+            placeholder="Defaults to you"
+            hint="Who follows up on this lead. Left empty = assigned to you."
             error={errors.ownerId}
           />
-          <FormInput
-            register={register}
+          <FormAutocomplete
+            control={control}
             name="city"
             label="City"
-            placeholder="e.g. Pune"
+            placeholder="e.g. Kathmandu"
+            suggestions={citySuggestions}
             error={errors.city}
           />
           <FormTextarea

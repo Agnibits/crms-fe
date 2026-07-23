@@ -1,29 +1,41 @@
 /** Shared enumerations for statuses, stages, priorities and badge colors. */
 
+// Lead lifecycle = qualification only (mirrors the backend LeadStatus enum).
+// Proposal/negotiation/won live on the deal pipeline — a qualified lead is
+// converted into a deal via the Convert flow instead of being "won" here.
 export const LEAD_STAGES = [
   { value: "new", label: "New", color: "blue" },
   { value: "contacted", label: "Contacted", color: "cyan" },
   { value: "qualified", label: "Qualified", color: "violet" },
-  { value: "unqualified", label: "Unqualified", color: "violet" },
-  // { value: "proposal", label: "Proposal", color: "amber" },
-  // { value: "negotiation", label: "Negotiation", color: "orange" },
-  // { value: "won", label: "Won", color: "green" },
+  { value: "unqualified", label: "Unqualified", color: "gray" },
+  { value: "converted", label: "Converted", color: "green" },
   { value: "lost", label: "Lost", color: "red" },
 ];
 
-export const LEAD_RATING = [
-  { value: "HOT", label: "Hot", color: "blue" },
-  { value: "WARM", label: "Warm", color: "cyan" },
-  { value: "COLD", label: "Cold", color: "violet" }
-  
+// Stages a user may set by hand — "converted" only happens via the Convert flow.
+export const LEAD_STAGES_PICKABLE = LEAD_STAGES.filter((s) => s.value !== "converted");
+
+// Gut-feel lead temperature (backend LeadRating). Replaces the old manual
+// 0–100 score input — real scoring should be computed, not typed.
+export const LEAD_RATINGS = [
+  { value: "hot", label: "Hot", color: "red" },
+  { value: "warm", label: "Warm", color: "amber" },
+  { value: "cold", label: "Cold", color: "cyan" },
 ];
 
+// Ordered roughly by how often each channel shows up in this market —
+// paid (advertisement) and inbound (incoming_call, walk_in) channels are kept
+// separate from their organic/outbound cousins so channel ROI stays visible.
 export const LEAD_SOURCES = [
   { value: "website", label: "Website" },
+  { value: "whatsapp", label: "WhatsApp" },
   { value: "referral", label: "Referral" },
   { value: "social", label: "Social Media" },
+  { value: "advertisement", label: "Advertisement" },
   { value: "email", label: "Email Campaign" },
   { value: "cold_call", label: "Cold Call" },
+  { value: "incoming_call", label: "Incoming Call" },
+  { value: "walk_in", label: "Walk-in" },
   { value: "event", label: "Event" },
   { value: "other", label: "Other" },
 ];
@@ -42,7 +54,12 @@ export const TASK_STATUSES = [
   { value: "in_progress", label: "In Progress", color: "blue" },
   { value: "in_review", label: "In Review", color: "amber" },
   { value: "done", label: "Done", color: "green" },
+  { value: "cancelled", label: "Cancelled", color: "red" },
 ];
+
+// Kanban columns — cancelled is a terminal state shown via badge/filter, not a
+// board column you drag into.
+export const TASK_BOARD_STATUSES = TASK_STATUSES.filter((s) => s.value !== "cancelled");
 
 export const PRIORITIES = [
   { value: "low", label: "Low", color: "gray" },

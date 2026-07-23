@@ -2,13 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AlertTriangle,
-  Download,
-  FileText,
-  Wallet,
-  TrendingUp,
-} from "lucide-react";
+import { AlertTriangle, Download, FileText, Plus, Wallet, TrendingUp } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -94,31 +88,27 @@ export default function InvoicesPage() {
       },
       {
         accessorKey: "total",
-        header: () => <span className="block text-right">Total</span>,
+        header: "Total",
+        meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="block text-start tabular-nums">
-            {formatCurrency(row.original.total)}
-          </span>
+          <span className="tabular-nums">{formatCurrency(row.original.total)}</span>
         ),
       },
       {
         accessorKey: "amountPaid",
-        header: () => <span className="block text-right">Paid</span>,
+        header: "Paid",
+        meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="block text-start tabular-nums">
-            {formatCurrency(row.original.amountPaid)}
-          </span>
+          <span className="tabular-nums">{formatCurrency(row.original.amountPaid)}</span>
         ),
       },
       {
         accessorKey: "balance",
-        header: () => <span className="block text-right">Balance</span>,
+        header: "Balance",
+        meta: { align: "right" },
         cell: ({ row }) => (
           <span
-            className={cn(
-              "block text-start tabular-nums",
-              (row.original.balance ?? 0) > 0 && "font-medium",
-            )}
+            className={cn("tabular-nums", (row.original.balance ?? 0) > 0 && "font-medium")}
           >
             {formatCurrency(row.original.balance)}
           </span>
@@ -147,6 +137,11 @@ export default function InvoicesPage() {
       <PageHeader
         title="Invoices"
         description="Track billing, collections and outstanding balances."
+        actions={
+          <Button onClick={() => router.push("/invoices/new")}>
+            <Plus /> Add Invoice
+          </Button>
+        }
       />
 
       {/* Summary cards */}
