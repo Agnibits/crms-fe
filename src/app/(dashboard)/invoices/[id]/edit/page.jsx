@@ -55,6 +55,7 @@ export default function EditInvoicePage() {
           items: (invoice.items ?? []).map((it) => ({
             description: it.description ?? "",
             quantity: Number(it.quantity) || 1,
+            unit: it.unit ?? "pcs",
             unitPrice: Number(it.unitPrice) || 0,
             taxRate: it.taxRate !== null && it.taxRate !== undefined ? Number(it.taxRate) : "",
           })),

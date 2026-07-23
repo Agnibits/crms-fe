@@ -18,7 +18,14 @@ function dateInDays(days) {
   return d.toISOString().slice(0, 10);
 }
 
-const EMPTY_ITEM = { description: "", quantity: 1, unitPrice: "", taxRate: "" };
+const EMPTY_ITEM = { description: "", quantity: 1, unit: "pcs", unitPrice: "", taxRate: "" };
+
+// Common units of measure — free text still allowed via the datalist.
+const UNIT_OPTIONS = [
+  "pcs", "unit", "dozen", "carton", "box", "pack", "set",
+  "kg", "gram", "litre", "metre", "sq.ft",
+  "hour", "day", "month", "project", "service", "license",
+];
 
 /**
  * Standalone invoice form: customer, due date and line items.
@@ -77,6 +84,7 @@ export default function InvoiceForm({
         .map((it) => ({
           description: it.description.trim(),
           quantity: Number(it.quantity) || 1,
+          unit: it.unit?.trim() || "pcs",
           unitPrice: Number(it.unitPrice),
           ...(it.taxRate !== "" && it.taxRate !== undefined
             ? { taxRate: Number(it.taxRate) }
@@ -145,12 +153,17 @@ export default function InvoiceForm({
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          <datalist id="unit-options">
+            {UNIT_OPTIONS.map((u) => (
+              <option key={u} value={u} />
+            ))}
+          </datalist>
           {fields.map((field, i) => (
             <div
               key={field.id}
               className="grid grid-cols-12 items-end gap-2 rounded-lg border p-3"
             >
-              <div className="col-span-12 space-y-1.5 sm:col-span-5">
+              <div className="col-span-12 space-y-1.5 sm:col-span-4">
                 {i === 0 && <Label>Description</Label>}
                 <Input
                   placeholder="e.g. CRM implementation"
@@ -163,12 +176,16 @@ export default function InvoiceForm({
                   </p>
                 )}
               </div>
-              <div className="col-span-3 space-y-1.5 sm:col-span-2">
+              <div className="col-span-3 space-y-1.5 sm:col-span-1">
                 {i === 0 && <Label>Qty</Label>}
+                <Input type="number" min={1} {...register(`items.${i}.quantity`)} />
+              </div>
+              <div className="col-span-4 space-y-1.5 sm:col-span-2">
+                {i === 0 && <Label>Unit</Label>}
                 <Input
-                  type="number"
-                  min={1}
-                  {...register(`items.${i}.quantity`)}
+                  list="unit-options"
+                  placeholder="pcs"
+                  {...register(`items.${i}.unit`)}
                 />
               </div>
               <div className="col-span-5 space-y-1.5 sm:col-span-2">

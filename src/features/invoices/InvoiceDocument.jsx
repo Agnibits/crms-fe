@@ -125,7 +125,10 @@ export default function InvoiceDocument({ invoice, company }) {
                 <td className="px-4 py-2.5 font-medium">
                   {item.description || item.product?.name || "—"}
                 </td>
-                <td className="px-4 py-2.5 text-right tabular-nums">{item.quantity}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums">
+                  {item.quantity}
+                  {item.unit ? ` ${item.unit}` : ""}
+                </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
                   {formatCurrency(item.unitPrice, invoice.currency)}
                 </td>
