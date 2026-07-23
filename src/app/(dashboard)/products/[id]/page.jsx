@@ -81,12 +81,16 @@ export default function ProductDetailPage() {
 
   const margin =
     product.price > 0 ? ((product.price - product.cost) / product.price) * 100 : 0;
+  const isService = product.type === "SERVICE";
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={product.name}
-        description={`SKU ${product.sku} · ${product.categoryName || "Uncategorized"}`}
+        description={[
+          isService ? "Service" : product.sku ? `SKU ${product.sku}` : "Goods",
+          product.categoryName || "Uncategorized",
+        ].join(" · ")}
         actions={
           <>
             <Button variant="outline" onClick={() => router.push("/products")}>
@@ -131,6 +135,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Badge variant="outline">{isService ? "Service" : "Goods"}</Badge>
             <Badge variant="outline">{product.categoryName || "Uncategorized"}</Badge>
             <StatusBadge value={product.status} options={PRODUCT_STATUSES} />
           </div>
@@ -147,18 +152,21 @@ export default function ProductDetailPage() {
             <Stat label="Tax rate" value={formatPercent(product.taxRate, 0)} />
           </div>
 
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Inventory</p>
-              <StockStatusBadge status={product.stockStatus} />
+          {/* Services aren't stocked — inventory only applies to goods. */}
+          {!isService && (
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Inventory</p>
+                <StockStatusBadge status={product.stockStatus} />
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Stat label="On hand" value={formatNumber(product.stock)} />
+                <Stat label="Reserved" value={formatNumber(product.reservedStock ?? 0)} />
+                <Stat label="Available" value={formatNumber(product.availableStock ?? product.stock)} />
+                <Stat label="Reorder level" value={formatNumber(product.reorderLevel ?? 0)} />
+              </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Stat label="On hand" value={formatNumber(product.stock)} />
-              <Stat label="Reserved" value={formatNumber(product.reservedStock ?? 0)} />
-              <Stat label="Available" value={formatNumber(product.availableStock ?? product.stock)} />
-              <Stat label="Reorder level" value={formatNumber(product.reorderLevel ?? 0)} />
-            </div>
-          </div>
+          )}
 
           {product.description && (
             <>
