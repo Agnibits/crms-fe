@@ -289,9 +289,9 @@ export default function CustomerDetailPage() {
                 <DefItem label="Employees">
                   {customer.employees > 0 ? formatNumber(customer.employees) : "—"}
                 </DefItem>
-                <DefItem label="Tags">
+                {/* <DefItem label="Tags">
                   {customer.tags?.length ? customer.tags.join(", ") : "—"}
-                </DefItem>
+                </DefItem> */}
                 <DefItem label="Created">{formatDate(customer.createdAt)}</DefItem>
                 <DefItem label="Last updated">{formatDate(customer.updatedAt)}</DefItem>
               </dl>
@@ -464,7 +464,7 @@ export default function CustomerDetailPage() {
                     <TableBody>
                       {items.map((invoice) => (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">{invoice.number}</TableCell>
+                          <TableCell className="font-medium">{invoice?.invoiceNumber}</TableCell>
                           <TableCell>
                             <StatusBadge value={invoice.status} options={INVOICE_STATUSES} />
                           </TableCell>

@@ -4,10 +4,18 @@ export const LEAD_STAGES = [
   { value: "new", label: "New", color: "blue" },
   { value: "contacted", label: "Contacted", color: "cyan" },
   { value: "qualified", label: "Qualified", color: "violet" },
-  { value: "proposal", label: "Proposal", color: "amber" },
-  { value: "negotiation", label: "Negotiation", color: "orange" },
-  { value: "won", label: "Won", color: "green" },
+  { value: "unqualified", label: "Unqualified", color: "violet" },
+  // { value: "proposal", label: "Proposal", color: "amber" },
+  // { value: "negotiation", label: "Negotiation", color: "orange" },
+  // { value: "won", label: "Won", color: "green" },
   { value: "lost", label: "Lost", color: "red" },
+];
+
+export const LEAD_RATING = [
+  { value: "HOT", label: "Hot", color: "blue" },
+  { value: "WARM", label: "Warm", color: "cyan" },
+  { value: "COLD", label: "Cold", color: "violet" }
+  
 ];
 
 export const LEAD_SOURCES = [
@@ -21,12 +29,12 @@ export const LEAD_SOURCES = [
 ];
 
 export const DEAL_STAGES = [
-  { value: "qualification", label: "Qualification", color: "blue" },
-  { value: "needs_analysis", label: "Needs Analysis", color: "cyan" },
-  { value: "proposal", label: "Proposal", color: "violet" },
-  { value: "negotiation", label: "Negotiation", color: "amber" },
-  { value: "closed_won", label: "Closed Won", color: "green" },
-  { value: "closed_lost", label: "Closed Lost", color: "red" },
+  { value: "New", label: "New", color: "blue" },
+  { value: "Qualified", label: "Qualification", color: "cyan" },
+  { value: "Proposal", label: "Proposal", color: "violet" },
+  { value: "Negotiation", label: "Negotiation", color: "amber" },
+  { value: "Closed Won", label: "Closed Won", color: "green" },
+  { value: "Closed Lost", label: "Closed Lost", color: "red" },
 ];
 
 export const TASK_STATUSES = [

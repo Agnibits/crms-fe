@@ -10,7 +10,7 @@ import {
   FormSelect,
   FormTextarea,
 } from "@/components/forms/fields";
-import { LEAD_STAGES, LEAD_SOURCES } from "@/constants/options";
+import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATING } from "@/constants/options";
 import { leadSchema } from "@/validations/lead.schema";
 import { useUsersOptions } from "./useUsersOptions";
 
@@ -70,7 +70,7 @@ export default function LeadForm({
             name="company"
             label="Company"
             placeholder="e.g. Acme Corp"
-            required
+            // required
             error={errors.company}
           />
           <FormInput
@@ -79,7 +79,7 @@ export default function LeadForm({
             type="email"
             label="Email"
             placeholder="name@company.com"
-            required
+            // required
             error={errors.email}
           />
           <FormInput
@@ -109,19 +109,15 @@ export default function LeadForm({
             register={register}
             name="value"
             label="Estimated Value"
-            placeholder="0"
-            required
-            min={0}
+            placeholder="e.g. 50,000"
             error={errors.value}
           />
-          <FormNumber
-            register={register}
-            name="score"
-            label="Lead Score"
-            placeholder="0–100"
-            min={0}
-            max={100}
-            hint="How likely this lead is to convert (0–100)."
+          <FormSelect
+            control={control}
+            name="rating"
+            label="Rating"
+            placeholder="Rate your experience"
+            options={LEAD_RATING}
             error={errors.score}
           />
           <FormSelect

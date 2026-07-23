@@ -64,7 +64,7 @@ import {
 } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
-const OPEN_STAGES = ["qualification", "needs_analysis", "proposal", "negotiation"];
+const OPEN_STAGES = ["New", "Qualification", "Proposal", "Negotiation"];
 
 /* ── Pipeline board (drag & drop) ─────────────────────────────── */
 
@@ -222,7 +222,7 @@ export default function OpportunitiesPage() {
 
   const forecast = useMemo(() => {
     const open = allItems.filter((o) => OPEN_STAGES.includes(o.stage));
-    const totalPipeline = open.reduce((acc, o) => acc + (o.amount || 0), 0);
+    const totalPipeline = open.reduce((acc, o) => acc + Number(o.amount || 0), 0);
     const weighted = open.reduce(
       (acc, o) => acc + ((o.amount || 0) * (o.probability || 0)) / 100,
       0
@@ -232,11 +232,11 @@ export default function OpportunitiesPage() {
     const now = new Date();
     const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
     const closedThisQuarter = allItems.filter((o) => {
-      if (!["closed_won", "closed_lost"].includes(o.stage)) return false;
+      if (!["Closed Won", "Closed Lost"].includes(o.stage)) return false;
       const date = new Date(o.expectedCloseDate);
       return date >= quarterStart && date <= now;
     });
-    const won = closedThisQuarter.filter((o) => o.stage === "closed_won").length;
+    const won = closedThisQuarter.filter((o) => o.stage === "Closed Won").length;
     const winRate =
       closedThisQuarter.length > 0 ? (won / closedThisQuarter.length) * 100 : 0;
 
@@ -251,11 +251,16 @@ export default function OpportunitiesPage() {
         header: "Opportunity",
         cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
-      { accessorKey: "customerName", header: "Customer" },
       {
-        accessorKey: "stage",
+        id: "customer.name",
+        accessorKey: "customerName",
+        header: "Customer",
+      },
+      {
+        id: "stage",
+        accessorKey: "stage.name",
         header: "Stage",
-        cell: ({ row }) => <StatusBadge value={row.original.stage} options={DEAL_STAGES} />,
+        cell: ({ row }) => <StatusBadge value={row.original.stage ?? "All"} options={DEAL_STAGES} />,
       },
       {
         accessorKey: "amount",
