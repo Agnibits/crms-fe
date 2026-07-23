@@ -19,6 +19,11 @@ const STATUS_OPTIONS = [
   { value: "archived", label: "Archived" },
 ];
 
+const TYPE_OPTIONS = [
+  { value: "GOODS", label: "Goods (physical, tracked in stock)" },
+  { value: "SERVICE", label: "Service (no stock)" },
+];
+
 /**
  * Shared create/edit product form.
  *   <ProductForm defaultValues={product} onSubmit={fn} submitting={bool} submitLabel="Save" />
@@ -34,25 +39,30 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
   const {
     register,
     control,
+    watch,
     handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: defaultValues?.name ?? "",
+      type: defaultValues?.type ?? "GOODS",
       sku: defaultValues?.sku ?? "",
       categoryId: defaultValues?.categoryId ?? "",
-      price: defaultValues?.price ?? 0,
-      cost: defaultValues?.cost ?? 0,
-      stock: defaultValues?.stock ?? 0,
-      reservedStock: defaultValues?.reservedStock ?? 0,
-      reorderLevel: defaultValues?.reorderLevel ?? 0,
+      price: defaultValues?.price ?? "",
+      cost: defaultValues?.cost ?? "",
+      stock: defaultValues?.stock ?? "",
+      reservedStock: defaultValues?.reservedStock ?? "",
+      reorderLevel: defaultValues?.reorderLevel ?? "",
       unit: defaultValues?.unit ?? "",
-      taxRate: defaultValues?.taxRate ?? 18,
+      taxRate: defaultValues?.taxRate ?? "",
       status: defaultValues?.status ?? "active",
       description: defaultValues?.description ?? "",
     },
   });
+
+  // Services have no inventory — hide stock/SKU fields when Service is chosen.
+  const isService = watch("type") === "SERVICE";
 
   const submit = (values) => {
     const category = (categories.data?.items ?? []).find((c) => c.id === values.categoryId);
@@ -66,27 +76,37 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
           <CardTitle className="text-base">Product details</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          <FormSelect
+            control={control}
+            name="type"
+            label="Type"
+            required
+            error={errors.type}
+            options={TYPE_OPTIONS}
+            hint="Services have no inventory — stock and SKU are hidden."
+            className="sm:col-span-2"
+          />
           <FormInput
             register={register}
             name="name"
             label="Name"
             required
             error={errors.name}
-            placeholder="e.g. CRM Pro License"
+            placeholder={isService ? "e.g. CRM Implementation" : "e.g. CRM Pro License"}
           />
-          <FormInput
-            register={register}
-            name="sku"
-            label="SKU"
-            required
-            error={errors.sku}
-            placeholder="e.g. SKU-1042"
-          />
+          {!isService && (
+            <FormInput
+              register={register}
+              name="sku"
+              label="SKU"
+              error={errors.sku}
+              placeholder="Auto-generated if left blank"
+            />
+          )}
           <FormSelect
             control={control}
             name="categoryId"
             label="Category"
-            required
             error={errors.categoryId}
             options={categoryOptions}
             placeholder={categories.isPending ? "Loading categories…" : "Select category"}
@@ -108,51 +128,56 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
             required
             error={errors.price}
             min={0}
+            placeholder="0.00"
           />
           <FormNumber
             register={register}
             name="cost"
             label="Cost price"
-            required
             error={errors.cost}
             min={0}
+            placeholder="0.00"
           />
-          <FormNumber
-            register={register}
-            name="stock"
-            label="Stock on hand"
-            required
-            error={errors.stock}
-            min={0}
-            step={1}
-          />
-          <FormNumber
-            register={register}
-            name="reservedStock"
-            label="Reserved stock"
-            error={errors.reservedStock}
-            min={0}
-            step={1}
-            hint="Committed to open orders — not available to sell."
-          />
-          <FormNumber
-            register={register}
-            name="reorderLevel"
-            label="Reorder level"
-            error={errors.reorderLevel}
-            min={0}
-            step={1}
-            hint="Flag as low stock at or below this quantity."
-          />
+          {!isService && (
+            <>
+              <FormNumber
+                register={register}
+                name="stock"
+                label="Stock on hand"
+                error={errors.stock}
+                min={0}
+                step={1}
+                placeholder="0"
+              />
+              <FormNumber
+                register={register}
+                name="reservedStock"
+                label="Reserved stock"
+                error={errors.reservedStock}
+                min={0}
+                step={1}
+                hint="Committed to open orders — not available to sell."
+              />
+              <FormNumber
+                register={register}
+                name="reorderLevel"
+                label="Reorder level"
+                error={errors.reorderLevel}
+                min={0}
+                step={1}
+                hint="Flag as low stock at or below this quantity."
+              />
+            </>
+          )}
           <FormNumber
             register={register}
             name="taxRate"
             label="Tax rate (%)"
-            required
             error={errors.taxRate}
             min={0}
             max={100}
-            hint="GST/VAT percentage applied on this product"
+            placeholder="e.g. 13"
+            hint="VAT/GST percentage applied on this product"
           />
           <FormSelect
             control={control}
