@@ -250,7 +250,11 @@ export default function DashboardPage() {
               />
             ) : (
               (activities.data || []).slice(0, 7).map((activity) => {
-                const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
+                // Backend sends UPPERCASE types and a nested user object.
+                const Icon = ACTIVITY_ICONS[String(activity.type).toLowerCase()] || StickyNote;
+                const who =
+                  activity.userName ||
+                  [activity.user?.firstName, activity.user?.lastName].filter(Boolean).join(" ");
                 return (
                   <div key={activity.id} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-muted/50">
                     <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -259,7 +263,8 @@ export default function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{activity.subject}</p>
                       <p className="text-xs text-muted-foreground">
-                        {activity.userName} · {formatRelative(activity.createdAt)}
+                        {who ? `${who} · ` : ""}
+                        {formatRelative(activity.createdAt)}
                       </p>
                     </div>
                   </div>
