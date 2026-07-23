@@ -30,6 +30,8 @@ const mapper = {
       number: c.invoiceNumber ?? c.number ?? "",
       customerId: c.customerId ?? c.customer?.id,
       customerName: c.customer?.name ?? c.customerName ?? "",
+      // Full customer for the invoice's Bill-To block (address, contact).
+      customer: c.customer ?? null,
       // Prisma sends Decimals as strings ("80000"); the UI does arithmetic on these.
       subtotal: Number(c.subtotal ?? 0),
       discount: Number(c.discount ?? 0),
