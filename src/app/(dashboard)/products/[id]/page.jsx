@@ -109,23 +109,48 @@ export default function ProductDetailPage() {
       {/* Summary card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadImage.isPending}
-              aria-label="Upload product image"
-              className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-primary/10 text-primary"
-            >
+          <div className="flex items-center gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-primary/10">
               {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                // Click the image to view it full-size; the corner button changes it.
+                <a
+                  href={product.imageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="View full image"
+                  className="block h-full w-full"
+                >
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                  />
+                </a>
               ) : (
-                <Package className="h-5 w-5" />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  aria-label="Upload product image"
+                  className="flex h-full w-full flex-col items-center justify-center gap-1 text-primary"
+                >
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Add image</span>
+                </button>
               )}
-              <span className="absolute inset-0 hidden items-center justify-center bg-black/50 text-white group-hover:flex">
-                <ImagePlus className="h-4 w-4" />
-              </span>
-            </button>
+              {product.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  aria-label="Change product image"
+                  title="Change image"
+                  className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                >
+                  <ImagePlus className="h-3 w-3" />
+                </button>
+              )}
+            </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
             <div>
               <CardTitle className="text-base">{product.name}</CardTitle>
