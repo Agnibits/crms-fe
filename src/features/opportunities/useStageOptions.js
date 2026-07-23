@@ -18,6 +18,7 @@ export function toStageOptions(pipeline) {
     id: s.id,
     isWon: s.isWon,
     isLost: s.isLost,
+    probability: s.probability,
     color: s.isWon ? "green" : s.isLost ? "red" : STAGE_COLOR_CYCLE[i++ % STAGE_COLOR_CYCLE.length],
   }));
 }

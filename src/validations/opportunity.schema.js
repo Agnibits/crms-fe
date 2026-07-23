@@ -19,15 +19,10 @@ export const opportunitySchema = z.object({
       })
       .min(0, "Amount cannot be negative")
   ),
+  // Derived from the chosen stage (backend syncs it); never typed by hand.
   probability: z.preprocess(
     emptyToUndefined,
-    z
-      .number({
-        required_error: "Probability is required",
-        invalid_type_error: "Enter a valid probability",
-      })
-      .min(0, "Probability must be between 0 and 100")
-      .max(100, "Probability must be between 0 and 100")
+    z.number().min(0).max(100).optional()
   ),
   expectedCloseDate: z.string().min(1, "Expected close date is required"),
   ownerId: z.string().optional().or(z.literal("")),

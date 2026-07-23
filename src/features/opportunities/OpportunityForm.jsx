@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,8 @@ export default function OpportunityForm({
     register,
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(opportunitySchema),
@@ -40,7 +43,6 @@ export default function OpportunityForm({
       customerName: "",
       stage: "",
       amount: "",
-      probability: "",
       expectedCloseDate: "",
       ownerId: "",
       ...defaultValues,
@@ -50,6 +52,15 @@ export default function OpportunityForm({
         : {}),
     },
   });
+
+  // New deals start at the first pipeline stage; probability follows the stage.
+  const selectedStage = watch("stage");
+  useEffect(() => {
+    if (!selectedStage && stageOptions.length) {
+      setValue("stage", stageOptions[0].value);
+    }
+  }, [selectedStage, stageOptions, setValue]);
+  const stageProbability = stageOptions.find((s) => s.value === selectedStage)?.probability;
 
   const submit = (values) => {
     const customerName =
@@ -63,7 +74,7 @@ export default function OpportunityForm({
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Opportunity Details</CardTitle>
+          <CardTitle className="text-base">Deal Details</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <FormInput
@@ -91,26 +102,21 @@ export default function OpportunityForm({
             label="Stage"
             required
             options={stageOptions}
+            hint={
+              stageProbability !== undefined
+                ? `Win probability: ${stageProbability}% (set by the stage)`
+                : undefined
+            }
             error={errors.stage}
           />
           <FormNumber
             register={register}
             name="amount"
             label="Amount"
-            placeholder="0"
+            placeholder="e.g. 150,000"
             required
             min={0}
             error={errors.amount}
-          />
-          <FormNumber
-            register={register}
-            name="probability"
-            label="Probability (%)"
-            placeholder="0–100"
-            required
-            min={0}
-            max={100}
-            error={errors.probability}
           />
           <FormDatePicker
             register={register}
