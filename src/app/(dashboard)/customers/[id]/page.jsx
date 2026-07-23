@@ -109,12 +109,24 @@ export default function CustomerDetailPage() {
   const [logOpen, setLogOpen] = useState(false);
 
   const dealItems = deals.data?.items ?? [];
-  const invoiceItems = invoices.data ?? [];
+  // The /customers/:id/invoices rows are raw — balance (total − amountPaid) is derived here.
+  const invoiceItems = (invoices.data ?? []).map((i) => {
+    const total = Number(i.total) || 0;
+    const amountPaid = Number(i.amountPaid) || 0;
+    return {
+      ...i,
+      number: i.invoiceNumber ?? i.number,
+      status: String(i.status ?? "").toLowerCase(),
+      total,
+      amountPaid,
+      balance: total - amountPaid,
+    };
+  });
   // Account KPIs from the customer's real deals + invoices.
   const openDeals = dealItems.filter((d) => d.status === "OPEN" || d.status === "open");
   const openDealsValue = openDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
-  const totalBilled = invoiceItems.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
-  const outstanding = invoiceItems.reduce((sum, i) => sum + (Number(i.balance) || 0), 0);
+  const totalBilled = invoiceItems.reduce((sum, i) => sum + i.total, 0);
+  const outstanding = invoiceItems.reduce((sum, i) => sum + i.balance, 0);
 
   // "Add note" — POST /customers/:id/notes, optimistic local echo + toast.
   const [noteBody, setNoteBody] = useState("");
@@ -495,42 +507,55 @@ export default function CustomerDetailPage() {
               <CardTitle className="text-base">Invoices</CardTitle>
             </CardHeader>
             <CardContent className="p-0 sm:p-0">
-              <TabSection
-                query={invoices}
-                emptyTitle="No invoices"
-                emptyDescription="Invoices billed to this customer will appear here."
-              >
-                {(items) => (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Number</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-right">Balance</TableHead>
-                        <TableHead>Due date</TableHead>
+              {invoices.isPending ? (
+                <div className="space-y-3 p-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : invoices.error ? (
+                <ErrorState error={invoices.error} onRetry={invoices.refetch} />
+              ) : invoiceItems.length === 0 ? (
+                <EmptyState
+                  title="No invoices"
+                  description="Invoices billed to this customer will appear here."
+                  actionLabel="New Invoice"
+                  onAction={() => router.push(`/invoices/new?customerId=${id}`)}
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Number</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Balance</TableHead>
+                      <TableHead>Due date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoiceItems.map((invoice) => (
+                      <TableRow
+                        key={invoice.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/invoices/${invoice.id}`)}
+                      >
+                        <TableCell className="font-medium">{invoice.number}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={invoice.status} options={INVOICE_STATUSES} />
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatCurrency(invoice.total)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatCurrency(invoice.balance)}
+                        </TableCell>
+                        <TableCell>{formatDate(invoice.dueDate)}</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((invoice) => (
-                        <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">{invoice.number}</TableCell>
-                          <TableCell>
-                            <StatusBadge value={invoice.status} options={INVOICE_STATUSES} />
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatCurrency(invoice.total)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatCurrency(invoice.balance)}
-                          </TableCell>
-                          <TableCell>{formatDate(invoice.dueDate)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </TabSection>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
