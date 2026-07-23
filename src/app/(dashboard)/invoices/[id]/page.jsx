@@ -8,6 +8,7 @@ import {
   HandCoins,
   Loader2,
   Mail,
+  Pencil,
   Printer,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
@@ -82,6 +83,11 @@ export default function InvoiceDetailPage() {
             <Button variant="ghost" onClick={() => router.push("/invoices")}>
               <ArrowLeft /> Back
             </Button>
+            {invoice?.status === "draft" && (
+              <Button variant="outline" onClick={() => router.push(`/invoices/${id}/edit`)}>
+                <Pencil /> Edit
+              </Button>
+            )}
             <Button
               variant="outline"
               disabled={isPending || isGenerating}

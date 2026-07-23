@@ -30,6 +30,8 @@ export default function InvoiceForm({
   submitting = false,
   submitLabel = "Create Invoice",
   onCancel,
+  // Edit mode: the backend doesn't change an invoice's customer on update.
+  lockCustomer = false,
 }) {
   const customers = useCustomerOptions();
 
@@ -92,6 +94,8 @@ export default function InvoiceForm({
             required
             options={customers.options}
             placeholder="Select a customer…"
+            disabled={lockCustomer}
+            hint={lockCustomer ? "The customer can't be changed on an existing invoice." : undefined}
             error={errors.customerId}
           />
           <FormDatePicker
