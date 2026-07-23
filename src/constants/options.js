@@ -54,7 +54,12 @@ export const TASK_STATUSES = [
   { value: "in_progress", label: "In Progress", color: "blue" },
   { value: "in_review", label: "In Review", color: "amber" },
   { value: "done", label: "Done", color: "green" },
+  { value: "cancelled", label: "Cancelled", color: "red" },
 ];
+
+// Kanban columns — cancelled is a terminal state shown via badge/filter, not a
+// board column you drag into.
+export const TASK_BOARD_STATUSES = TASK_STATUSES.filter((s) => s.value !== "cancelled");
 
 export const PRIORITIES = [
   { value: "low", label: "Low", color: "gray" },

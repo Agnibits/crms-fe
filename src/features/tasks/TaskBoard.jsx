@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TASK_STATUSES, PRIORITIES } from "@/constants/options";
+import { TASK_STATUSES, TASK_BOARD_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import { taskHooks } from "./hooks";
@@ -196,7 +196,7 @@ export default function TaskBoard({ tasks = [], loading = false, onEdit, onDelet
   if (loading) {
     return (
       <div className="flex gap-4 overflow-x-auto pb-2">
-        {TASK_STATUSES.map((status) => (
+        {TASK_BOARD_STATUSES.map((status) => (
           <div key={status.value} className="w-72 shrink-0 space-y-2 sm:w-80 lg:w-auto lg:min-w-0 lg:flex-1">
             <Skeleton className="h-6 w-28" />
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -216,7 +216,7 @@ export default function TaskBoard({ tasks = [], loading = false, onEdit, onDelet
       onDragCancel={() => setActiveTask(null)}
     >
       <div className="flex items-stretch gap-4 overflow-x-auto pb-2">
-        {TASK_STATUSES.map((status) => (
+        {TASK_BOARD_STATUSES.map((status) => (
           <BoardColumn
             key={status.value}
             status={status}
