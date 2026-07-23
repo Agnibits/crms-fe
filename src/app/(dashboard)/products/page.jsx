@@ -61,7 +61,9 @@ const PRODUCT_STATUSES = [
 const LOW_STOCK_THRESHOLD = 20;
 const MAX_STOCK = 500;
 
-function StockCell({ stock }) {
+function StockCell({ stock, type }) {
+  // Services aren't stocked — don't imply "0 in stock".
+  if (type === "SERVICE") return <span className="text-muted-foreground">—</span>;
   return (
     <span className="inline-flex items-center gap-2 tabular-nums">
       {formatNumber(stock)}
@@ -123,7 +125,7 @@ function InventoryTab() {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell className="text-muted-foreground">{product.sku}</TableCell>
                   <TableCell className="text-right">
-                    <StockCell stock={product.stock} />
+                    <StockCell stock={product.stock} type={product.type} />
                   </TableCell>
                   <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
                   <TableCell>
@@ -198,7 +200,7 @@ export default function ProductsPage() {
       {
         accessorKey: "stock",
         header: "Stock",
-        cell: ({ row }) => <StockCell stock={row.original.stock} />,
+        cell: ({ row }) => <StockCell stock={row.original.stock} type={row.original.type} />,
       },
       {
         accessorKey: "status",

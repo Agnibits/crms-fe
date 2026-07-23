@@ -26,6 +26,15 @@ export default function InvoiceDocument({ invoice, company }) {
   if (!invoice) return null;
 
   const statusLabel = findOption(INVOICE_STATUSES, invoice.status)?.label ?? invoice.status;
+  // Bill-To from the linked customer (address, contact) — never the raw UUID.
+  const cust = invoice.customer ?? {};
+  const billTo = {
+    company: cust.company,
+    addressLine: cust.addressLine,
+    cityLine: [cust.city, cust.state, cust.postalCode].filter(Boolean).join(", "),
+    country: cust.country,
+    contact: [cust.email, cust.phone].filter(Boolean).join(" · "),
+  };
   const sellerAddress = [company?.addressLine, company?.city, company?.country]
     .filter(Boolean)
     .join(", ");
@@ -90,12 +99,16 @@ export default function InvoiceDocument({ invoice, company }) {
 
       {/* Bill to */}
       <div className="flex flex-col gap-4 py-6 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="text-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Bill To
           </p>
           <p className="mt-1.5 font-semibold">{invoice.customerName || "—"}</p>
-          <p className="text-sm text-muted-foreground">Customer ID: {invoice.customerId || "—"}</p>
+          {billTo.company && <p className="text-muted-foreground">{billTo.company}</p>}
+          {billTo.addressLine && <p className="text-muted-foreground">{billTo.addressLine}</p>}
+          {billTo.cityLine && <p className="text-muted-foreground">{billTo.cityLine}</p>}
+          {billTo.country && <p className="text-muted-foreground">{billTo.country}</p>}
+          {billTo.contact && <p className="text-muted-foreground">{billTo.contact}</p>}
         </div>
         <div className="sm:text-right">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

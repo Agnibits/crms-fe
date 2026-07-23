@@ -13,7 +13,7 @@ const base = createCrudService(ENDPOINTS.products);
 
 // Backend Product columns — drops the derived "categoryName" label etc.
 const ALLOW = new Set([
-  "sku", "name", "description", "costPrice", "sellingPrice", "taxRate",
+  "sku", "name", "type", "description", "costPrice", "sellingPrice", "taxRate",
   "stock", "reservedStock", "reorderLevel", "unit", "categoryId", "isActive",
 ]);
 

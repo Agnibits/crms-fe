@@ -39,6 +39,7 @@ export const ENDPOINTS = {
   payments: "/payments",
   tasks: "/tasks",
   activities: "/activities",
+  tags: "/tags",
   events: "/events",
   campaigns: "/campaigns",
   tickets: "/tickets",

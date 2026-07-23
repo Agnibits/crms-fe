@@ -79,6 +79,8 @@ export default function LogActivityDialog({
         description: description.trim() || undefined,
         relatedType,
         relatedId: entity.id,
+        // Stamp the customer FK too so the account's activity views find it.
+        ...(relatedType === "CUSTOMER" ? { customerId: entity.id } : {}),
         completedAt: new Date().toISOString(),
       });
       // Schedule the next step, linked to the same lead/deal.
