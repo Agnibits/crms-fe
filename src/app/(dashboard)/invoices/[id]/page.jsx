@@ -180,10 +180,11 @@ export default function InvoiceDetailPage() {
                     {payments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium tabular-nums">
-                          {payment.number ?? "—"}
+                          {payment.paymentNumber ?? payment.number ?? "—"}
                         </TableCell>
                         <TableCell>
-                          {findOption(PAYMENT_METHODS, payment.method)?.label ??
+                          {findOption(PAYMENT_METHODS, String(payment.method ?? "").toLowerCase())
+                            ?.label ??
                             payment.method ??
                             "—"}
                         </TableCell>
