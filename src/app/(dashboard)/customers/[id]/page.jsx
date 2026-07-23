@@ -358,9 +358,6 @@ export default function CustomerDetailPage() {
                 <DefItem label="City">{customer.city || "—"}</DefItem>
                 <DefItem label="Country">{customer.country || "—"}</DefItem>
                 <DefItem label="Address">{customer.address || "—"}</DefItem>
-                <DefItem label="Revenue">
-                  {customer.revenue > 0 ? formatCurrency(customer.revenue) : "—"}
-                </DefItem>
                 <DefItem label="Employees">
                   {customer.employees > 0 ? formatNumber(customer.employees) : "—"}
                 </DefItem>
