@@ -145,7 +145,7 @@ export default function CustomerDetailPage() {
     try {
       await customerService.addNote(id, body);
       setLocalNotes((prev) => [
-        { id: `local-${Date.now()}`, description: body, userName: "You", createdAt: new Date().toISOString() },
+        { id: `local-${Date.now()}`, content: body, userName: "You", createdAt: new Date().toISOString() },
         ...prev,
       ]);
       setNoteBody("");
@@ -647,9 +647,14 @@ export default function CustomerDetailPage() {
                 <ul className="space-y-3">
                   {allNotes.map((note) => (
                     <li key={note.id} className="rounded-lg border p-3">
-                      <p className="text-sm">{note.description || note.subject}</p>
+                      <p className="whitespace-pre-wrap text-sm">
+                        {note.content || note.description || note.subject}
+                      </p>
                       <p className="mt-1.5 text-xs text-muted-foreground">
-                        {note.userName} · {formatRelative(note.createdAt)}
+                        {(note.userName ||
+                          [note.user?.firstName, note.user?.lastName].filter(Boolean).join(" ") ||
+                          "—") + " · "}
+                        {formatRelative(note.createdAt)}
                       </p>
                     </li>
                   ))}
