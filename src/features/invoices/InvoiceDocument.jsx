@@ -176,12 +176,18 @@ export default function InvoiceDocument({ invoice, company }) {
         </dl>
       </div>
 
-      {/* Footer */}
+      {/* Footer — the payment line must match the invoice's state */}
       <div className="mt-8 border-t pt-4 text-center text-xs text-muted-foreground">
-        <p>
-          Payment due by <span className="font-medium">{formatDate(invoice.dueDate)}</span>. Thank
-          you for your business!
-        </p>
+        {invoice.status === "paid" ? (
+          <p>Paid in full. Thank you for your business!</p>
+        ) : invoice.status === "void" ? (
+          <p>This invoice has been cancelled.</p>
+        ) : (
+          <p>
+            Payment due by <span className="font-medium">{formatDate(invoice.dueDate)}</span>.
+            Thank you for your business!
+          </p>
+        )}
         {(company?.name || company?.website) && (
           <p className="mt-1">
             {[company?.name, company?.website].filter(Boolean).join(" · ")}
