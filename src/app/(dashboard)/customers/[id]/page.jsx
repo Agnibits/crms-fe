@@ -89,18 +89,23 @@ export default function CustomerDetailPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  // Which tab is open — pure display tabs load their data only when visited.
+  const [tab, setTab] = useState("overview");
+
   const { data: customer, isPending, error, refetch } = customerHooks.useDetail(id);
-  const timeline = customerHooks.useSub(id, "timeline");
-  const contacts = customerHooks.useSub(id, "contacts");
+  const timeline = customerHooks.useSub(id, "timeline", { enabled: !!id && tab === "timeline" });
+  const contacts = customerHooks.useSub(id, "contacts", { enabled: !!id && tab === "contacts" });
   // Real deals live on the Opportunity model — the legacy /:id/deals is empty.
+  // Kept eager: the Open Deals KPI needs it.
   const deals = useQuery({
     queryKey: [...QUERY_KEYS.customers, "detail", id, "opportunities"],
     queryFn: ({ signal }) => opportunityService.list({ customerId: id, limit: 100 }, { signal }),
     enabled: !!id,
   });
+  // Kept eager: the Total Billed / Collected / Outstanding KPIs need it.
   const invoices = customerHooks.useSub(id, "invoices");
-  const files = customerHooks.useSub(id, "files");
-  const notes = customerHooks.useSub(id, "notes");
+  const files = customerHooks.useSub(id, "files", { enabled: !!id && tab === "files" });
+  const notes = customerHooks.useSub(id, "notes", { enabled: !!id && tab === "notes" });
   const { ownersById } = useOwners();
   const { stageOptions } = useStageOptions();
 
@@ -306,7 +311,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview">
+      <Tabs value={tab} onValueChange={setTab}>
         <div className="overflow-x-auto">
           <TabsList className="w-max">
             <TabsTrigger value="overview">Overview</TabsTrigger>

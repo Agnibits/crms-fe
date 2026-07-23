@@ -35,6 +35,7 @@ export default function TagEditor({ entityType, entityId, className }) {
     queryKey: ["tags", "pool"],
     queryFn: ({ signal }) => tagService.list({ signal }),
     staleTime: 5 * 60 * 1000,
+    enabled: open, // only fetch the tag pool when the picker is open
   });
 
   const assignedTags = assigned.data ?? [];
