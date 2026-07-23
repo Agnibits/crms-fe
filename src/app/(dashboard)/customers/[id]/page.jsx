@@ -2,29 +2,33 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
+  ClipboardList,
   Download,
   ExternalLink,
   Globe,
+  Handshake,
   Mail,
   MapPin,
-  MessageSquare,
   Pencil,
   Phone,
-  PhoneCall,
+  Receipt,
   Star,
   StickyNote,
   Trash2,
-  Video,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
+import StatCard from "@/components/common/StatCard";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import UserAvatar from "@/components/common/UserAvatar";
+import ActivityTimeline from "@/components/common/ActivityTimeline";
+import LogActivityDialog from "@/features/leads/LogActivityDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,29 +44,17 @@ import {
 } from "@/components/ui/table";
 import { customerHooks, useOwners } from "@/features/customers/hooks";
 import { customerService } from "@/services/customer.service";
-import {
-  ACTIVITY_TYPES,
-  CUSTOMER_STATUSES,
-  DEAL_STAGES,
-  INVOICE_STATUSES,
-} from "@/constants/options";
+import { opportunityService } from "@/services/opportunity.service";
+import { useStageOptions } from "@/features/opportunities/useStageOptions";
+import { CUSTOMER_STATUSES, INVOICE_STATUSES } from "@/constants/options";
+import { QUERY_KEYS } from "@/constants/app";
 import {
   formatBytes,
   formatCurrency,
   formatDate,
-  formatDateTime,
   formatNumber,
   formatRelative,
 } from "@/utils/format";
-
-const ACTIVITY_ICONS = {
-  call: PhoneCall,
-  meeting: Video,
-  email: Mail,
-  note: StickyNote,
-  whatsapp: MessageSquare,
-  sms: MessageSquare,
-};
 
 /** Shared loading/error/empty wrapper for tab content. */
 function TabSection({ query, emptyTitle, emptyDescription, children }) {
@@ -99,14 +91,29 @@ export default function CustomerDetailPage() {
   const { data: customer, isPending, error, refetch } = customerHooks.useDetail(id);
   const timeline = customerHooks.useSub(id, "timeline");
   const contacts = customerHooks.useSub(id, "contacts");
-  const deals = customerHooks.useSub(id, "deals");
+  // Real deals live on the Opportunity model — the legacy /:id/deals is empty.
+  const deals = useQuery({
+    queryKey: [...QUERY_KEYS.customers, "detail", id, "opportunities"],
+    queryFn: ({ signal }) => opportunityService.list({ customerId: id, limit: 100 }, { signal }),
+    enabled: !!id,
+  });
   const invoices = customerHooks.useSub(id, "invoices");
   const files = customerHooks.useSub(id, "files");
   const notes = customerHooks.useSub(id, "notes");
   const { ownersById } = useOwners();
+  const { stageOptions } = useStageOptions();
 
   const remove = customerHooks.useRemove();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+
+  const dealItems = deals.data?.items ?? [];
+  const invoiceItems = invoices.data ?? [];
+  // Account KPIs from the customer's real deals + invoices.
+  const openDeals = dealItems.filter((d) => d.status === "OPEN" || d.status === "open");
+  const openDealsValue = openDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+  const totalBilled = invoiceItems.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+  const outstanding = invoiceItems.reduce((sum, i) => sum + (Number(i.balance) || 0), 0);
 
   // "Add note" — POST /customers/:id/notes, optimistic local echo + toast.
   const [noteBody, setNoteBody] = useState("");
@@ -164,6 +171,18 @@ export default function CustomerDetailPage() {
         description="Customer account overview and related records."
         actions={
           <>
+            <Button variant="outline" onClick={() => setLogOpen(true)}>
+              <ClipboardList /> Log Activity
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/deals/new?customerId=${id}`)}
+            >
+              <Handshake /> New Deal
+            </Button>
+            <Button onClick={() => router.push(`/invoices/new?customerId=${id}`)}>
+              <Receipt /> New Invoice
+            </Button>
             <Button variant="outline" onClick={() => router.push(`/customers/${id}/edit`)}>
               <Pencil /> Edit
             </Button>
@@ -234,6 +253,42 @@ export default function CustomerDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Account KPIs */}
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <StatCard
+          title="Total Billed"
+          value={formatCurrency(totalBilled)}
+          icon={Receipt}
+          hint="across all invoices"
+          loading={invoices.isPending}
+          index={0}
+        />
+        <StatCard
+          title="Collected"
+          value={formatCurrency(customer.revenue || 0)}
+          icon={Building2}
+          hint="payments received"
+          loading={isPending}
+          index={1}
+        />
+        <StatCard
+          title="Outstanding"
+          value={formatCurrency(outstanding)}
+          icon={Receipt}
+          hint="balance to collect"
+          loading={invoices.isPending}
+          index={2}
+        />
+        <StatCard
+          title="Open Deals"
+          value={formatCurrency(openDealsValue)}
+          icon={Handshake}
+          hint={`${openDeals.length} in pipeline`}
+          loading={deals.isPending}
+          index={3}
+        />
+      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview">
@@ -306,38 +361,10 @@ export default function CustomerDetailPage() {
               <CardTitle className="text-base">Activity timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <TabSection
+              <ActivityTimeline
                 query={timeline}
-                emptyTitle="No activity yet"
-                emptyDescription="Calls, meetings, emails and notes will show up here."
-              >
-                {(items) => (
-                  <ol className="relative space-y-6 border-l pl-6">
-                    {items.map((activity) => {
-                      const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
-                      return (
-                        <li key={activity.id} className="relative">
-                          <span className="absolute -left-[37px] flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 ring-4 ring-background">
-                            <Icon className="h-3 w-3 text-primary" />
-                          </span>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-medium">{activity.subject}</p>
-                            <StatusBadge value={activity.type} options={ACTIVITY_TYPES} />
-                          </div>
-                          {activity.description && (
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {activity.description}
-                            </p>
-                          )}
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {activity.userName} · {formatDateTime(activity.createdAt)}
-                          </p>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-              </TabSection>
+                emptyDescription="Calls, meetings, emails and notes with this customer will show up here."
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -402,38 +429,61 @@ export default function CustomerDetailPage() {
               <CardTitle className="text-base">Deals</CardTitle>
             </CardHeader>
             <CardContent className="p-0 sm:p-0">
-              <TabSection
-                query={deals}
-                emptyTitle="No deals"
-                emptyDescription="Deals linked to this customer will appear here."
-              >
-                {(items) => (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Deal</TableHead>
-                        <TableHead>Stage</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead>Expected close</TableHead>
+              {deals.isPending ? (
+                <div className="space-y-3 p-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : deals.error ? (
+                <ErrorState error={deals.error} onRetry={deals.refetch} />
+              ) : dealItems.length === 0 ? (
+                <EmptyState
+                  title="No deals"
+                  description="Deals with this customer will appear here."
+                  actionLabel="New Deal"
+                  onAction={() => router.push(`/deals/new?customerId=${id}`)}
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Deal</TableHead>
+                      <TableHead>Stage</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Expected close</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dealItems.map((deal) => (
+                      <TableRow
+                        key={deal.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/deals/${deal.id}`)}
+                      >
+                        <TableCell className="font-medium">{deal.name}</TableCell>
+                        <TableCell>
+                          {deal.status === "WON" || deal.status === "LOST" ? (
+                            <StatusBadge
+                              value={deal.status}
+                              options={[
+                                { value: "WON", label: "Won", color: "green" },
+                                { value: "LOST", label: "Lost", color: "red" },
+                              ]}
+                            />
+                          ) : (
+                            <StatusBadge value={deal.stage} options={stageOptions} />
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatCurrency(deal.amount)}
+                        </TableCell>
+                        <TableCell>{formatDate(deal.expectedCloseDate)}</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((deal) => (
-                        <TableRow key={deal.id}>
-                          <TableCell className="font-medium">{deal.name}</TableCell>
-                          <TableCell>
-                            <StatusBadge value={deal.stage} options={DEAL_STAGES} />
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatCurrency(deal.amount)}
-                          </TableCell>
-                          <TableCell>{formatDate(deal.expectedCloseDate)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </TabSection>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -579,6 +629,14 @@ export default function CustomerDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <LogActivityDialog
+        entity={customer}
+        relatedType="CUSTOMER"
+        queryKey={QUERY_KEYS.customers}
+        open={logOpen}
+        onOpenChange={setLogOpen}
+      />
 
       <ConfirmDialog
         open={confirmDelete}
