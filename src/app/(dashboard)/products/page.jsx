@@ -170,9 +170,13 @@ export default function ProductsPage() {
         header: "Name",
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/40 text-muted-foreground">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white text-muted-foreground dark:bg-muted/40">
               {row.original.imageUrl ? (
-                <img src={row.original.imageUrl} alt={row.original.name} className="h-full w-full object-cover" />
+                <img
+                  src={row.original.imageUrl}
+                  alt={row.original.name}
+                  className="h-full w-full object-contain p-0.5"
+                />
               ) : (
                 <Package className="h-4 w-4" />
               )}

@@ -7,6 +7,7 @@ import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import ImageLightbox from "@/components/common/ImageLightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,7 @@ export default function ProductDetailPage() {
   const uploadImage = useUploadProductImage();
   const fileRef = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const onPickImage = (e) => {
     const file = e.target.files?.[0];
@@ -112,20 +114,20 @@ export default function ProductDetailPage() {
           <div className="flex items-center gap-4">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-white dark:bg-muted/40">
               {product.imageUrl ? (
-                // Click the image to view it full-size; the corner button changes it.
-                <a
-                  href={product.imageUrl}
-                  target="_blank"
-                  rel="noreferrer"
+                // Click the image for an in-page full-size preview; the corner
+                // button changes it.
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen(true)}
                   title="View full image"
-                  className="block h-full w-full"
+                  className="block h-full w-full cursor-zoom-in"
                 >
                   <img
                     src={product.imageUrl}
                     alt={product.name}
                     className="h-full w-full object-contain p-1.5"
                   />
-                </a>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -206,6 +208,13 @@ export default function ProductDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <ImageLightbox
+        src={product.imageUrl}
+        alt={product.name}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
 
       <ConfirmDialog
         open={confirmDelete}
