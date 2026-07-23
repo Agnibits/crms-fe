@@ -110,7 +110,7 @@ export default function ProductDetailPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-4">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-primary/10">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-white dark:bg-muted/40">
               {product.imageUrl ? (
                 // Click the image to view it full-size; the corner button changes it.
                 <a
@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
                   <img
                     src={product.imageUrl}
                     alt={product.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain p-1.5"
                   />
                 </a>
               ) : (
