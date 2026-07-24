@@ -63,7 +63,8 @@ const MAX_STOCK = 500;
 
 function StockCell({ stock, type }) {
   // Services aren't stocked — don't imply "0 in stock".
-  if (type === "SERVICE") return <span className="text-muted-foreground">—</span>;
+  if (type === "SERVICE")
+    return <span className="text-muted-foreground">—</span>;
   return (
     <span className="inline-flex items-center gap-2 tabular-nums">
       {formatNumber(stock)}
@@ -123,18 +124,24 @@ function InventoryTab() {
               {items.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.sku}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {product.sku}
+                  </TableCell>
                   <TableCell className="text-right">
                     <StockCell stock={product.stock} type={product.type} />
                   </TableCell>
-                  <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
+                  <TableCell className="capitalize text-muted-foreground">
+                    {product.unit}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Progress
                         value={Math.min(100, (product.stock / MAX_STOCK) * 100)}
                         className="h-1.5"
                         indicatorClassName={
-                          product.stock < LOW_STOCK_THRESHOLD ? "bg-amber-500" : undefined
+                          product.stock < LOW_STOCK_THRESHOLD
+                            ? "bg-amber-500"
+                            : undefined
                         }
                       />
                       <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
@@ -155,7 +162,9 @@ function InventoryTab() {
 export default function ProductsPage() {
   const router = useRouter();
   const t = useTableState();
-  const { data, isPending, error, refetch } = productHooks.useList(t.queryParams);
+  const { data, isPending, error, refetch } = productHooks.useList(
+    t.queryParams,
+  );
   const categories = productCategoryHooks.useList({ page: 1, limit: 100 });
   const remove = productHooks.useRemove();
   const bulkRemove = productHooks.useBulkRemove();
@@ -170,16 +179,22 @@ export default function ProductsPage() {
         header: "Name",
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/40 text-muted-foreground">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-muted/40 text-muted-foreground">
               {row.original.imageUrl ? (
-                <img src={row.original.imageUrl} alt={row.original.name} className="h-full w-full object-cover" />
+                <img
+                  src={row.original.imageUrl}
+                  alt={row.original.name}
+                  className="h-full w-full object-contain p-0.5"
+                />
               ) : (
                 <Package className="h-4 w-4" />
               )}
             </span>
             <div className="min-w-0">
               <p className="truncate font-medium">{row.original.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{row.original.categoryName}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {row.original.categoryName}
+              </p>
             </div>
           </div>
         ),
@@ -189,23 +204,33 @@ export default function ProductsPage() {
         accessorKey: "cost",
         header: "Cost",
         cell: ({ row }) => (
-          <span className="tabular-nums text-muted-foreground">{formatCurrency(row.original.cost)}</span>
+          <span className="tabular-nums text-muted-foreground">
+            {formatCurrency(row.original.cost)}
+          </span>
         ),
       },
       {
         accessorKey: "price",
         header: "Selling",
-        cell: ({ row }) => <span className="tabular-nums">{formatCurrency(row.original.price)}</span>,
+        cell: ({ row }) => (
+          <span className="tabular-nums">
+            {formatCurrency(row.original.price)}
+          </span>
+        ),
       },
       {
         accessorKey: "stock",
         header: "Stock",
-        cell: ({ row }) => <StockCell stock={row.original.stock} type={row.original.type} />,
+        cell: ({ row }) => (
+          <StockCell stock={row.original.stock} type={row.original.type} />
+        ),
       },
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => <StatusBadge value={row.original.status} options={PRODUCT_STATUSES} />,
+        cell: ({ row }) => (
+          <StatusBadge value={row.original.status} options={PRODUCT_STATUSES} />
+        ),
       },
       {
         id: "actions",
@@ -224,11 +249,18 @@ export default function ProductsPage() {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onClick={() => router.push(`/products/${row.original.id}`)}>
+            <DropdownMenuContent
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem
+                onClick={() => router.push(`/products/${row.original.id}`)}
+              >
                 <Eye className="h-4 w-4" /> View
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push(`/products/${row.original.id}/edit`)}>
+              <DropdownMenuItem
+                onClick={() => router.push(`/products/${row.original.id}/edit`)}
+              >
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -242,7 +274,7 @@ export default function ProductsPage() {
         ),
       },
     ],
-    [router]
+    [router],
   );
 
   return (
@@ -292,7 +324,10 @@ export default function ProductsPage() {
                 value={t.filters.categoryId ?? "all"}
                 onValueChange={(v) => t.setFilter("categoryId", v)}
               >
-                <SelectTrigger className="w-[180px]" aria-label="Filter by category">
+                <SelectTrigger
+                  className="w-[180px]"
+                  aria-label="Filter by category"
+                >
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,7 +363,12 @@ export default function ProductsPage() {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => bulkRemove.mutate(rows.map((r) => r.id), { onSuccess: clear })}
+                onClick={() =>
+                  bulkRemove.mutate(
+                    rows.map((r) => r.id),
+                    { onSuccess: clear },
+                  )
+                }
               >
                 <Trash2 className="h-4 w-4" /> Delete
               </Button>
@@ -341,7 +381,10 @@ export default function ProductsPage() {
         </TabsContent>
       </Tabs>
 
-      <CategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
+      <CategoriesDialog
+        open={categoriesOpen}
+        onOpenChange={setCategoriesOpen}
+      />
 
       <ConfirmDialog
         open={!!deleteId}
@@ -351,7 +394,9 @@ export default function ProductsPage() {
         description="This product will be removed from your catalog."
         confirmLabel="Delete"
         loading={remove.isPending}
-        onConfirm={() => remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })}
+        onConfirm={() =>
+          remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
+        }
       />
     </div>
   );

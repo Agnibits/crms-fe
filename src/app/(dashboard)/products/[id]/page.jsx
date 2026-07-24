@@ -13,7 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { productHooks, useUploadProductImage } from "@/features/products/hooks";
-import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/utils/format";
+import {
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  formatPercent,
+} from "@/utils/format";
+import ImageLightbox from "@/components/common/ImageLightbox";
 
 const PRODUCT_STATUSES = [
   { value: "active", label: "Active", color: "green" },
@@ -32,8 +38,14 @@ function Stat({ label, value, sub }) {
 
 const STOCK_STATUS = {
   IN_STOCK: { label: "In stock", cls: "bg-success/15 text-success" },
-  LOW_STOCK: { label: "Low stock", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  OUT_OF_STOCK: { label: "Out of stock", cls: "bg-destructive/15 text-destructive" },
+  LOW_STOCK: {
+    label: "Low stock",
+    cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  },
+  OUT_OF_STOCK: {
+    label: "Out of stock",
+    cls: "bg-destructive/15 text-destructive",
+  },
 };
 
 function StockStatusBadge({ status }) {
@@ -44,11 +56,17 @@ function StockStatusBadge({ status }) {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { data: product, isPending, error, refetch } = productHooks.useDetail(id);
+  const {
+    data: product,
+    isPending,
+    error,
+    refetch,
+  } = productHooks.useDetail(id);
   const remove = productHooks.useRemove();
   const uploadImage = useUploadProductImage();
   const fileRef = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const onPickImage = (e) => {
     const file = e.target.files?.[0];
@@ -80,7 +98,9 @@ export default function ProductDetailPage() {
   }
 
   const margin =
-    product.price > 0 ? ((product.price - product.cost) / product.price) * 100 : 0;
+    product.price > 0
+      ? ((product.price - product.cost) / product.price) * 100
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -92,10 +112,16 @@ export default function ProductDetailPage() {
             <Button variant="outline" onClick={() => router.push("/products")}>
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
-            <Button variant="outline" onClick={() => router.push(`/products/${id}/edit`)}>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/products/${id}/edit`)}
+            >
               <Pencil className="h-4 w-4" /> Edit
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
               <Trash2 className="h-4 w-4" /> Delete
             </Button>
           </>
@@ -106,23 +132,39 @@ export default function ProductDetailPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadImage.isPending}
-              aria-label="Upload product image"
-              className="group relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-primary/10 text-primary"
-            >
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-white dark:bg-muted/40">
               {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen(true)}
+                  title="View full image"
+                  className="block h-full w-full cursor-zoom-in"
+                >
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="h-full w-full object-contain p-1.5"
+                  />
+                </button>
               ) : (
-                <Package className="h-5 w-5" />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  aria-label="Upload product image"
+                  className="flex h-full w-full flex-col items-center justify-center gap-1 text-primary"
+                >
+                  <ImagePlus className="h-3 w-3" />
+                </button>
               )}
-              <span className="absolute inset-0 hidden items-center justify-center bg-black/50 text-white group-hover:flex">
-                <ImagePlus className="h-4 w-4" />
-              </span>
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickImage} />
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onPickImage}
+            />
             <div>
               <CardTitle className="text-base">{product.name}</CardTitle>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -131,13 +173,19 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{product.categoryName || "Uncategorized"}</Badge>
+            <Badge variant="outline">
+              {product.categoryName || "Uncategorized"}
+            </Badge>
             <StatusBadge value={product.status} options={PRODUCT_STATUSES} />
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Selling price" value={formatCurrency(product.price)} sub={`per ${product.unit}`} />
+            <Stat
+              label="Selling price"
+              value={formatCurrency(product.price)}
+              sub={`per ${product.unit}`}
+            />
             <Stat label="Cost price" value={formatCurrency(product.cost)} />
             <Stat
               label="Margin"
@@ -154,9 +202,18 @@ export default function ProductDetailPage() {
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Stat label="On hand" value={formatNumber(product.stock)} />
-              <Stat label="Reserved" value={formatNumber(product.reservedStock ?? 0)} />
-              <Stat label="Available" value={formatNumber(product.availableStock ?? product.stock)} />
-              <Stat label="Reorder level" value={formatNumber(product.reorderLevel ?? 0)} />
+              <Stat
+                label="Reserved"
+                value={formatNumber(product.reservedStock ?? 0)}
+              />
+              <Stat
+                label="Available"
+                value={formatNumber(product.availableStock ?? product.stock)}
+              />
+              <Stat
+                label="Reorder level"
+                value={formatNumber(product.reorderLevel ?? 0)}
+              />
             </div>
           </div>
 
@@ -167,12 +224,21 @@ export default function ProductDetailPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Description
                 </p>
-                <p className="mt-2 text-sm leading-relaxed">{product.description}</p>
+                <p className="mt-2 text-sm leading-relaxed">
+                  {product.description}
+                </p>
               </div>
             </>
           )}
         </CardContent>
       </Card>
+
+      <ImageLightbox
+        src={product.imageUrl}
+        alt={product.name}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
 
       <ConfirmDialog
         open={confirmDelete}
