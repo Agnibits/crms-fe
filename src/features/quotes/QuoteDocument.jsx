@@ -3,25 +3,33 @@
 import StatusBadge from "@/components/common/StatusBadge";
 import { Separator } from "@/components/ui/separator";
 import { QUOTE_STATUSES } from "@/constants/options";
+import { absoluteUploadUrl } from "@/services/normalize";
 import { formatCurrency, formatDate } from "@/utils/format";
-
-export const QUOTE_COMPANY = {
-  name: "AgniBits Technologies",
-  email: "hello@agnibits.com",
-  phone: "+91 9876543210",
-  website: "https://agnibits.com",
-  address: "4th Floor, Tech Park One, Pune, India",
-  gstin: "27ABCDE1234F1Z5",
-};
 
 /**
  * Print-friendly quote document: company + customer header,
  * line-item table and subtotal / discount / tax / total footer.
- *   <QuoteDocument quote={quote} />
+ * `company` is the issuing (tenant) company; the customer comes off the quote.
+ *   <QuoteDocument quote={quote} company={company} />
  */
-export default function QuoteDocument({ quote }) {
+export default function QuoteDocument({ quote, company }) {
   if (!quote) return null;
   const items = quote.items ?? [];
+
+  const sellerAddress = [company?.addressLine, company?.city, company?.country]
+    .filter(Boolean)
+    .join(", ");
+  const sellerContact = [company?.email, company?.phone].filter(Boolean).join(" · ");
+  const logoUrl = absoluteUploadUrl(company?.logoUrl);
+
+  const cust = quote.customer ?? {};
+  const billTo = {
+    company: cust.company,
+    addressLine: cust.addressLine,
+    cityLine: [cust.city, cust.state, cust.postalCode].filter(Boolean).join(", "),
+    country: cust.country,
+    contact: [cust.email, cust.phone].filter(Boolean).join(" · "),
+  };
 
   return (
     <div className="rounded-xl bg-background p-6 text-sm sm:p-8">
@@ -29,18 +37,29 @@ export default function QuoteDocument({ quote }) {
       <div className="flex flex-col justify-between gap-6 sm:flex-row">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
-              A
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt={`${company?.name ?? "Company"} logo`}
+                className="h-9 w-9 rounded-lg object-contain"
+              />
+            ) : (
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
+                {(company?.name ?? "?").charAt(0)}
+              </span>
+            )}
             <div>
-              <p className="text-base font-semibold leading-tight">{QUOTE_COMPANY.name}</p>
-              <p className="text-xs text-muted-foreground">{QUOTE_COMPANY.website}</p>
+              <p className="text-base font-semibold leading-tight">{company?.name ?? "—"}</p>
+              {company?.website && (
+                <p className="text-xs text-muted-foreground">{company.website}</p>
+              )}
             </div>
           </div>
           <div className="mt-3 space-y-0.5 text-xs text-muted-foreground">
-            <p>{QUOTE_COMPANY.address}</p>
-            <p>{QUOTE_COMPANY.email} · {QUOTE_COMPANY.phone}</p>
-            <p>GSTIN: {QUOTE_COMPANY.gstin}</p>
+            {sellerAddress && <p>{sellerAddress}</p>}
+            {sellerContact && <p>{sellerContact}</p>}
+            {company?.taxId && <p>Tax ID: {company.taxId}</p>}
           </div>
         </div>
         <div className="sm:text-right">
@@ -58,11 +77,15 @@ export default function QuoteDocument({ quote }) {
 
       <Separator className="my-6" />
 
-      {/* Bill to */}
-      <div>
+      {/* Quote for */}
+      <div className="text-sm">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Quote for</p>
         <p className="mt-1 text-base font-semibold">{quote.customerName || "—"}</p>
-        <p className="text-xs text-muted-foreground">Customer ID: {quote.customerId || "—"}</p>
+        {billTo.company && <p className="text-muted-foreground">{billTo.company}</p>}
+        {billTo.addressLine && <p className="text-muted-foreground">{billTo.addressLine}</p>}
+        {billTo.cityLine && <p className="text-muted-foreground">{billTo.cityLine}</p>}
+        {billTo.country && <p className="text-muted-foreground">{billTo.country}</p>}
+        {billTo.contact && <p className="text-muted-foreground">{billTo.contact}</p>}
       </div>
 
       {/* Line items */}
@@ -130,7 +153,8 @@ export default function QuoteDocument({ quote }) {
       )}
 
       <p className="mt-8 text-center text-xs text-muted-foreground">
-        Thank you for considering {QUOTE_COMPANY.name}. This quotation is valid until {formatDate(quote.validUntil)}.
+        Thank you for considering {company?.name ?? "us"}. This quotation is valid until{" "}
+        {formatDate(quote.validUntil)}.
       </p>
     </div>
   );

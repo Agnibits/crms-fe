@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { quoteHooks } from "@/features/quotes/hooks";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { QUOTE_STATUSES } from "@/constants/options";
 import { formatCurrency, formatDate } from "@/utils/format";
 
@@ -25,6 +26,7 @@ export default function QuoteDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data: quote, isPending, error, refetch } = quoteHooks.useDetail(id);
+  const { company } = useMyCompany();
   const patch = quoteHooks.usePatch();
   const convert = quoteHooks.useAction({
     successMessage: "Quote converted to order",
@@ -75,7 +77,7 @@ export default function QuoteDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="rounded-xl border">
-              <QuoteDocument quote={quote} />
+              <QuoteDocument quote={quote} company={company} />
             </div>
           </CardContent>
         </Card>
@@ -89,7 +91,7 @@ export default function QuoteDetailPage() {
             <CardContent className="space-y-3">
               <Button
                 className="w-full"
-                onClick={() => downloadPdf(quote)}
+                onClick={() => downloadPdf(quote, company)}
                 disabled={downloading}
               >
                 {downloading ? (
@@ -106,7 +108,7 @@ export default function QuoteDetailPage() {
                 variant="outline"
                 className="w-full"
                 disabled={convert.isPending || quote.status === "declined" || quote.status === "expired"}
-                onClick={() => convert.mutate({ id, action: "convert-to-order" })}
+                onClick={() => convert.mutate({ id, action: "convert" })}
               >
                 {convert.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
