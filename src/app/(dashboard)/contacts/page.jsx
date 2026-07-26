@@ -24,8 +24,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
-import { contactHooks } from "@/features/contacts/hooks";
+import { contactHooks, useCustomerOptions } from "@/features/contacts/hooks";
 import { exportToCsv } from "@/utils/export";
 import { formatDate, birthdayStatus } from "@/utils/format";
 
@@ -44,6 +51,7 @@ export default function ContactsPage() {
   const router = useRouter();
   const t = useTableState();
   const { data, isPending, error, refetch } = contactHooks.useList(t.queryParams);
+  const { options: customerOptions } = useCustomerOptions();
   const remove = contactHooks.useRemove();
   const [deleteId, setDeleteId] = useState(null);
 
@@ -167,9 +175,27 @@ export default function ContactsPage() {
         total={data?.total ?? 0}
         {...t.tableProps}
         onRowClick={(row) => router.push(`/contacts/${row.id}`)}
-        searchPlaceholder="Search contacts…"
+        searchPlaceholder="Search by name, email or company…"
         emptyTitle="No contacts found"
         emptyDescription="Try adjusting your search, or add your first contact."
+        toolbar={
+          <Select
+            value={t.filters.customerId ?? "all"}
+            onValueChange={(v) => t.setFilter("customerId", v === "all" ? undefined : v)}
+          >
+            <SelectTrigger className="w-[200px]" aria-label="Filter by company">
+              <SelectValue placeholder="All companies" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All companies</SelectItem>
+              {customerOptions.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
         actions={
           <Button
             variant="outline"
