@@ -78,21 +78,26 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
   const watchedItems = useWatch({ control, name: "items" });
   const discount = useWatch({ control, name: "discount" });
 
-  // Tax is computed from each line's catalog tax rate (matches the backend) —
-  // never a manual figure that could disagree with what's saved.
+  // Mirrors the backend documentTotals exactly: tax comes from each line's
+  // catalog rate, and the discount reduces the taxable value first
+  // (Nepal VAT / India GST), spread across lines in proportion to value.
   const totals = useMemo(() => {
     let subtotal = 0;
-    let taxTotal = 0;
-    const lines = (watchedItems ?? []).map((item) => {
+    const rows = (watchedItems ?? []).map((item) => {
       const qty = Number(item?.quantity) || 0;
       const price = Number(item?.unitPrice) || 0;
-      const rate = Number(item?.taxRate) || 0;
       const net = qty * price;
       subtotal += net;
-      taxTotal += (net * rate) / 100;
+      return { net, rate: Number(item?.taxRate) || 0 };
+    });
+    const disc = Number(discount) || 0;
+    const factor = subtotal > 0 ? Math.max(0, (subtotal - disc) / subtotal) : 0;
+    let taxTotal = 0;
+    const lines = rows.map(({ net, rate }) => {
+      taxTotal += (net * factor * rate) / 100;
       return net;
     });
-    const total = subtotal + taxTotal - (Number(discount) || 0);
+    const total = Math.max(subtotal - disc, 0) + taxTotal;
     return { lines, subtotal, tax: taxTotal, total };
   }, [watchedItems, discount]);
 
