@@ -42,8 +42,25 @@ const mapper = {
 
 export const ticketService = {
   ...withMapping(base, mapper),
-  // GET /tickets/:id omits the message thread — /detail includes it.
-  getById: async (id, opts) => mapper.fromBackend(await base.sub(id, "detail", {}, opts)),
+  // GET /tickets/:id omits the message thread — /detail includes it. The
+  // ticket's own description is the customer's original request, so surface it
+  // as the first message in the thread (it isn't shown anywhere else).
+  getById: async (id, opts) => {
+    const t = mapper.fromBackend(await base.sub(id, "detail", {}, opts));
+    if (t?.description) {
+      t.messages = [
+        {
+          id: `desc-${t.id}`,
+          from: "customer",
+          author: t.customerName || "Customer",
+          body: t.description,
+          createdAt: t.createdAt,
+        },
+        ...(t.messages ?? []),
+      ];
+    }
+    return t;
+  },
   /** Post a reply on the ticket thread: POST /tickets/:id/messages */
   reply: (id, payload) => base.action(id, "messages", payload),
 };
