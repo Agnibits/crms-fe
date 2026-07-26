@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, Inbox, Ticket } from "lucide-react";
+import { CheckCircle2, Clock, Inbox, Plus, Ticket } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
 import StatusBadge from "@/components/common/StatusBadge";
 import DataTable from "@/components/tables/DataTable";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -16,12 +17,14 @@ import {
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
 import { ticketHooks } from "@/features/tickets/hooks";
+import NewTicketDialog from "@/features/tickets/NewTicketDialog";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatNumber, formatRelative } from "@/utils/format";
 
 export default function TicketsPage() {
   const router = useRouter();
   const t = useTableState();
+  const [createOpen, setCreateOpen] = useState(false);
   const { data, isPending, error, refetch } = ticketHooks.useList(t.queryParams);
   const stats = ticketHooks.useList({ limit: 1000 });
 
@@ -80,6 +83,11 @@ export default function TicketsPage() {
       <PageHeader
         title="Support Tickets"
         description="Track, prioritize and resolve customer support requests."
+        actions={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4" /> New Ticket
+          </Button>
+        }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -167,6 +175,8 @@ export default function TicketsPage() {
           </>
         }
       />
+
+      <NewTicketDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }
