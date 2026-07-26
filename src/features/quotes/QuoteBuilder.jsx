@@ -73,18 +73,24 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
 
   const watchedItems = watch("items");
   const discount = watch("discount");
-  const tax = watch("tax");
 
+  // Tax is computed from each line's catalog tax rate (matches the backend) —
+  // never a manual figure that could disagree with what's saved.
   const totals = useMemo(() => {
+    let subtotal = 0;
+    let taxTotal = 0;
     const lines = (watchedItems ?? []).map((item) => {
       const qty = Number(item?.quantity) || 0;
       const price = Number(item?.unitPrice) || 0;
-      return qty * price;
+      const rate = Number(item?.taxRate) || 0;
+      const net = qty * price;
+      subtotal += net;
+      taxTotal += (net * rate) / 100;
+      return net;
     });
-    const subtotal = lines.reduce((acc, v) => acc + v, 0);
-    const total = subtotal - (Number(discount) || 0) + (Number(tax) || 0);
-    return { lines, subtotal, total };
-  }, [watchedItems, discount, tax]);
+    const total = subtotal + taxTotal - (Number(discount) || 0);
+    return { lines, subtotal, tax: taxTotal, total };
+  }, [watchedItems, discount]);
 
   const handleProductChange = (index, productId) => {
     const product = productList.find((p) => p.id === productId);
@@ -108,6 +114,8 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       total: item.quantity * item.unitPrice,
     }));
     const subtotal = items.reduce((acc, it) => acc + it.total, 0);
+    // Tax is derived from line taxRates on the backend; only the doc-level
+    // discount is sent as an adjustment.
     onSubmit?.({
       number: defaultValues?.number ?? `QT-${String(Date.now()).slice(-6)}`,
       customerId: values.customerId,
@@ -116,8 +124,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       items,
       subtotal,
       discount: values.discount || 0,
-      tax: values.tax || 0,
-      total: subtotal - (values.discount || 0) + (values.tax || 0),
+      tax: 0,
       validUntil: new Date(`${values.validUntil}T00:00:00`).toISOString(),
       notes: values.notes ?? "",
     });
@@ -272,35 +279,23 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       <Card>
         <CardContent className="grid gap-6 pt-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="discount">Discount (amount)</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  min={0}
-                  step="any"
-                  aria-invalid={!!errors.discount}
-                  {...register("discount", { valueAsNumber: true })}
-                />
-                {errors.discount && (
-                  <p className="text-xs font-medium text-destructive">{errors.discount.message}</p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="tax">Tax (amount)</Label>
-                <Input
-                  id="tax"
-                  type="number"
-                  min={0}
-                  step="any"
-                  aria-invalid={!!errors.tax}
-                  {...register("tax", { valueAsNumber: true })}
-                />
-                {errors.tax && (
-                  <p className="text-xs font-medium text-destructive">{errors.tax.message}</p>
-                )}
-              </div>
+            <div className="space-y-1.5 sm:max-w-xs">
+              <Label htmlFor="discount">Discount (amount)</Label>
+              <Input
+                id="discount"
+                type="number"
+                min={0}
+                step="any"
+                placeholder="0"
+                aria-invalid={!!errors.discount}
+                {...register("discount", { valueAsNumber: true })}
+              />
+              {errors.discount && (
+                <p className="text-xs font-medium text-destructive">{errors.discount.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Tax is calculated automatically from each product&apos;s rate.
+              </p>
             </div>
             <FormTextarea
               register={register}
@@ -324,7 +319,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
               </div>
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>Tax</span>
-                <span className="tabular-nums text-foreground">{formatCurrency(Number(tax) || 0)}</span>
+                <span className="tabular-nums text-foreground">{formatCurrency(totals.tax)}</span>
               </div>
               <Separator />
               <div className="flex items-center justify-between text-base font-semibold">
