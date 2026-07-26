@@ -16,6 +16,22 @@ export function formatDateTime(value) {
   return formatDate(value, "MMM d, yyyy · h:mm a");
 }
 
+/**
+ * Recurring-birthday status: compares the month/day against today (ignores the
+ * stored year). Returns { isToday, inDays } where inDays counts to the next
+ * occurrence (0 = today), or null when there's no valid date.
+ */
+export function birthdayStatus(value) {
+  const date = toDate(value);
+  if (!date) return null;
+  const now = new Date();
+  const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let next = new Date(now.getFullYear(), date.getMonth(), date.getDate());
+  if (next < t0) next = new Date(now.getFullYear() + 1, date.getMonth(), date.getDate());
+  const inDays = Math.round((next - t0) / 86400000);
+  return { isToday: inDays === 0, inDays };
+}
+
 export function formatRelative(value) {
   const date = toDate(value);
   return date ? formatDistanceToNow(date, { addSuffix: true }) : "—";

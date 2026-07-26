@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Briefcase,
   Building2,
+  Cake,
   ExternalLink,
   Mail,
   MapPin,
@@ -23,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contactHooks } from "@/features/contacts/hooks";
-import { formatDate } from "@/utils/format";
+import { formatDate, birthdayStatus } from "@/utils/format";
 
 function DefItem({ label, children }) {
   return (
@@ -137,7 +138,28 @@ export default function ContactDetailPage() {
               <DefItem label="Department">{contact.department || "—"}</DefItem>
               <DefItem label="City">{contact.city || "—"}</DefItem>
               <DefItem label="Birthday">
-                {contact.birthday ? formatDate(contact.birthday) : "—"}
+                {contact.birthday ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    {formatDate(contact.birthday)}
+                    {(() => {
+                      const b = birthdayStatus(contact.birthday);
+                      if (!b) return null;
+                      if (b.isToday)
+                        return (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-pink-500/10 px-1.5 py-0.5 text-xs font-medium text-pink-600 dark:text-pink-400">
+                            <Cake className="h-3 w-3" /> Today
+                          </span>
+                        );
+                      if (b.inDays <= 30)
+                        return (
+                          <span className="text-xs text-muted-foreground">· in {b.inDays}d</span>
+                        );
+                      return null;
+                    })()}
+                  </span>
+                ) : (
+                  "—"
+                )}
               </DefItem>
               <DefItem label="LinkedIn">
                 {contact.linkedin ? (

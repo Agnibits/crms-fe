@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Cake,
   Download,
   Eye,
   MoreHorizontal,
@@ -26,7 +27,7 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { contactHooks } from "@/features/contacts/hooks";
 import { exportToCsv } from "@/utils/export";
-import { formatDate } from "@/utils/format";
+import { formatDate, birthdayStatus } from "@/utils/format";
 
 const EXPORT_COLUMNS = [
   { key: "name", label: "Name" },
@@ -65,6 +66,12 @@ export default function ContactsPage() {
                   <Star
                     className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400"
                     aria-label="Primary contact"
+                  />
+                )}
+                {birthdayStatus(row.original.birthday)?.isToday && (
+                  <Cake
+                    className="h-3.5 w-3.5 shrink-0 text-pink-500"
+                    aria-label="Birthday today"
                   />
                 )}
               </p>
