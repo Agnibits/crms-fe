@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   Plus,
@@ -38,6 +39,7 @@ import {
   useReopenConversation,
 } from "@/features/inbox/hooks";
 import ComposeDialog from "@/features/inbox/ComposeDialog";
+import { useEmailChannels } from "@/features/email/hooks";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -187,11 +189,17 @@ function Thread({ id }) {
 }
 
 export default function InboxPage() {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
   const [compose, setCompose] = useState(false);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
+
+  // The inbox sends/receives through the company's own email channel. Without
+  // one connected, composing would just 400 — so guide the user to set it up.
+  const { data: channels, isPending: channelsPending } = useEmailChannels();
+  const needsSetup = !channelsPending && (channels?.length ?? 0) === 0;
 
   const params = {
     ...(status !== "all" ? { status } : {}),
@@ -214,11 +222,37 @@ export default function InboxPage() {
         title="Inbox"
         description="Two-way email with your customers and leads."
         actions={
-          <Button onClick={() => setCompose(true)}>
-            <Plus className="h-4 w-4" /> New email
-          </Button>
+          needsSetup ? (
+            <Button onClick={() => router.push("/settings/email")}>
+              <Mail className="h-4 w-4" /> Connect email
+            </Button>
+          ) : (
+            <Button onClick={() => setCompose(true)}>
+              <Plus className="h-4 w-4" /> New email
+            </Button>
+          )
         }
       />
+
+      {needsSetup && (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-medium">Connect your email to get started</p>
+              <p className="text-sm text-muted-foreground">
+                The inbox sends and receives through your company email account. Connect one to
+                start emailing customers and leads.
+              </p>
+            </div>
+          </div>
+          <Button className="shrink-0" onClick={() => router.push("/settings/email")}>
+            <Mail className="h-4 w-4" /> Connect email
+          </Button>
+        </div>
+      )}
 
       <div className="grid h-[calc(100vh-230px)] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,360px)_1fr]">
         {/* List pane */}
