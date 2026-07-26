@@ -114,6 +114,7 @@ export const PAYMENT_METHODS = [
 export const TICKET_STATUSES = [
   { value: "open", label: "Open", color: "blue" },
   { value: "in_progress", label: "In Progress", color: "amber" },
+  { value: "on_hold", label: "On Hold", color: "orange" },
   { value: "resolved", label: "Resolved", color: "green" },
   { value: "closed", label: "Closed", color: "gray" },
 ];

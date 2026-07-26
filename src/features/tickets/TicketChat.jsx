@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import UserAvatar from "@/components/common/UserAvatar";
 import EmptyState from "@/components/common/EmptyState";
 import { ticketService } from "@/services/ticket.service";
 import { toastError } from "@/services/api";
+import { QUERY_KEYS } from "@/constants/app";
 import { formatRelative } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
@@ -20,6 +22,7 @@ import { cn } from "@/utils/cn";
  * server-provided messages) before the API call resolves.
  */
 export default function TicketChat({ ticket, className }) {
+  const queryClient = useQueryClient();
   const [localMessages, setLocalMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -48,6 +51,10 @@ export default function TicketChat({ ticket, className }) {
     try {
       await ticketService.action(ticket.id, "messages", { body });
       toast.success("Reply sent");
+      // Pull the server copy (with its real id) and drop the optimistic one so
+      // the message isn't rendered twice.
+      setLocalMessages([]);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tickets });
     } catch (error) {
       // Roll back the optimistic message on failure.
       setLocalMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
