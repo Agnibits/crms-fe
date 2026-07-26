@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { UserCheck } from "lucide-react";
+import { Building2, User, UserCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/utils/format";
+import { cn } from "@/utils/cn";
 import { getDefaultPipeline } from "@/services/opportunity.service";
 import { leadHooks } from "./hooks";
 
@@ -36,6 +37,17 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
   const router = useRouter();
   const [withDeal, setWithDeal] = useState(true);
   const [closeDate, setCloseDate] = useState(() => dateInDays(30));
+  // Business (company + contact) vs individual (person only). Default inferred
+  // from whether the lead has a company; the user confirms/overrides here.
+  const [isBusiness, setIsBusiness] = useState(true);
+  const [companyName, setCompanyName] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setIsBusiness(Boolean(lead?.company));
+      setCompanyName(lead?.company || "");
+    }
+  }, [open, lead?.id, lead?.company]);
 
   const { data: pipeline } = useQuery({
     queryKey: ["pipelines", "default"],
@@ -58,7 +70,7 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
   if (!lead) return null;
 
   const handleConvert = () => {
-    const payload =
+    const dealPart =
       withDeal && canCreateDeal
         ? {
             createOpportunity: true,
@@ -67,6 +79,11 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
             closeDate: closeDate || undefined,
           }
         : {};
+    const payload = {
+      accountType: isBusiness ? "business" : "individual",
+      companyName: isBusiness ? companyName || undefined : undefined,
+      ...dealPart,
+    };
     convert.mutate({ id: lead.id, action: "convert", payload });
   };
 
@@ -101,6 +118,64 @@ export default function ConvertLeadDialog({ lead, open, onOpenChange }) {
               <p className="font-medium tabular-nums">{formatCurrency(lead.value)}</p>
             </div>
           </div>
+        </div>
+
+        {/* Account type — confirm/override, then preview what gets created */}
+        <div className="space-y-3 rounded-lg border p-4">
+          <p className="text-sm font-medium">Account type</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { key: true, icon: Building2, title: "Business", sub: "A company with contacts" },
+              { key: false, icon: User, title: "Individual", sub: "A single person" },
+            ].map(({ key, icon: Icon, title, sub }) => (
+              <button
+                key={String(key)}
+                type="button"
+                onClick={() => setIsBusiness(key)}
+                className={cn(
+                  "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors",
+                  isBusiness === key
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    : "hover:bg-muted/50"
+                )}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-medium">
+                  <Icon className="h-4 w-4" /> {title}
+                </span>
+                <span className="text-xs text-muted-foreground">{sub}</span>
+              </button>
+            ))}
+          </div>
+
+          {isBusiness && (
+            <div className="space-y-1">
+              <Label htmlFor="convert-company" className="text-xs text-muted-foreground">
+                Company name
+              </Label>
+              <Input
+                id="convert-company"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. TechNova Solutions Pvt. Ltd."
+              />
+            </div>
+          )}
+
+          <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+            {isBusiness ? (
+              <>
+                Creates customer{" "}
+                <span className="font-medium text-foreground">{companyName || lead.name}</span> and
+                primary contact{" "}
+                <span className="font-medium text-foreground">{lead.name}</span>.
+              </>
+            ) : (
+              <>
+                Creates individual customer{" "}
+                <span className="font-medium text-foreground">{lead.name}</span>.
+              </>
+            )}
+          </p>
         </div>
 
         <div className="flex items-start gap-3 rounded-lg border p-4">
