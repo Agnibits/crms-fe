@@ -17,8 +17,6 @@
 // Frontend option value → backend enum value, where a plain upper-case is wrong.
 const ENUM_OVERRIDES = {
   bank_transfer: "BANK",
-  cheque: "BANK",
-  other: "CASH",
   declined: "REJECTED",
   void: "CANCELLED",
   social: "SOCIAL_MEDIA",
@@ -33,6 +31,8 @@ const ENUM_OVERRIDES = {
 const ENUM_OVERRIDES_REVERSE = {
   SOCIAL_MEDIA: "social",
   REJECTED: "declined",
+  // Payment method: backend BANK ↔ frontend option value "bank_transfer".
+  BANK: "bank_transfer",
 };
 
 function toEnumBackend(val) {
