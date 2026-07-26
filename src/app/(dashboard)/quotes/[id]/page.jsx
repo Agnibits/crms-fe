@@ -104,10 +104,11 @@ export default function QuoteDetailPage() {
               <Button variant="outline" className="w-full" onClick={() => window.print()}>
                 <Printer className="h-4 w-4" /> Print
               </Button>
+              {/* A quote becomes an order only once the customer has accepted it. */}
               <Button
                 variant="outline"
                 className="w-full"
-                disabled={convert.isPending || quote.status === "declined" || quote.status === "expired"}
+                disabled={convert.isPending || quote.status !== "accepted"}
                 onClick={() => convert.mutate({ id, action: "convert" })}
               >
                 {convert.isPending ? (
@@ -117,6 +118,12 @@ export default function QuoteDetailPage() {
                 )}
                 Convert to Order
               </Button>
+              {quote.status !== "accepted" && (
+                <p className="text-xs text-muted-foreground">
+                  Mark the quote as <span className="font-medium">Accepted</span> to convert it into
+                  an order.
+                </p>
+              )}
             </CardContent>
           </Card>
 
