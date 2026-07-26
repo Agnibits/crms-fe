@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { FormInput, FormSelect, FormSwitch } from "@/components/forms/fields";
+import { FormInput, FormSelect, FormSwitch, FormTextarea } from "@/components/forms/fields";
 import { contactSchema } from "@/validations/contact.schema";
 import { useCustomerOptions } from "@/features/contacts/hooks";
 
@@ -37,6 +37,10 @@ export default function ContactForm({
       jobTitle: defaultValues?.jobTitle ?? "",
       customerId: defaultValues?.customerId ?? "",
       city: defaultValues?.city ?? "",
+      department: defaultValues?.department ?? "",
+      birthday: defaultValues?.birthday ? String(defaultValues.birthday).slice(0, 10) : "",
+      linkedin: defaultValues?.linkedin ?? "",
+      notes: defaultValues?.notes ?? "",
       isPrimary: defaultValues?.isPrimary ?? false,
     },
   });
@@ -100,6 +104,38 @@ export default function ContactForm({
             disabled={customers.isPending}
           />
           <FormInput register={register} name="city" label="City" error={errors.city} placeholder="Mumbai" />
+          <FormInput
+            register={register}
+            name="department"
+            label="Department"
+            error={errors.department}
+            placeholder="Procurement"
+          />
+          <FormInput
+            register={register}
+            name="birthday"
+            type="date"
+            label="Birthday"
+            error={errors.birthday}
+            hint="Optional — handy for relationship touchpoints."
+          />
+          <FormInput
+            register={register}
+            name="linkedin"
+            type="url"
+            label="LinkedIn"
+            error={errors.linkedin}
+            placeholder="https://linkedin.com/in/janedoe"
+          />
+          <FormTextarea
+            register={register}
+            name="notes"
+            label="Notes"
+            error={errors.notes}
+            rows={3}
+            placeholder="Anything useful about this contact…"
+            className="sm:col-span-2"
+          />
           <FormSwitch
             control={control}
             name="isPrimary"

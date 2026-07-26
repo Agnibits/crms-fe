@@ -134,10 +134,36 @@ export default function ContactDetailPage() {
               <DefItem label="Email">{contact.email || "—"}</DefItem>
               <DefItem label="Phone">{contact.phone || "—"}</DefItem>
               <DefItem label="Job title">{contact.jobTitle || "—"}</DefItem>
+              <DefItem label="Department">{contact.department || "—"}</DefItem>
               <DefItem label="City">{contact.city || "—"}</DefItem>
+              <DefItem label="Birthday">
+                {contact.birthday ? formatDate(contact.birthday) : "—"}
+              </DefItem>
+              <DefItem label="LinkedIn">
+                {contact.linkedin ? (
+                  <a
+                    href={contact.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    Profile <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </DefItem>
               <DefItem label="Primary contact">{contact.isPrimary ? "Yes" : "No"}</DefItem>
               <DefItem label="Created">{formatDate(contact.createdAt)}</DefItem>
             </dl>
+            {contact.notes && (
+              <div className="mt-6 border-t pt-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Notes
+                </p>
+                <p className="mt-1.5 whitespace-pre-wrap text-sm">{contact.notes}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
