@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus, Save } from "lucide-react";
+import { ImagePlus, Loader2, Plus, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,6 +39,24 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
   const { data: unitOptions = [] } = useProductUnits();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
 
+  // Image is uploaded after the product is created (needs its id), so hold the
+  // picked file and hand it to the parent alongside the form values.
+  const fileRef = useRef(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(defaultValues?.imageUrl ?? null);
+
+  const onPickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(defaultValues?.imageUrl ?? null);
+  };
+
   const {
     register,
     control,
@@ -69,7 +87,10 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
 
   const submit = (values) => {
     const category = (categories.data?.items ?? []).find((c) => c.id === values.categoryId);
-    onSubmit?.({ ...values, categoryName: category?.name ?? defaultValues?.categoryName ?? "" });
+    onSubmit?.(
+      { ...values, categoryName: category?.name ?? defaultValues?.categoryName ?? "" },
+      imageFile
+    );
   };
 
   return (
@@ -79,6 +100,58 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
           <CardTitle className="text-base">Product details</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          {/* Product image — held locally, uploaded once the product exists. */}
+          <div className="flex items-center gap-4 sm:col-span-2">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-white dark:bg-muted/40">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="h-full w-full object-contain p-1.5"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex h-full w-full flex-col items-center justify-center gap-1 text-primary"
+                >
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Add image</span>
+                </button>
+              )}
+              {imagePreview && (
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  aria-label="Remove image"
+                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <div className="text-sm">
+              <p className="font-medium">Product image</p>
+              <p className="text-xs text-muted-foreground">
+                Shown on the catalog, quotes and invoices. Optional.
+              </p>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="mt-1 text-xs font-medium text-primary hover:underline"
+              >
+                {imagePreview ? "Change image" : "Upload image"}
+              </button>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onPickImage}
+            />
+          </div>
+
           <FormSelect
             control={control}
             name="type"

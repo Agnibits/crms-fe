@@ -7,15 +7,21 @@ import ErrorState from "@/components/common/ErrorState";
 import ProductForm from "@/features/products/ProductForm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { productHooks } from "@/features/products/hooks";
+import { productHooks, useUploadProductImage } from "@/features/products/hooks";
 
 export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data: product, isPending, error, refetch } = productHooks.useDetail(id);
-  const update = productHooks.useUpdate({
-    onSuccess: () => router.push(`/products/${id}`),
-  });
+  const update = productHooks.useUpdate();
+  const uploadImage = useUploadProductImage();
+  const submitting = update.isPending || uploadImage.isPending;
+
+  const handleSubmit = async (values, imageFile) => {
+    await update.mutateAsync({ id, ...values });
+    if (imageFile) await uploadImage.mutateAsync({ id, file: imageFile });
+    router.push(`/products/${id}`);
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -38,8 +44,8 @@ export default function EditProductPage() {
       ) : (
         <ProductForm
           defaultValues={product}
-          onSubmit={(values) => update.mutate({ id, ...values })}
-          submitting={update.isPending}
+          onSubmit={handleSubmit}
+          submitting={submitting}
           submitLabel="Save Changes"
         />
       )}
