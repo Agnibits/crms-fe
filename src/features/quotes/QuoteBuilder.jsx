@@ -23,7 +23,9 @@ import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
 import { formatCurrency } from "@/utils/format";
 
-const emptyItem = { productId: "", productName: "", quantity: 1, unit: "pcs", unitPrice: 0, taxRate: 0 };
+// unit is left blank until a product is picked — it's the product's unit,
+// never an assumed "pcs".
+const emptyItem = { productId: "", productName: "", quantity: 1, unit: "", unitPrice: 0, taxRate: 0 };
 
 function defaultValidUntil() {
   const d = new Date(Date.now() + 30 * 86_400_000);
@@ -58,7 +60,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
             productId: it.productId,
             productName: it.productName ?? "",
             quantity: it.quantity ?? 1,
-            unit: it.unit ?? "pcs",
+            unit: it.unit ?? "",
             unitPrice: it.unitPrice ?? 0,
             taxRate: it.taxRate ?? 0,
           }))
@@ -98,7 +100,8 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
     setValue(`items.${index}.productId`, productId, { shouldValidate: true });
     if (product) {
       setValue(`items.${index}.productName`, product.name);
-      setValue(`items.${index}.unit`, product.unit ?? "pcs");
+      // Snapshot the product's own unit (dozen, carton, hour…), not a guess.
+      setValue(`items.${index}.unit`, product.unit ?? "");
       setValue(`items.${index}.unitPrice`, product.price, { shouldValidate: true });
       setValue(`items.${index}.taxRate`, product.taxRate ?? 0);
     }
@@ -111,7 +114,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       productName:
         item.productName || productList.find((p) => p.id === item.productId)?.name || "",
       quantity: item.quantity,
-      unit: item.unit ?? "pcs",
+      unit: item.unit || undefined,
       unitPrice: item.unitPrice,
       taxRate: item.taxRate ?? 0,
       total: item.quantity * item.unitPrice,
