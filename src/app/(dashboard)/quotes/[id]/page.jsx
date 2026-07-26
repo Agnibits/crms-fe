@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Download, FileText, Loader2, Printer, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Download, FileText, Loader2, Mail, Printer, ShoppingCart } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import ErrorState from "@/components/common/ErrorState";
 import QuoteDocument from "@/features/quotes/QuoteDocument";
@@ -28,6 +28,9 @@ export default function QuoteDetailPage() {
   const { data: quote, isPending, error, refetch } = quoteHooks.useDetail(id);
   const { company } = useMyCompany();
   const patch = quoteHooks.usePatch();
+  const sendQuote = quoteHooks.useAction({
+    successMessage: "Quote emailed to customer",
+  });
   const convert = quoteHooks.useAction({
     successMessage: "Quote converted to order",
     onSuccess: () => router.push("/orders"),
@@ -104,6 +107,25 @@ export default function QuoteDetailPage() {
               <Button variant="outline" className="w-full" onClick={() => window.print()}>
                 <Printer className="h-4 w-4" /> Print
               </Button>
+              {/* Email the quote PDF to the customer; first send flips draft → sent. */}
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={sendQuote.isPending || !quote.customer?.email}
+                onClick={() => sendQuote.mutate({ id, action: "send" })}
+              >
+                {sendQuote.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4" />
+                )}
+                Email to Customer
+              </Button>
+              {!quote.customer?.email && (
+                <p className="text-xs text-muted-foreground">
+                  Add an email to this customer to send the quote.
+                </p>
+              )}
               {/* A quote becomes an order only once the customer has accepted it. */}
               <Button
                 variant="outline"
