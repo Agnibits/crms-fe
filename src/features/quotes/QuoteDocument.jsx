@@ -82,7 +82,10 @@ export default function QuoteDocument({ quote }) {
               <tr key={`${item.productId}-${index}`} className="border-b last:border-b-0">
                 <td className="py-2.5 pr-2 text-muted-foreground">{index + 1}</td>
                 <td className="py-2.5 pr-2 font-medium">{item.productName || item.productId}</td>
-                <td className="py-2.5 pr-2 text-right tabular-nums">{item.quantity}</td>
+                <td className="py-2.5 pr-2 text-right tabular-nums">
+                  {item.quantity}
+                  {item.unit ? ` ${item.unit}` : ""}
+                </td>
                 <td className="py-2.5 pr-2 text-right tabular-nums">{formatCurrency(item.unitPrice)}</td>
                 <td className="py-2.5 text-right font-medium tabular-nums">
                   {formatCurrency(item.total ?? item.quantity * item.unitPrice)}

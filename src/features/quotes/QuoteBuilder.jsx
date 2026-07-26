@@ -23,7 +23,7 @@ import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
 import { formatCurrency } from "@/utils/format";
 
-const emptyItem = { productId: "", productName: "", quantity: 1, unitPrice: 0, taxRate: 0 };
+const emptyItem = { productId: "", productName: "", quantity: 1, unit: "pcs", unitPrice: 0, taxRate: 0 };
 
 function defaultValidUntil() {
   const d = new Date(Date.now() + 30 * 86_400_000);
@@ -58,6 +58,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
             productId: it.productId,
             productName: it.productName ?? "",
             quantity: it.quantity ?? 1,
+            unit: it.unit ?? "pcs",
             unitPrice: it.unitPrice ?? 0,
             taxRate: it.taxRate ?? 0,
           }))
@@ -97,6 +98,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
     setValue(`items.${index}.productId`, productId, { shouldValidate: true });
     if (product) {
       setValue(`items.${index}.productName`, product.name);
+      setValue(`items.${index}.unit`, product.unit ?? "pcs");
       setValue(`items.${index}.unitPrice`, product.price, { shouldValidate: true });
       setValue(`items.${index}.taxRate`, product.taxRate ?? 0);
     }
@@ -109,6 +111,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       productName:
         item.productName || productList.find((p) => p.id === item.productId)?.name || "",
       quantity: item.quantity,
+      unit: item.unit ?? "pcs",
       unitPrice: item.unitPrice,
       taxRate: item.taxRate ?? 0,
       total: item.quantity * item.unitPrice,
@@ -212,15 +215,22 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
                       )}
                     </div>
                     <div className="col-span-4 md:col-span-2">
-                      <Input
-                        type="number"
-                        min={1}
-                        step={1}
-                        aria-label="Quantity"
-                        className="text-right tabular-nums"
-                        aria-invalid={!!itemErrors?.quantity}
-                        {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min={1}
+                          step={1}
+                          aria-label="Quantity"
+                          className="text-right tabular-nums"
+                          aria-invalid={!!itemErrors?.quantity}
+                          {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                        />
+                        {watchedItems?.[index]?.unit && (
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {watchedItems[index].unit}
+                          </span>
+                        )}
+                      </div>
                       {itemErrors?.quantity && (
                         <p className="mt-1 text-xs font-medium text-destructive">
                           {itemErrors.quantity.message}
