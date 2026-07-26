@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable, { selectionColumn } from "@/components/tables/DataTable";
@@ -22,19 +23,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
 import { orderHooks } from "@/features/orders/hooks";
+import { orderService } from "@/services/order.service";
+import { toastError } from "@/services/api";
+import { QUERY_KEYS } from "@/constants/app";
 import { ORDER_STATUSES, BADGE_COLORS, findOption } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
-/** Inline, optimistic status select rendered in each row. */
-function RowStatusSelect({ order, patch }) {
+/** Inline status select rendered in each row. */
+function RowStatusSelect({ order, onChange }) {
   const option = findOption(ORDER_STATUSES, order.status);
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <Select
         value={order.status}
-        onValueChange={(status) => patch.mutate({ id: order.id, status })}
+        onValueChange={(status) => onChange(order.id, status)}
       >
         <SelectTrigger
           aria-label={`Status for ${order.number}`}
@@ -61,7 +65,14 @@ export default function OrdersPage() {
   const router = useRouter();
   const t = useTableState();
   const { data, isPending, error, refetch } = orderHooks.useList(t.queryParams);
-  const patch = orderHooks.usePatch();
+  const queryClient = useQueryClient();
+  // Status goes through the dedicated /status endpoint (enforces transitions).
+  const statusMut = useMutation({
+    mutationFn: ({ id, status }) => orderService.updateStatus(id, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders }),
+    onError: (e) => toastError(e, "Couldn't update the order status"),
+  });
+  const changeStatus = (id, status) => statusMut.mutate({ id, status });
   const remove = orderHooks.useRemove();
   const bulkRemove = orderHooks.useBulkRemove();
   const [deleteId, setDeleteId] = useState(null);
@@ -78,7 +89,7 @@ export default function OrdersPage() {
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => <RowStatusSelect order={row.original} patch={patch} />,
+        cell: ({ row }) => <RowStatusSelect order={row.original} onChange={changeStatus} />,
       },
       {
         accessorKey: "total",
@@ -124,7 +135,7 @@ export default function OrdersPage() {
         ),
       },
     ],
-    [router, patch]
+    [router, changeStatus]
   );
 
   return (

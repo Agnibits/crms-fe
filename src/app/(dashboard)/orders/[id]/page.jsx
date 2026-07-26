@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Ban, Check, FileText, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { ArrowLeft, Ban, Check, FileText, Loader2, Receipt } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
@@ -20,15 +22,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { orderHooks } from "@/features/orders/hooks";
+import { orderService } from "@/services/order.service";
+import { toastError } from "@/services/api";
 import { ORDER_STATUSES } from "@/constants/options";
+import { QUERY_KEYS } from "@/constants/app";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
+// Fulfilment steps in order (cancelled is a side exit, not a step).
 const FLOW = ORDER_STATUSES.filter((s) => s.value !== "cancelled");
 
-function StatusFlow({ order, patch }) {
+function StatusFlow({ order, statusMut }) {
   const currentIndex = FLOW.findIndex((s) => s.value === order.status);
   const cancelled = order.status === "cancelled";
+  const busy = statusMut.isPending;
 
   return (
     <div className="space-y-3">
@@ -39,22 +46,20 @@ function StatusFlow({ order, patch }) {
           <button
             key={step.value}
             type="button"
-            disabled={patch.isPending || cancelled}
-            onClick={() => patch.mutate({ id: order.id, status: step.value })}
+            disabled={busy || cancelled}
+            onClick={() => statusMut.mutate(step.value)}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors",
               done ? "border-primary/40 bg-primary/5" : "hover:bg-muted/50",
               isCurrent && "ring-1 ring-primary/50",
-              (patch.isPending || cancelled) && "cursor-not-allowed opacity-70"
+              (busy || cancelled) && "cursor-not-allowed opacity-70"
             )}
             aria-label={`Set status to ${step.label}`}
           >
             <span
               className={cn(
                 "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
-                done
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "text-muted-foreground"
+                done ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground"
               )}
             >
               {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
@@ -64,9 +69,7 @@ function StatusFlow({ order, patch }) {
                 {step.label}
               </p>
             </div>
-            {isCurrent && (
-              <span className="text-xs font-medium text-primary">Current</span>
-            )}
+            {isCurrent && <span className="text-xs font-medium text-primary">Current</span>}
           </button>
         );
       })}
@@ -80,10 +83,10 @@ function StatusFlow({ order, patch }) {
         <Button
           variant="outline"
           className="w-full text-destructive hover:text-destructive"
-          disabled={patch.isPending || order.status === "delivered"}
-          onClick={() => patch.mutate({ id: order.id, status: "cancelled" })}
+          disabled={busy || order.status === "completed"}
+          onClick={() => statusMut.mutate("cancelled")}
         >
-          {patch.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
           Cancel order
         </Button>
       )}
@@ -94,8 +97,25 @@ function StatusFlow({ order, patch }) {
 export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: order, isPending, error, refetch } = orderHooks.useDetail(id);
-  const patch = orderHooks.usePatch();
+
+  // Status transitions go through the dedicated /status endpoint (the generic
+  // update doesn't accept status), which enforces valid transitions.
+  const statusMut = useMutation({
+    mutationFn: (status) => orderService.updateStatus(id, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders }),
+    onError: (e) => toastError(e, "Couldn't update the order status"),
+  });
+  const invoiceMut = useMutation({
+    mutationFn: () => orderService.generateInvoice(id),
+    onSuccess: (invoice) => {
+      toast.success("Invoice created from this order");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invoices });
+      router.push(invoice?.id ? `/invoices/${invoice.id}` : "/invoices");
+    },
+    onError: (e) => toastError(e, "Failed to generate invoice"),
+  });
 
   if (error) {
     return (
@@ -119,16 +139,30 @@ export default function OrderDetailPage() {
   }
 
   const items = order.items ?? [];
+  // An order can be billed once it's confirmed (not a draft or cancelled).
+  const canInvoice = ["confirmed", "processing", "completed"].includes(order.status);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={order.number}
-        description={`Order for ${order.customerName} · ${formatCurrency(order.total)}`}
+        title={order.number || "Order"}
+        description={`Order for ${order.customerName || "—"} · ${formatCurrency(order.total)}`}
         actions={
-          <Button variant="outline" onClick={() => router.push("/orders")}>
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
+          <>
+            {canInvoice && (
+              <Button onClick={() => invoiceMut.mutate()} disabled={invoiceMut.isPending}>
+                {invoiceMut.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Receipt className="h-4 w-4" />
+                )}
+                Generate Invoice
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => router.push("/orders")}>
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+          </>
         }
       />
 
@@ -159,7 +193,10 @@ export default function OrderDetailPage() {
                         <TableCell className="font-medium">
                           {item.productName || item.productId}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {item.quantity}
+                          {item.unit ? ` ${item.unit}` : ""}
+                        </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatCurrency(item.unitPrice)}
                         </TableCell>
@@ -209,7 +246,7 @@ export default function OrderDetailPage() {
             <CardContent className="grid gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-xs text-muted-foreground">Customer</p>
-                <p className="mt-1 text-sm font-medium">{order.customerName}</p>
+                <p className="mt-1 text-sm font-medium">{order.customerName || "—"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Created</p>
@@ -220,7 +257,7 @@ export default function OrderDetailPage() {
                 {order.quoteId ? (
                   <Button asChild variant="link" className="mt-0.5 h-auto p-0 text-sm">
                     <Link href={`/quotes/${order.quoteId}`}>
-                      <FileText className="h-3.5 w-3.5" /> View quote
+                      <FileText className="h-3.5 w-3.5" /> {order.quoteNumber || "View quote"}
                     </Link>
                   </Button>
                 ) : (
@@ -240,7 +277,7 @@ export default function OrderDetailPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <StatusFlow order={order} patch={patch} />
+            <StatusFlow order={order} statusMut={statusMut} />
           </CardContent>
         </Card>
       </div>

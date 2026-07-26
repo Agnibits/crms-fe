@@ -83,11 +83,13 @@ export const QUOTE_STATUSES = [
   { value: "expired", label: "Expired", color: "amber" },
 ];
 
+// Mirrors the backend OrderStatus enum exactly (DRAFT/CONFIRMED/PROCESSING/
+// COMPLETED/CANCELLED) so badges, filters and the status flow line up.
 export const ORDER_STATUSES = [
-  { value: "pending", label: "Pending", color: "amber" },
+  { value: "draft", label: "Draft", color: "gray" },
   { value: "confirmed", label: "Confirmed", color: "blue" },
-  { value: "shipped", label: "Shipped", color: "violet" },
-  { value: "delivered", label: "Delivered", color: "green" },
+  { value: "processing", label: "Processing", color: "violet" },
+  { value: "completed", label: "Completed", color: "green" },
   { value: "cancelled", label: "Cancelled", color: "red" },
 ];
 
