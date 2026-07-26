@@ -24,7 +24,7 @@ import {
 import { orderHooks } from "@/features/orders/hooks";
 import { orderService } from "@/services/order.service";
 import { toastError } from "@/services/api";
-import { ORDER_STATUSES } from "@/constants/options";
+import { ORDER_STATUSES, INVOICE_STATUSES } from "@/constants/options";
 import { QUERY_KEYS } from "@/constants/app";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -112,6 +112,7 @@ export default function OrderDetailPage() {
     onSuccess: (invoice) => {
       toast.success("Invoice created from this order");
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invoices });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.orders });
       router.push(invoice?.id ? `/invoices/${invoice.id}` : "/invoices");
     },
     onError: (e) => toastError(e, "Failed to generate invoice"),
@@ -139,6 +140,7 @@ export default function OrderDetailPage() {
   }
 
   const items = order.items ?? [];
+  const invoices = order.invoices ?? [];
   // An order can be billed once it's confirmed (not a draft or cancelled).
   const canInvoice = ["confirmed", "processing", "completed"].includes(order.status);
 
@@ -264,6 +266,41 @@ export default function OrderDetailPage() {
                   <p className="mt-1 text-sm text-muted-foreground">—</p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoices billed from this order — closes the order ↔ invoice loop */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">Billing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {invoices.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {canInvoice
+                    ? "No invoice yet. Use “Generate Invoice” to bill this order."
+                    : "No invoice yet."}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {invoices.map((inv) => (
+                    <Link
+                      key={inv.id}
+                      href={`/invoices/${inv.id}`}
+                      className="flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <Receipt className="h-4 w-4 text-muted-foreground" />
+                        {inv.number || "Invoice"}
+                      </span>
+                      <span className="flex items-center gap-3">
+                        <StatusBadge value={inv.status} options={INVOICE_STATUSES} />
+                        <span className="text-sm tabular-nums">{formatCurrency(inv.total)}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

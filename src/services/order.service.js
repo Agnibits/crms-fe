@@ -35,6 +35,14 @@ const mapper = {
         unitPrice: Number(it.unitPrice ?? 0),
         total: Number(it.total ?? 0),
       })),
+      // Invoices billed from this order (only present on /detail).
+      invoices: (o.invoices ?? []).map((inv) => ({
+        id: inv.id,
+        number: inv.invoiceNumber ?? inv.number ?? "",
+        status: String(inv.status ?? "").toLowerCase(),
+        total: Number(inv.total ?? 0),
+        createdAt: inv.createdAt,
+      })),
     };
   },
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -10,6 +11,7 @@ import {
   Mail,
   Pencil,
   Printer,
+  Package,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import ErrorState from "@/components/common/ErrorState";
@@ -74,9 +76,23 @@ export default function InvoiceDetailPage() {
           )
         }
         description={
-          isPending
-            ? undefined
-            : `${invoice?.customerName ?? ""} · Due ${formatDate(invoice?.dueDate)}`
+          isPending ? undefined : (
+            <span className="inline-flex flex-wrap items-center gap-x-1.5">
+              {invoice?.customerName ?? ""} · Due {formatDate(invoice?.dueDate)}
+              {invoice?.orderId && (
+                <>
+                  <span aria-hidden>·</span>
+                  <Link
+                    href={`/orders/${invoice.orderId}`}
+                    className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                  >
+                    <Package className="h-3.5 w-3.5" />
+                    {invoice.orderNumber || "View order"}
+                  </Link>
+                </>
+              )}
+            </span>
+          )
         }
         actions={
           <>
