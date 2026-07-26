@@ -18,9 +18,25 @@ const MUTED = [107, 114, 128];
 export function useInvoicePdf() {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  async function downloadPdf(invoice) {
+  async function downloadPdf(invoice, company = {}) {
     if (!invoice) return;
     setIsGenerating(true);
+    // Letterhead comes from the tenant company (not hardcoded); bill-to from
+    // the invoice's own customer.
+    const seller = {
+      name: company.name || "AgniBits CRM",
+      address: [company.addressLine, company.city, company.country].filter(Boolean).join(", "),
+      contact: [company.email, company.phone].filter(Boolean).join("  ·  "),
+      taxId: company.taxId || "",
+    };
+    const cust = invoice.customer ?? {};
+    const custLines = [
+      cust.company,
+      cust.addressLine,
+      [cust.city, cust.state, cust.postalCode].filter(Boolean).join(", "),
+      cust.country,
+      [cust.email, cust.phone].filter(Boolean).join(" · "),
+    ].filter(Boolean);
     try {
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");
@@ -35,11 +51,12 @@ export function useInvoicePdf() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(20);
-      doc.text("AgniBits CRM", margin, 40);
+      doc.text(seller.name, margin, 40);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("4th Floor, Tech Park One, Pune, India", margin, 56);
-      doc.text("hello@agnibits.com  ·  +91 9876543210", margin, 68);
+      if (seller.address) doc.text(seller.address, margin, 56);
+      if (seller.contact) doc.text(seller.contact, margin, 68);
+      if (seller.taxId) doc.text(`Tax ID: ${seller.taxId}`, margin, 80);
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
@@ -60,7 +77,7 @@ export function useInvoicePdf() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...MUTED);
-      doc.text(`Customer ID: ${invoice.customerId ?? "—"}`, margin, y + 30);
+      custLines.forEach((line, i) => doc.text(String(line), margin, y + 30 + i * 12));
 
       const statusLabel =
         findOption(INVOICE_STATUSES, invoice.status)?.label ?? String(invoice.status ?? "");
@@ -80,7 +97,9 @@ export function useInvoicePdf() {
 
       /* Line items */
       autoTable(doc, {
-        startY: y + 50,
+        // Push the table below whichever is taller: the meta rows or the
+        // customer address block.
+        startY: Math.max(y + 50, y + 30 + custLines.length * 12 + 12),
         margin: { left: margin, right: margin },
         head: [["Item", "Qty", "Unit Price", "Amount"]],
         body: (invoice.items ?? []).map((item) => [

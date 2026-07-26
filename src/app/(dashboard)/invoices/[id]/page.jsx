@@ -107,7 +107,7 @@ export default function InvoiceDetailPage() {
             <Button
               variant="outline"
               disabled={isPending || isGenerating}
-              onClick={() => downloadPdf(invoice)}
+              onClick={() => downloadPdf(invoice, company)}
             >
               {isGenerating ? <Loader2 className="animate-spin" /> : <Download />}
               Download PDF
