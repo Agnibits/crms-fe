@@ -24,7 +24,6 @@ import CategoriesDialog from "@/features/products/CategoriesDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -58,23 +57,44 @@ const PRODUCT_STATUSES = [
   { value: "archived", label: "Archived", color: "gray" },
 ];
 
-const LOW_STOCK_THRESHOLD = 20;
-const MAX_STOCK = 500;
+const STOCK_STATUS = {
+  IN_STOCK: { label: "In stock", cls: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+  LOW_STOCK: { label: "Low stock", cls: "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+  OUT_OF_STOCK: { label: "Out of stock", cls: "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400" },
+};
 
-function StockCell({ stock, type }) {
+function StockStatusBadge({ status }) {
+  const s = STOCK_STATUS[status] || STOCK_STATUS.OUT_OF_STOCK;
+  return (
+    <Badge variant="outline" className={s.cls}>
+      {s.label}
+    </Badge>
+  );
+}
+
+// Low/out is decided by the backend against each product's OWN reorder level
+// (never a hardcoded threshold), so the list agrees with the detail page.
+function StockCell({ stock, type, stockStatus }) {
   // Services aren't stocked — don't imply "0 in stock".
   if (type === "SERVICE") return <span className="text-muted-foreground">—</span>;
   return (
     <span className="inline-flex items-center gap-2 tabular-nums">
       {formatNumber(stock)}
-      {stock < LOW_STOCK_THRESHOLD && (
+      {stockStatus === "OUT_OF_STOCK" ? (
+        <Badge
+          variant="outline"
+          className="border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400"
+        >
+          <AlertTriangle className="h-3 w-3" /> Out
+        </Badge>
+      ) : stockStatus === "LOW_STOCK" ? (
         <Badge
           variant="outline"
           className="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
         >
           <AlertTriangle className="h-3 w-3" /> Low
         </Badge>
-      )}
+      ) : null}
     </span>
   );
 }
@@ -116,34 +136,29 @@ function InventoryTab() {
                 <TableHead>SKU</TableHead>
                 <TableHead className="text-right">Stock</TableHead>
                 <TableHead>Unit</TableHead>
-                <TableHead className="w-[220px]">Level</TableHead>
+                <TableHead className="text-right">Reorder at</TableHead>
+                <TableHead className="w-[140px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{product.sku}</TableCell>
-                  <TableCell className="text-right">
-                    <StockCell stock={product.stock} type={product.type} />
-                  </TableCell>
-                  <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Progress
-                        value={Math.min(100, (product.stock / MAX_STOCK) * 100)}
-                        className="h-1.5"
-                        indicatorClassName={
-                          product.stock < LOW_STOCK_THRESHOLD ? "bg-amber-500" : undefined
-                        }
-                      />
-                      <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-                        {Math.round((product.stock / MAX_STOCK) * 100)}%
-                      </span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {items
+                .filter((p) => p.type !== "SERVICE")
+                .map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{product.sku}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatNumber(product.stock)}
+                    </TableCell>
+                    <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {formatNumber(product.reorderLevel ?? 0)}
+                    </TableCell>
+                    <TableCell>
+                      <StockStatusBadge status={product.stockStatus} />
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         )}
@@ -204,7 +219,7 @@ export default function ProductsPage() {
       {
         accessorKey: "stock",
         header: "Stock",
-        cell: ({ row }) => <StockCell stock={row.original.stock} type={row.original.type} />,
+        cell: ({ row }) => <StockCell stock={row.original.stock} type={row.original.type} stockStatus={row.original.stockStatus} />,
       },
       {
         accessorKey: "status",
