@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,6 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
   } = useForm({
@@ -74,8 +73,10 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
-  const watchedItems = watch("items");
-  const discount = watch("discount");
+  // useWatch (not watch) so line totals react to setValue from product picks —
+  // watch("items") returns stale values after a nested setValue in field arrays.
+  const watchedItems = useWatch({ control, name: "items" });
+  const discount = useWatch({ control, name: "discount" });
 
   // Tax is computed from each line's catalog tax rate (matches the backend) —
   // never a manual figure that could disagree with what's saved.
@@ -102,8 +103,9 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       setValue(`items.${index}.productName`, product.name);
       // Snapshot the product's own unit (dozen, carton, hour…), not a guess.
       setValue(`items.${index}.unit`, product.unit ?? "");
-      setValue(`items.${index}.unitPrice`, product.price, { shouldValidate: true });
-      setValue(`items.${index}.taxRate`, product.taxRate ?? 0);
+      // Prices come from the API as Decimal strings — coerce to numbers.
+      setValue(`items.${index}.unitPrice`, Number(product.price) || 0, { shouldValidate: true });
+      setValue(`items.${index}.taxRate`, Number(product.taxRate) || 0);
     }
   };
 
