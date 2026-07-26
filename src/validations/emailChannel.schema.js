@@ -18,4 +18,5 @@ export const emailChannelSchema = z.object({
   imapPort: port,
   imapUser: z.string().optional().or(z.literal("")),
   imapPass: z.string().optional().or(z.literal("")),
+  autoCreateTickets: z.boolean().optional(),
 });

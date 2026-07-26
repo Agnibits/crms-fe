@@ -32,9 +32,11 @@ import { emailChannelSchema } from "@/validations/emailChannel.schema";
 import {
   useEmailChannels,
   useConnectChannel,
+  useUpdateChannel,
   useTestChannel,
   useDeleteChannel,
 } from "@/features/email/hooks";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/utils/cn";
 
 /* Provider presets — the user picks their email provider and we fill in the
@@ -154,36 +156,55 @@ const HELP = {
   },
 };
 
-function ConnectedChannel({ channel, onTest, onDelete, testing }) {
+function ConnectedChannel({ channel, onTest, onDelete, onToggleTickets, testing, updating }) {
+  const canAutoTicket = !!channel.imapHost; // needs IMAP to receive
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Mail className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="flex items-center gap-2 font-medium">
-            {channel.fromEmail}
-            {channel.isActive === false ? (
-              <Badge variant="secondary">Inactive</Badge>
-            ) : (
-              <Badge className="bg-success/15 text-success">Active</Badge>
-            )}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            SMTP {channel.smtpHost}
-            {channel.smtpPort ? `:${channel.smtpPort}` : ""}
-            {channel.imapHost ? ` · IMAP ${channel.imapHost}` : " · IMAP not set (no replies)"}
-          </p>
+    <div className="space-y-3 rounded-lg border p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Mail className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 font-medium">
+              {channel.fromEmail}
+              {channel.isActive === false ? (
+                <Badge variant="secondary">Inactive</Badge>
+              ) : (
+                <Badge className="bg-success/15 text-success">Active</Badge>
+              )}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              SMTP {channel.smtpHost}
+              {channel.smtpPort ? `:${channel.smtpPort}` : ""}
+              {channel.imapHost ? ` · IMAP ${channel.imapHost}` : " · IMAP not set (no replies)"}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => onTest(channel.id)} loading={testing}>
+            <CheckCircle2 className="h-4 w-4" /> Test SMTP
+          </Button>
+          <Button variant="outline" size="sm" className="text-destructive" onClick={() => onDelete(channel.id)}>
+            <Trash2 className="h-4 w-4" /> Remove
+          </Button>
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => onTest(channel.id)} loading={testing}>
-          <CheckCircle2 className="h-4 w-4" /> Test SMTP
-        </Button>
-        <Button variant="outline" size="sm" className="text-destructive" onClick={() => onDelete(channel.id)}>
-          <Trash2 className="h-4 w-4" /> Remove
-        </Button>
+      <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2.5">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">Auto-create support tickets</p>
+          <p className="text-xs text-muted-foreground">
+            {canAutoTicket
+              ? "Incoming emails to this inbox become support tickets automatically."
+              : "Add IMAP settings to receive email before enabling this."}
+          </p>
+        </div>
+        <Switch
+          checked={!!channel.autoCreateTickets}
+          disabled={!canAutoTicket || updating}
+          onCheckedChange={(v) => onToggleTickets(channel.id, v)}
+          aria-label="Auto-create support tickets from incoming email"
+        />
       </div>
     </div>
   );
@@ -192,6 +213,7 @@ function ConnectedChannel({ channel, onTest, onDelete, testing }) {
 export default function EmailChannelsPage() {
   const { data: channels = [], isPending, error, refetch } = useEmailChannels();
   const connect = useConnectChannel();
+  const update = useUpdateChannel();
   const test = useTestChannel();
   const del = useDeleteChannel();
 
@@ -220,6 +242,7 @@ export default function EmailChannelsPage() {
       imapPort: 993,
       imapUser: "",
       imapPass: "",
+      autoCreateTickets: false,
     },
   });
 
@@ -292,7 +315,9 @@ export default function EmailChannelsPage() {
                   channel={c}
                   onTest={(id) => test.mutate(id)}
                   onDelete={(id) => del.mutate(id)}
+                  onToggleTickets={(id, autoCreateTickets) => update.mutate({ id, autoCreateTickets })}
                   testing={test.isPending && test.variables === c.id}
+                  updating={update.isPending && update.variables?.id === c.id}
                 />
               ))}
             </div>
@@ -374,6 +399,16 @@ export default function EmailChannelsPage() {
                 <FormInput register={register} name="fromEmail" type="email" label="Email address" placeholder="support@acme.com" required error={errors.fromEmail} />
                 <FormInput register={register} name="smtpPass" type="password" label="Email password" placeholder="App password or account password" required error={errors.smtpPass} hint="For Gmail/Yahoo, paste the App Password from the steps above" />
               </div>
+            </div>
+
+            {/* Support: turn inbound email into tickets */}
+            <div className="rounded-lg border p-4">
+              <FormSwitch
+                control={control}
+                name="autoCreateTickets"
+                label="Turn incoming emails into support tickets"
+                hint="When a customer emails this inbox, a support ticket is created automatically. Requires IMAP (incoming) to be set."
+              />
             </div>
 
             {/* Advanced — hidden by default; auto-open for “Other” */}

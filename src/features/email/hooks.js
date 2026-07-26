@@ -27,6 +27,18 @@ export function useConnectChannel(options = {}) {
   });
 }
 
+export function useUpdateChannel(options = {}) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }) => emailChannelService.update(id, payload),
+    onSuccess: (d, v, c) => {
+      qc.invalidateQueries({ queryKey: KEY });
+      options.onSuccess?.(d, v, c);
+    },
+    onError: (e) => toastError(e, "Failed to update email account"),
+  });
+}
+
 export function useTestChannel() {
   return useMutation({
     mutationFn: (id) => emailChannelService.test(id),
