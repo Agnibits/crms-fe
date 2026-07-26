@@ -75,7 +75,6 @@ export default function ContactForm({
             type="email"
             label="Email"
             error={errors.email}
-            required
             placeholder="jane@example.com"
           />
           <FormInput
@@ -98,9 +97,8 @@ export default function ContactForm({
             name="customerId"
             label="Customer"
             error={errors.customerId}
-            required
             options={customers.options}
-            placeholder={customers.isPending ? "Loading customers…" : "Select customer"}
+            placeholder={customers.isPending ? "Loading customers…" : "Select customer (optional)"}
             disabled={customers.isPending}
           />
           <FormInput register={register} name="city" label="City" error={errors.city} placeholder="Mumbai" />

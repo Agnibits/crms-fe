@@ -5,10 +5,10 @@ export const contactSchema = z.object({
     .string()
     .min(2, "Name must be at least 2 characters")
     .max(80, "Name is too long"),
-  email: z.string().min(1, "Email is required").email("Enter a valid email address"),
+  email: z.string().email("Enter a valid email address").optional().or(z.literal("")),
   phone: z.string().max(25, "Phone number is too long").optional().or(z.literal("")),
   jobTitle: z.string().max(80, "Job title is too long").optional().or(z.literal("")),
-  customerId: z.string().min(1, "Select a customer"),
+  customerId: z.string().optional().or(z.literal("")),
   city: z.string().max(60).optional().or(z.literal("")),
   department: z.string().max(100, "Department is too long").optional().or(z.literal("")),
   birthday: z.string().optional().or(z.literal("")),
