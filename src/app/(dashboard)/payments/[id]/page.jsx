@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Receipt } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Download, Loader2, Receipt } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import ErrorState from "@/components/common/ErrorState";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -11,6 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { paymentHooks } from "@/features/payments/hooks";
+import { useReceiptPdf } from "@/features/payments/useReceiptPdf";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { PAYMENT_METHODS, findOption } from "@/constants/options";
 import { formatCurrency, formatDate, formatDateTime } from "@/utils/format";
 
@@ -27,6 +29,8 @@ export default function PaymentDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { data: payment, isPending, error, refetch } = paymentHooks.useDetail(id);
+  const { company } = useMyCompany();
+  const { downloadPdf, isGenerating } = useReceiptPdf();
 
   if (error) {
     return (
@@ -43,9 +47,19 @@ export default function PaymentDetailPage() {
         title="Payment Receipt"
         description={isPending ? undefined : payment?.number}
         actions={
-          <Button variant="ghost" onClick={() => router.push("/payments")}>
-            <ArrowLeft /> Back to Payments
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              disabled={isPending || isGenerating}
+              onClick={() => downloadPdf(payment, company)}
+            >
+              {isGenerating ? <Loader2 className="animate-spin" /> : <Download />}
+              Download PDF
+            </Button>
+            <Button variant="ghost" onClick={() => router.push("/payments")}>
+              <ArrowLeft /> Back to Payments
+            </Button>
+          </>
         }
       />
 
