@@ -321,7 +321,12 @@ function ProductsTab() {
   const top = [...(data?.top ?? [])].sort((a, b) => b.revenue - a.revenue);
   const max = top[0]?.revenue || 1;
 
-  const exportRows = top.map((p) => ({ name: p.name, revenue: p.revenue, stock: p.stock }));
+  const exportRows = top.map((p) => ({
+    name: p.name,
+    type: String(p.type).toUpperCase() === "SERVICE" ? "Service" : "Goods",
+    revenue: p.revenue,
+    stock: String(p.type).toUpperCase() === "SERVICE" ? "—" : p.stock,
+  }));
 
   return (
     <div className="space-y-4">
@@ -333,6 +338,7 @@ function ProductsTab() {
           rows={exportRows}
           columns={[
             { key: "name", label: "Product" },
+            { key: "type", label: "Type" },
             { key: "revenue", label: "Revenue" },
             { key: "stock", label: "Stock" },
           ]}
@@ -356,9 +362,13 @@ function ProductsTab() {
                     {product.name}
                   </p>
                   <div className="flex shrink-0 items-center gap-3">
-                    <Badge variant="secondary" className="tabular-nums">
-                      {formatNumber(product.stock)} in stock
-                    </Badge>
+                    {String(product.type).toUpperCase() === "SERVICE" ? (
+                      <Badge variant="secondary">Service</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="tabular-nums">
+                        {formatNumber(product.stock)} in stock
+                      </Badge>
+                    )}
                     <p className="w-24 text-right text-sm font-semibold tabular-nums">
                       {formatCurrency(product.revenue)}
                     </p>
