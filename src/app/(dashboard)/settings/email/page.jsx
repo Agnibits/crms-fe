@@ -77,6 +77,15 @@ const PROVIDERS = [
     imapPort: 993,
   },
   {
+    value: "hostinger",
+    label: "Hostinger Email",
+    smtpHost: "smtp.hostinger.com",
+    smtpPort: 465,
+    smtpSecure: true,
+    imapHost: "imap.hostinger.com",
+    imapPort: 993,
+  },
+  {
     value: "other",
     label: "Other provider",
     smtpHost: "",
@@ -124,6 +133,15 @@ const HELP = {
       "Paste it into “Email password” below.",
     ],
     link: { href: "https://accounts.zoho.com/home#security/app_password", label: "Open Zoho App Passwords" },
+  },
+  hostinger: {
+    note: "Use your full email address and its mailbox password — the one you set in Hostinger hPanel → Emails. No app password needed.",
+    steps: [
+      "Log in to Hostinger hPanel and open Emails → Manage for your domain.",
+      "If you don't know the mailbox password, use “Change password” to set a new one.",
+      "Enter the email address and that password below.",
+    ],
+    link: { href: "https://hpanel.hostinger.com/", label: "Open Hostinger hPanel" },
   },
   other: {
     note: "Find your provider's email settings (often under “IMAP/SMTP” or “Email setup”) and enter them in Advanced settings below.",
