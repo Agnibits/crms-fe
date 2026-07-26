@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +8,7 @@ import toast from "react-hot-toast";
 import { ArrowLeft, Ban, Check, FileText, Loader2, Receipt } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorState from "@/components/common/ErrorState";
 import EmptyState from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -98,6 +100,7 @@ export default function OrderDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [confirmReinvoice, setConfirmReinvoice] = useState(false);
   const { data: order, isPending, error, refetch } = orderHooks.useDetail(id);
 
   // Status transitions go through the dedicated /status endpoint (the generic
@@ -152,7 +155,12 @@ export default function OrderDetailPage() {
         actions={
           <>
             {canInvoice && (
-              <Button onClick={() => invoiceMut.mutate()} disabled={invoiceMut.isPending}>
+              <Button
+                onClick={() =>
+                  invoices.length > 0 ? setConfirmReinvoice(true) : invoiceMut.mutate()
+                }
+                disabled={invoiceMut.isPending}
+              >
                 {invoiceMut.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -318,6 +326,18 @@ export default function OrderDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={confirmReinvoice}
+        onOpenChange={setConfirmReinvoice}
+        title="Bill this order again?"
+        description={`This order already has ${invoices.length} invoice${
+          invoices.length === 1 ? "" : "s"
+        }. Only create another if you're splitting the billing — otherwise you'll double-bill the customer.`}
+        confirmLabel="Create another invoice"
+        loading={invoiceMut.isPending}
+        onConfirm={() => invoiceMut.mutate(undefined, { onSuccess: () => setConfirmReinvoice(false) })}
+      />
     </div>
   );
 }
