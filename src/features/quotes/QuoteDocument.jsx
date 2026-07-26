@@ -32,7 +32,19 @@ export default function QuoteDocument({ quote, company }) {
   };
 
   return (
-    <div className="rounded-xl bg-background p-6 text-sm sm:p-8">
+    <div id="quote-print-area" className="rounded-xl bg-background p-6 text-sm sm:p-8">
+      {/* Print-only isolation: hide the app chrome, print just this document. */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #quote-print-area, #quote-print-area * { visibility: visible !important; }
+          #quote-print-area {
+            position: absolute; inset: 0 auto auto 0; width: 100%;
+            padding: 24px; background: #fff; color: #000;
+          }
+        }
+      `}</style>
+
       {/* Header */}
       <div className="flex flex-col justify-between gap-6 sm:flex-row">
         <div>
