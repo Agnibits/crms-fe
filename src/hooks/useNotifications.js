@@ -23,7 +23,8 @@ export function useNotifications() {
     queryFn: ({ signal }) => notificationService.list({ limit: 50 }, { signal }),
     enabled: isAuthenticated,
     staleTime: 30_000,
-    refetchInterval: 60_000, // surface new notifications without a manual refresh
+    // Realtime comes from the socket; this is just a safety net if it drops.
+    refetchInterval: 3 * 60_000,
   });
 
   useEffect(() => {
@@ -33,11 +34,19 @@ export function useNotifications() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    return connectSocket((notification) => {
-      addNotification(normalizeNotification(notification));
-      toast(notification.title || "New notification", { icon: "🔔" });
+    return connectSocket({
+      // A new notification (e.g. inbound email) — push it into the bell instantly.
+      "notification:new": (notification) => {
+        addNotification(normalizeNotification(notification));
+        toast(notification.title || "New notification", { icon: "🔔" });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
+      },
+      // New inbound message — refresh the inbox list + unread badge instantly.
+      "conversation:message": () => {
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      },
     });
-  }, [isAuthenticated, addNotification]);
+  }, [isAuthenticated, addNotification, queryClient]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
 

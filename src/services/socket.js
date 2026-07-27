@@ -15,22 +15,23 @@ const MOCK_EVENTS = [
 ];
 
 /**
- * Connect the realtime notification channel.
- * `onNotification(payload)` fires for every incoming notification.
- * Returns a disconnect function.
+ * Connect the realtime channel and bind a map of `{ eventName: handler }`.
+ * Event names must match what the backend emits (e.g. "notification:new",
+ * "conversation:message"). Returns a disconnect function.
  */
-export function connectSocket(onNotification) {
+export function connectSocket(handlers = {}) {
+  const entries = Object.entries(handlers);
+
   if (USE_MOCK) {
-    // Demo mode: emit a sample notification periodically.
     let i = 0;
     mockTimer = setInterval(() => {
       const event = MOCK_EVENTS[i % MOCK_EVENTS.length];
       i += 1;
-      onNotification({
+      handlers["notification:new"]?.({
         id: `mock-${Date.now()}`,
         ...event,
         createdAt: new Date().toISOString(),
-        read: false,
+        isRead: false,
       });
     }, 90_000);
     return () => clearInterval(mockTimer);
@@ -40,14 +41,14 @@ export function connectSocket(onNotification) {
     transports: ["websocket"],
     auth: { token: tokenStorage.getAccessToken() },
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
     reconnectionDelay: 2000,
   });
 
-  socket.on("notification", onNotification);
+  entries.forEach(([event, fn]) => socket.on(event, fn));
 
   return () => {
-    socket?.off("notification", onNotification);
+    entries.forEach(([event, fn]) => socket?.off(event, fn));
     socket?.disconnect();
     socket = null;
   };
