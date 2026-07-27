@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import {
   Mail,
   Plus,
@@ -108,20 +109,34 @@ function ConversationRow({ conversation, active, onClick }) {
         <span className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>
           {conversation.externalId || "Unknown sender"}
         </span>
-        <span className="shrink-0 text-[11px] text-muted-foreground">
+        <span
+          className={cn(
+            "shrink-0 text-[11px]",
+            unread ? "font-medium text-primary" : "text-muted-foreground"
+          )}
+        >
           {conversation.lastMessageAt ? formatRelative(conversation.lastMessageAt) : ""}
         </span>
       </div>
-      <p className={cn("mt-0.5 truncate text-sm", unread ? "text-foreground" : "text-muted-foreground")}>
-        {conversation.subject || "(no subject)"}
-      </p>
-      <div className="mt-1 flex items-center gap-2">
+      <div className="mt-0.5 flex items-center justify-between gap-2">
+        <p className={cn("truncate text-sm", unread ? "font-medium text-foreground" : "text-muted-foreground")}>
+          {conversation.subject || "(no subject)"}
+        </p>
+        {unread && (
+          <span
+            className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground"
+            aria-label={`${conversation.unreadCount} unread`}
+          >
+            {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+          </span>
+        )}
+      </div>
+      <div className="mt-1">
         {conversation.status === "CLOSED" ? (
           <Badge variant="secondary" className="text-[10px]">Closed</Badge>
         ) : (
           <Badge className="bg-primary/10 text-[10px] text-primary">Open</Badge>
         )}
-        {unread && <span className="h-2 w-2 rounded-full bg-primary" aria-label="Unread" />}
       </div>
     </button>
   );
@@ -267,6 +282,23 @@ export default function InboxPage() {
   }, []);
 
   const conversations = data?.items ?? [];
+
+  // WhatsApp-style: when the total unread count rises (a new inbound arrived
+  // via a sync), toast the sender and reflect the count in the browser tab.
+  const prevUnreadRef = useRef(null);
+  useEffect(() => {
+    const total = conversations.reduce((s, c) => s + (c.unreadCount || 0), 0);
+    if (prevUnreadRef.current !== null && total > prevUnreadRef.current) {
+      const newest = [...conversations]
+        .filter((c) => c.unreadCount > 0)
+        .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))[0];
+      toast.success(newest ? `New message from ${newest.externalId}` : "New message received");
+    }
+    prevUnreadRef.current = total;
+    document.title = total > 0 ? `(${total}) Inbox · AgniBits CRM` : "Inbox · AgniBits CRM";
+  }, [conversations]);
+
+  useEffect(() => () => { document.title = "AgniBits CRM"; }, []);
 
   const select = (c) => {
     setSelectedId(c.id);
