@@ -47,6 +47,27 @@ const STATUS_FILTERS = [
   { value: "closed", label: "Closed" },
 ];
 
+/**
+ * Email bodies are HTML; render them as readable plain text. We intentionally
+ * do NOT inject HTML (inbound customer email is untrusted → XSS risk), so tags
+ * become line breaks and entities are decoded.
+ */
+function htmlToText(input = "") {
+  if (!input) return "";
+  return String(input)
+    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\s*\/?>/gi, "\n")
+    .replace(/<\s*li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function ConversationRow({ conversation, active, onClick }) {
   const unread = conversation.unreadCount > 0;
   return (
@@ -95,7 +116,7 @@ function MessageBubble({ message }) {
         <p className="mb-1 text-[11px] opacity-70">
           {message.fromAddress} · {formatRelative(message.createdAt)}
         </p>
-        <p className="whitespace-pre-wrap break-words">{message.body}</p>
+        <p className="whitespace-pre-wrap break-words">{htmlToText(message.body)}</p>
         {failed && (
           <p className="mt-1.5 flex items-center gap-1 text-[11px] text-destructive-foreground/90">
             <AlertTriangle className="h-3 w-3" /> Failed to send
