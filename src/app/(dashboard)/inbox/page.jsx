@@ -12,6 +12,7 @@ import {
   RotateCcw,
   RefreshCw,
   AlertTriangle,
+  ChevronDown,
   Inbox as InboxIcon,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
@@ -173,8 +174,39 @@ function Thread({ id }) {
   const close = useCloseConversation();
   const reopen = useReopenConversation();
   const [text, setText] = useState("");
+  const scrollRef = useRef(null);
+  const [showJump, setShowJump] = useState(false);
 
   useEffect(() => setText(""), [id]);
+
+  const scrollToBottom = (behavior = "smooth") => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior });
+    setShowJump(false);
+  };
+
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    setShowJump(!nearBottom);
+  };
+
+  const messageCount = conversation?.messages?.length ?? 0;
+  // Jump to the newest message when opening a thread.
+  useEffect(() => {
+    if (id) requestAnimationFrame(() => scrollToBottom("auto"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+  // On a new message: stick to bottom if already near it, else show the arrow.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !messageCount) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+    if (nearBottom) requestAnimationFrame(() => scrollToBottom("smooth"));
+    else setShowJump(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageCount]);
 
   if (!id) {
     return (
@@ -219,11 +251,27 @@ function Thread({ id }) {
         )}
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {messages.length === 0 ? (
-          <EmptyState title="No messages" className="border-0" />
-        ) : (
-          messages.map((m) => <MessageBubble key={m.id} message={m} />)
+      <div className="relative flex-1 overflow-hidden">
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          className="h-full space-y-3 overflow-y-auto p-4"
+        >
+          {messages.length === 0 ? (
+            <EmptyState title="No messages" className="border-0" />
+          ) : (
+            messages.map((m) => <MessageBubble key={m.id} message={m} />)
+          )}
+        </div>
+        {showJump && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom("smooth")}
+            aria-label="Jump to latest message"
+            className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-md transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </button>
         )}
       </div>
 
