@@ -26,4 +26,6 @@ export const emailChannelService = {
   remove: async (id) => unwrap(await api.delete(`${BASE}/${id}`)),
   /** Verify the SMTP connection for a saved channel. */
   test: async (id) => unwrap(await api.post(`${BASE}/${id}/test`)),
+  /** Verify the IMAP connection (inbound/replies) for a saved channel. */
+  imapTest: async (id) => unwrap(await api.post(`${BASE}/${id}/imap-test`)),
 };

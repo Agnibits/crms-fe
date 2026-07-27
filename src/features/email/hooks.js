@@ -47,6 +47,14 @@ export function useTestChannel() {
   });
 }
 
+export function useTestImapChannel() {
+  return useMutation({
+    mutationFn: (id) => emailChannelService.imapTest(id),
+    onSuccess: () => toast.success("IMAP connection OK — replies will sync"),
+    onError: (e) => toastError(e, "IMAP test failed — check host / credentials"),
+  });
+}
+
 export function useDeleteChannel() {
   const qc = useQueryClient();
   return useMutation({

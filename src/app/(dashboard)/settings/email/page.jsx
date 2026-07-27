@@ -34,6 +34,7 @@ import {
   useConnectChannel,
   useUpdateChannel,
   useTestChannel,
+  useTestImapChannel,
   useDeleteChannel,
 } from "@/features/email/hooks";
 import { Switch } from "@/components/ui/switch";
@@ -156,7 +157,7 @@ const HELP = {
   },
 };
 
-function ConnectedChannel({ channel, onTest, onDelete, onToggleTickets, testing, updating }) {
+function ConnectedChannel({ channel, onTest, onTestImap, onDelete, onToggleTickets, testing, testingImap, updating }) {
   const canAutoTicket = !!channel.imapHost; // needs IMAP to receive
   return (
     <div className="space-y-3 rounded-lg border p-4">
@@ -181,10 +182,15 @@ function ConnectedChannel({ channel, onTest, onDelete, onToggleTickets, testing,
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => onTest(channel.id)} loading={testing}>
             <CheckCircle2 className="h-4 w-4" /> Test SMTP
           </Button>
+          {channel.imapHost && (
+            <Button variant="outline" size="sm" onClick={() => onTestImap(channel.id)} loading={testingImap}>
+              <CheckCircle2 className="h-4 w-4" /> Test IMAP
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="text-destructive" onClick={() => onDelete(channel.id)}>
             <Trash2 className="h-4 w-4" /> Remove
           </Button>
@@ -215,6 +221,7 @@ export default function EmailChannelsPage() {
   const connect = useConnectChannel();
   const update = useUpdateChannel();
   const test = useTestChannel();
+  const testImap = useTestImapChannel();
   const del = useDeleteChannel();
 
   const [provider, setProvider] = useState("gmail");
@@ -314,9 +321,11 @@ export default function EmailChannelsPage() {
                   key={c.id}
                   channel={c}
                   onTest={(id) => test.mutate(id)}
+                  onTestImap={(id) => testImap.mutate(id)}
                   onDelete={(id) => del.mutate(id)}
                   onToggleTickets={(id, autoCreateTickets) => update.mutate({ id, autoCreateTickets })}
                   testing={test.isPending && test.variables === c.id}
+                  testingImap={testImap.isPending && testImap.variables === c.id}
                   updating={update.isPending && update.variables?.id === c.id}
                 />
               ))}
