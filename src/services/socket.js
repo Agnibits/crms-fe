@@ -9,6 +9,9 @@ import { ENDPOINTS } from "@/constants/endpoints";
 let socket = null;
 let mockTimer = null;
 let refreshing = false;
+// Ref count so the ONE shared socket lives as long as at least one consumer
+// (DashboardLayout, NotificationPanel, the notifications page…) is mounted.
+let refCount = 0;
 
 /** Refresh the access token (mirrors the axios interceptor) so a reconnect can
  *  use a fresh one — the socket handshake is rejected on an expired token. */
@@ -44,6 +47,14 @@ const MOCK_EVENTS = [
  * "conversation:message"). Returns a disconnect function.
  */
 export function connectSocket(handlers = {}) {
+  // Ref-counted singleton. useNotifications() is mounted by several components
+  // at once; without this guard each mount opens its OWN socket, so every
+  // server event is delivered N times — N duplicate "New email" toasts for a
+  // single email. The FIRST caller binds the handlers (they're identical across
+  // callers); later callers just share the connection.
+  refCount += 1;
+  if (socket || mockTimer) return releaseSocket;
+
   const entries = Object.entries(handlers);
 
   if (USE_MOCK) {
@@ -58,7 +69,7 @@ export function connectSocket(handlers = {}) {
         isRead: false,
       });
     }, 90_000);
-    return () => clearInterval(mockTimer);
+    return releaseSocket;
   }
 
   socket = io(SOCKET_URL, {
@@ -82,11 +93,21 @@ export function connectSocket(handlers = {}) {
     }
   });
 
-  return () => {
-    entries.forEach(([event, fn]) => socket?.off(event, fn));
-    socket?.disconnect();
+  return releaseSocket;
+}
+
+/** Release one consumer's hold; tear the socket down only when the last unmounts. */
+function releaseSocket() {
+  refCount = Math.max(0, refCount - 1);
+  if (refCount > 0) return;
+  if (mockTimer) {
+    clearInterval(mockTimer);
+    mockTimer = null;
+  }
+  if (socket) {
+    socket.disconnect();
     socket = null;
-  };
+  }
 }
 
 export function getSocket() {

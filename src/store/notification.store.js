@@ -13,12 +13,18 @@ export const useNotificationStore = create((set, get) => ({
       unreadCount: notifications.filter((n) => !n.read).length,
     }),
 
-  /** Prepend a realtime notification (from socket.io). */
+  /** Prepend a realtime notification (from socket.io). Idempotent by id so a
+   *  socket push and the 45s poll delivering the same one can't double-count. */
   addNotification: (notification) =>
-    set((state) => ({
-      notifications: [{ read: false, ...notification }, ...state.notifications].slice(0, 100),
-      unreadCount: state.unreadCount + 1,
-    })),
+    set((state) => {
+      if (notification?.id && state.notifications.some((n) => n.id === notification.id)) {
+        return state;
+      }
+      return {
+        notifications: [{ read: false, ...notification }, ...state.notifications].slice(0, 100),
+        unreadCount: state.unreadCount + 1,
+      };
+    }),
 
   markAsRead: (id) =>
     set((state) => {

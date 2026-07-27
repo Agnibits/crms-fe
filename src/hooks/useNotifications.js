@@ -40,7 +40,11 @@ export function useNotifications() {
       // A new notification (e.g. inbound email) — push it into the bell instantly.
       "notification:new": (notification) => {
         addNotification(normalizeNotification(notification));
-        toast(notification.title || "New notification", { icon: "🔔" });
+        // id-keyed so react-hot-toast collapses any accidental duplicate into one.
+        toast(notification.title || "New notification", {
+          icon: "🔔",
+          id: notification.id ? `notif-${notification.id}` : undefined,
+        });
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
       },
       // New inbound message — refresh the inbox list + unread badge instantly.
