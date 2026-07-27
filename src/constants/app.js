@@ -1,6 +1,10 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "AgniBits CRM";
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+// Socket.io runs on the API host (no /api/v1 prefix). Derive it from API_URL so
+// realtime works without a separate NEXT_PUBLIC_SOCKET_URL env var — otherwise
+// it wrongly falls back to localhost in production and the socket never connects.
+export const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL || API_URL.replace(/\/api\/v\d+\/?$/, "");
 // Mock mode is a development/demo convenience served by the in-browser adapter.
 // It is hard-disabled in production builds so a stray NEXT_PUBLIC_USE_MOCK=true
 // can never ship seeded demo data to real users — production always hits the API.
