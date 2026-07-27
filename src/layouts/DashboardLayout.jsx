@@ -8,7 +8,6 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import AiCopilot from "@/features/ai/AiCopilot";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useGlobalInboxSync } from "@/features/inbox/hooks";
 import { useAuthStore } from "@/store/auth.store";
 import { authService } from "@/services/auth.service";
 import { tokenStorage } from "@/utils/storage";
@@ -41,7 +40,6 @@ function useSessionBootstrap() {
 export default function DashboardLayout({ children }) {
   const ready = useSessionBootstrap();
   useNotifications();
-  useGlobalInboxSync();
 
   if (!ready) {
     return <LoadingSpinner fullPage label="Loading your workspace…" />;
