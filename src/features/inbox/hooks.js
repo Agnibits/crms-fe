@@ -1,11 +1,36 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { conversationService } from "@/services/conversation.service";
 import { toastError } from "@/services/api";
 
 const KEY = ["conversations"];
+
+/**
+ * App-wide inbound sync: pulls new mail on the server (poll-now) and refreshes
+ * conversation queries every 60s from ANY page — so the Inbox nav badge and
+ * notifications update even when you're not on the Inbox. Errors (e.g. no
+ * permission) are swallowed. Mount once, globally (the dashboard layout).
+ */
+export function useGlobalInboxSync() {
+  const qc = useQueryClient();
+  useEffect(() => {
+    let alive = true;
+    const run = () =>
+      conversationService
+        .sync()
+        .then(() => alive && qc.invalidateQueries({ queryKey: KEY }))
+        .catch(() => {});
+    run();
+    const id = setInterval(run, 60_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [qc]);
+}
 
 /** Inbox list — polls every 60s so inbound replies show up automatically. */
 export function useConversations(params = {}) {

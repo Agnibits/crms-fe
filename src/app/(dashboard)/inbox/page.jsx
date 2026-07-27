@@ -318,16 +318,8 @@ export default function InboxPage() {
   const { data, isPending, error, refetch } = useConversations(params);
   const markRead = useMarkRead();
   const manualSync = useSyncInbox();
-  const autoSync = useSyncInbox({ silent: true });
-
-  // Pull new inbound mail while the inbox is open (belt-and-suspenders over the
-  // server-side poller): once on mount, then every 60s.
-  useEffect(() => {
-    autoSync.mutate();
-    const t = setInterval(() => autoSync.mutate(), 60_000);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // App-wide sync (dashboard layout) already pulls inbound every 60s, so no
+  // per-page interval here.
 
   const conversations = data?.items ?? [];
 
