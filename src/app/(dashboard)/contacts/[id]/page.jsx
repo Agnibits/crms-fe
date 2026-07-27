@@ -130,15 +130,14 @@ export default function ContactDetailPage() {
             <CardTitle className="text-base">Contact details</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Only fields with a value — no wall of dashes. Name/email/phone
+                live in the header above, so they're not repeated here. */}
             <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-              <DefItem label="Full name">{contact.name}</DefItem>
-              <DefItem label="Email">{contact.email || "—"}</DefItem>
-              <DefItem label="Phone">{contact.phone || "—"}</DefItem>
-              <DefItem label="Job title">{contact.jobTitle || "—"}</DefItem>
-              <DefItem label="Department">{contact.department || "—"}</DefItem>
-              <DefItem label="City">{contact.city || "—"}</DefItem>
-              <DefItem label="Birthday">
-                {contact.birthday ? (
+              {contact.jobTitle && <DefItem label="Job title">{contact.jobTitle}</DefItem>}
+              {contact.department && <DefItem label="Department">{contact.department}</DefItem>}
+              {contact.city && <DefItem label="City">{contact.city}</DefItem>}
+              {contact.birthday && (
+                <DefItem label="Birthday">
                   <span className="inline-flex items-center gap-1.5">
                     {formatDate(contact.birthday)}
                     {(() => {
@@ -157,12 +156,10 @@ export default function ContactDetailPage() {
                       return null;
                     })()}
                   </span>
-                ) : (
-                  "—"
-                )}
-              </DefItem>
-              <DefItem label="LinkedIn">
-                {contact.linkedin ? (
+                </DefItem>
+              )}
+              {contact.linkedin && (
+                <DefItem label="LinkedIn">
                   <a
                     href={contact.linkedin}
                     target="_blank"
@@ -171,13 +168,28 @@ export default function ContactDetailPage() {
                   >
                     Profile <ExternalLink className="h-3 w-3" />
                   </a>
-                ) : (
-                  "—"
-                )}
-              </DefItem>
-              <DefItem label="Primary contact">{contact.isPrimary ? "Yes" : "No"}</DefItem>
+                </DefItem>
+              )}
               <DefItem label="Created">{formatDate(contact.createdAt)}</DefItem>
             </dl>
+
+            {!contact.jobTitle &&
+              !contact.department &&
+              !contact.birthday &&
+              !contact.linkedin && (
+                <p className="mt-5 border-t pt-4 text-sm text-muted-foreground">
+                  No extra details yet.{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/contacts/${id}/edit`)}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Add job title, department, birthday or LinkedIn
+                  </button>
+                  .
+                </p>
+              )}
+
             {contact.notes && (
               <div className="mt-6 border-t pt-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
