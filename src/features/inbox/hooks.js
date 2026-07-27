@@ -39,6 +39,21 @@ function useThreadMutation(mutationFn, { success, error, id } = {}) {
   });
 }
 
+/** Manually pull new inbound mail, then refresh the thread list. */
+export function useSyncInbox(options = {}) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => conversationService.sync(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      if (!options.silent) toast.success("Inbox synced");
+    },
+    onError: (e) => {
+      if (!options.silent) toastError(e, "Sync failed");
+    },
+  });
+}
+
 export function useSendEmail(options = {}) {
   const qc = useQueryClient();
   return useMutation({

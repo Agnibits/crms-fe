@@ -31,6 +31,9 @@ export const conversationService = {
   /** Reply within a thread. */
   reply: async (id, payload) => unwrap(await api.post(`${BASE}/${id}/reply`, payload)),
 
+  /** Pull new inbound mail now (server polls every company's IMAP inbox). */
+  sync: async () => unwrap(await api.post(`/email/poll-now`)),
+
   markRead: async (id) => unwrap(await api.patch(`${BASE}/${id}/read`)),
   assign: async (id, assignedUserId) => unwrap(await api.patch(`${BASE}/${id}/assign`, { assignedUserId })),
   close: async (id) => unwrap(await api.patch(`${BASE}/${id}/close`)),

@@ -9,6 +9,7 @@ import {
   Send,
   CheckCircle2,
   RotateCcw,
+  RefreshCw,
   AlertTriangle,
   Inbox as InboxIcon,
 } from "lucide-react";
@@ -37,6 +38,7 @@ import {
   useMarkRead,
   useCloseConversation,
   useReopenConversation,
+  useSyncInbox,
 } from "@/features/inbox/hooks";
 import ComposeDialog from "@/features/inbox/ComposeDialog";
 import { useEmailChannels } from "@/features/email/hooks";
@@ -229,6 +231,17 @@ export default function InboxPage() {
   };
   const { data, isPending, error, refetch } = useConversations(params);
   const markRead = useMarkRead();
+  const manualSync = useSyncInbox();
+  const autoSync = useSyncInbox({ silent: true });
+
+  // Pull new inbound mail while the inbox is open (belt-and-suspenders over the
+  // server-side poller): once on mount, then every 60s.
+  useEffect(() => {
+    autoSync.mutate();
+    const t = setInterval(() => autoSync.mutate(), 60_000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const conversations = data?.items ?? [];
 
@@ -248,9 +261,19 @@ export default function InboxPage() {
               <Mail className="h-4 w-4" /> Connect email
             </Button>
           ) : (
-            <Button onClick={() => setCompose(true)}>
-              <Plus className="h-4 w-4" /> New email
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => manualSync.mutate()}
+                disabled={manualSync.isPending}
+              >
+                <RefreshCw className={cn("h-4 w-4", manualSync.isPending && "animate-spin")} />
+                Sync
+              </Button>
+              <Button onClick={() => setCompose(true)}>
+                <Plus className="h-4 w-4" /> New email
+              </Button>
+            </div>
           )
         }
       />
