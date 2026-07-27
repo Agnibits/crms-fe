@@ -70,6 +70,29 @@ function htmlToText(input = "") {
     .trim();
 }
 
+/**
+ * Drop the quoted reply history so a message shows only what was newly written
+ * (like Gmail's collapsed "…"). Cuts at the first quote marker or ">" line.
+ */
+function stripQuoted(text = "") {
+  if (!text) return "";
+  const lines = text.split("\n");
+  const markers = [
+    /^\s*On\b.*\bwrote:\s*$/i, // Gmail / Apple Mail
+    /^\s*-{2,}\s*Original Message\s*-{2,}/i, // Outlook
+    /^\s*From:\s.+\S+@\S+/i, // Outlook header block
+    /^\s*_{5,}\s*$/, // separator line
+    /^\s*>{1,}/, // quoted line
+  ];
+  let cut = lines.findIndex((l) => markers.some((re) => re.test(l)));
+  const kept = cut === -1 ? lines : lines.slice(0, cut);
+  const out = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  // If stripping left nothing (edge case), fall back to the full text.
+  return out || text.trim();
+}
+
+const cleanBody = (body) => stripQuoted(htmlToText(body));
+
 function ConversationRow({ conversation, active, onClick }) {
   const unread = conversation.unreadCount > 0;
   return (
@@ -118,7 +141,7 @@ function MessageBubble({ message }) {
         <p className="mb-1 text-[11px] opacity-70">
           {message.fromAddress} · {formatRelative(message.createdAt)}
         </p>
-        <p className="whitespace-pre-wrap break-words">{htmlToText(message.body)}</p>
+        <p className="whitespace-pre-wrap break-words">{cleanBody(message.body)}</p>
         {failed && (
           <p className="mt-1.5 flex items-center gap-1 text-[11px] text-destructive-foreground/90">
             <AlertTriangle className="h-3 w-3" /> Failed to send
