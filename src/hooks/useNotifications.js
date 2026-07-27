@@ -22,9 +22,11 @@ export function useNotifications() {
     queryKey: [...QUERY_KEYS.notifications],
     queryFn: ({ signal }) => notificationService.list({ limit: 50 }, { signal }),
     enabled: isAuthenticated,
-    staleTime: 30_000,
-    // Realtime comes from the socket; this is just a safety net if it drops.
-    refetchInterval: 3 * 60_000,
+    staleTime: 20_000,
+    // Socket gives instant; this poll guarantees delivery within ~45s even if
+    // the socket can't connect (cheap DB read, no IMAP cost).
+    refetchInterval: 45_000,
+    refetchIntervalInBackground: true,
   });
 
   useEffect(() => {

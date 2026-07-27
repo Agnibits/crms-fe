@@ -38,13 +38,13 @@ export function useConversations(params = {}) {
     queryKey: [...KEY, "list", params],
     queryFn: ({ signal }) => conversationService.list(params, { signal }),
     placeholderData: keepPreviousData,
-    // Realtime updates arrive via socket; this is a safety refresh only.
-    refetchInterval: 3 * 60_000,
+    // Socket pushes real-time; this poll is a reliable fallback (cheap read).
+    refetchInterval: 45_000,
   });
 }
 
-/** Total unread conversations — drives the global Inbox nav badge. Socket
- *  invalidation keeps it live; the interval is just a safety net. */
+/** Total unread conversations — drives the global Inbox nav badge. Socket keeps
+ *  it live; the poll is a reliable fallback (cheap DB read, runs in background). */
 export function useInboxUnread() {
   return useQuery({
     queryKey: [...KEY, "unread-count"],
@@ -52,20 +52,21 @@ export function useInboxUnread() {
       const res = await conversationService.list({ status: "open", limit: 100 }, { signal });
       return (res?.items ?? []).filter((c) => (c.unreadCount || 0) > 0).length;
     },
-    refetchInterval: 3 * 60_000,
-    staleTime: 30_000,
+    refetchInterval: 45_000,
+    refetchIntervalInBackground: true,
+    staleTime: 20_000,
     retry: false,
   });
 }
 
-/** A single thread (includes its messages). Socket invalidation refreshes it on
- *  new mail; the interval is a safety net while it's open. */
+/** A single thread (includes its messages). Socket refreshes it on new mail;
+ *  the interval is a fallback while it's open. */
 export function useConversation(id) {
   return useQuery({
     queryKey: [...KEY, "detail", id],
     queryFn: ({ signal }) => conversationService.getById(id, { signal }),
     enabled: !!id,
-    refetchInterval: id ? 2 * 60_000 : false,
+    refetchInterval: id ? 30_000 : false,
   });
 }
 
