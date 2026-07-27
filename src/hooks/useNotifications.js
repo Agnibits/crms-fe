@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { notificationService } from "@/services/notification.service";
+import { notificationService, normalizeNotification } from "@/services/notification.service";
 import { connectSocket } from "@/services/socket";
 import { useNotificationStore } from "@/store/notification.store";
 import { useAuthStore } from "@/store/auth.store";
@@ -22,7 +22,8 @@ export function useNotifications() {
     queryKey: [...QUERY_KEYS.notifications],
     queryFn: ({ signal }) => notificationService.list({ limit: 50 }, { signal }),
     enabled: isAuthenticated,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000, // surface new notifications without a manual refresh
   });
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function useNotifications() {
   useEffect(() => {
     if (!isAuthenticated) return;
     return connectSocket((notification) => {
-      addNotification(notification);
+      addNotification(normalizeNotification(notification));
       toast(notification.title || "New notification", { icon: "🔔" });
     });
   }, [isAuthenticated, addNotification]);

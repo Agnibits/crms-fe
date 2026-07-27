@@ -318,8 +318,13 @@ export default function InboxPage() {
   const { data, isPending, error, refetch } = useConversations(params);
   const markRead = useMarkRead();
   const manualSync = useSyncInbox();
-  // App-wide sync (dashboard layout) already pulls inbound every 60s, so no
-  // per-page interval here.
+  const openSync = useSyncInbox({ silent: true });
+  // Pull once when the Inbox opens for immediate freshness (the server poller
+  // handles ongoing sync, so no continuous per-tab polling).
+  useEffect(() => {
+    openSync.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const conversations = data?.items ?? [];
 
