@@ -17,6 +17,20 @@ export function useConversations(params = {}) {
   });
 }
 
+/** Total unread conversations — drives the global Inbox nav badge. Polls 60s. */
+export function useInboxUnread() {
+  return useQuery({
+    queryKey: [...KEY, "unread-count"],
+    queryFn: async ({ signal }) => {
+      const res = await conversationService.list({ status: "open", limit: 100 }, { signal });
+      return (res?.items ?? []).filter((c) => (c.unreadCount || 0) > 0).length;
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
 /** A single thread (includes its messages). Polls while open for new replies. */
 export function useConversation(id) {
   return useQuery({

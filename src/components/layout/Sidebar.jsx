@@ -9,9 +9,10 @@ import { navForRole } from "@/constants/nav";
 import { APP_NAME } from "@/constants/app";
 import { useAuthStore } from "@/store/auth.store";
 import { useUiStore } from "@/store/ui.store";
+import { useInboxUnread } from "@/features/inbox/hooks";
 import { cn } from "@/utils/cn";
 
-function NavLink({ item, collapsed, onNavigate }) {
+function NavLink({ item, collapsed, onNavigate, badge = 0 }) {
   const pathname = usePathname();
   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
   const Icon = item.icon;
@@ -22,7 +23,7 @@ function NavLink({ item, collapsed, onNavigate }) {
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground shadow-sm"
           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -30,7 +31,20 @@ function NavLink({ item, collapsed, onNavigate }) {
       )}
     >
       <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+      {badge > 0 && !collapsed && (
+        <span
+          className={cn(
+            "ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+            active ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
+          )}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+      {badge > 0 && collapsed && (
+        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-sidebar" />
+      )}
     </Link>
   );
 
@@ -47,6 +61,7 @@ function SidebarBody({ collapsed = false, onNavigate }) {
   const role = useAuthStore((s) => s.user?.role);
   const isSuperAdmin = useAuthStore((s) => s.user?.rawRole === "SUPER_ADMIN");
   const sections = navForRole(role, { isSuperAdmin });
+  const inboxUnread = useInboxUnread().data ?? 0;
 
   return (
     <div className="flex h-full flex-col">
@@ -69,7 +84,13 @@ function SidebarBody({ collapsed = false, onNavigate }) {
             )}
             <div className="space-y-0.5">
               {section.items.map((item) => (
-                <NavLink key={item.href} item={item} collapsed={collapsed} onNavigate={onNavigate} />
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  collapsed={collapsed}
+                  onNavigate={onNavigate}
+                  badge={item.href === "/inbox" ? inboxUnread : 0}
+                />
               ))}
             </div>
           </div>
