@@ -300,6 +300,13 @@ function Thread({ id }) {
 export default function InboxPage() {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(null);
+  // Deep-link: a notification opens /inbox?c=<conversationId>. Read it on mount
+  // (via window, so no useSearchParams Suspense boundary needed) and open that
+  // thread — Thread fetches it by id even if it's not on the current list page.
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("c");
+    if (c) setSelectedId(c);
+  }, []);
   const [compose, setCompose] = useState(false);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");

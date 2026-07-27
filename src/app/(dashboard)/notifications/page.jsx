@@ -1,19 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Bell,
-  BellOff,
-  CheckCheck,
-  Handshake,
-  LifeBuoy,
-  ListChecks,
-  Receipt,
-  Target,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BellOff, CheckCheck } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
+import NotificationItem from "@/components/common/NotificationItem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,19 +14,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useNotificationStore } from "@/store/notification.store";
-import { formatRelative } from "@/utils/format";
-import { cn } from "@/utils/cn";
-
-const TYPE_ICONS = {
-  lead: Target,
-  deal: Handshake,
-  invoice: Receipt,
-  task: ListChecks,
-  ticket: LifeBuoy,
-  system: Bell,
-};
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const { isPending, error, refetch, markAsRead, markAllAsRead } = useNotifications();
   const notifications = useNotificationStore((s) => s.notifications);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -47,9 +30,12 @@ export default function NotificationsPage() {
   );
 
   const handleClick = (notification) => {
-    if (notification.read) return;
-    storeMarkAsRead(notification.id); // instant feedback
-    markAsRead.mutate(notification.id);
+    if (!notification.read) {
+      storeMarkAsRead(notification.id); // instant feedback
+      markAsRead.mutate(notification.id);
+    }
+    const conversationId = notification.data?.conversationId;
+    if (conversationId) router.push(`/inbox?c=${conversationId}`);
   };
 
   const handleMarkAll = () => {
@@ -104,68 +90,19 @@ export default function NotificationsPage() {
           description={
             tab === "unread"
               ? "No unread notifications — nice work."
-              : "Updates about leads, deals, invoices and tickets will show up here."
+              : "Updates about emails, leads, deals, invoices and tickets will show up here."
           }
         />
       ) : (
         <Card>
           <CardContent className="divide-y p-0">
-            {visible.map((notification) => {
-              const Icon = TYPE_ICONS[notification.type] || Bell;
-              return (
-                <button
-                  key={notification.id}
-                  type="button"
-                  onClick={() => handleClick(notification)}
-                  className={cn(
-                    "flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/50",
-                    !notification.read && "bg-primary/[0.03]"
-                  )}
-                  aria-label={
-                    notification.read
-                      ? notification.title
-                      : `${notification.title} (unread — click to mark as read)`
-                  }
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                      notification.read
-                        ? "bg-muted text-muted-foreground"
-                        : "bg-primary/10 text-primary"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "truncate text-sm",
-                          notification.read ? "font-normal" : "font-semibold"
-                        )}
-                      >
-                        {notification.title}
-                      </span>
-                      {!notification.read && (
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full bg-primary"
-                          aria-hidden
-                        />
-                      )}
-                    </span>
-                    {notification.message && (
-                      <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-                        {notification.message}
-                      </span>
-                    )}
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {formatRelative(notification.createdAt)}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+            {visible.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onSelect={handleClick}
+              />
+            ))}
           </CardContent>
         </Card>
       )}

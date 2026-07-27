@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 import { notificationService, normalizeNotification } from "@/services/notification.service";
+import { showNotificationToast } from "@/components/common/NotificationToast";
 import { connectSocket } from "@/services/socket";
 import { useNotificationStore } from "@/store/notification.store";
 import { useAuthStore } from "@/store/auth.store";
@@ -17,6 +18,7 @@ export function useNotifications() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { setNotifications, addNotification } = useNotificationStore();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const query = useQuery({
     queryKey: [...QUERY_KEYS.notifications],
@@ -36,15 +38,17 @@ export function useNotifications() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    const openNotification = (n) => {
+      const conversationId = n?.data?.conversationId;
+      if (conversationId) router.push(`/inbox?c=${conversationId}`);
+    };
     return connectSocket({
-      // A new notification (e.g. inbound email) — push it into the bell instantly.
+      // A new notification (e.g. inbound email) — push it into the bell instantly
+      // and surface a rich toast (sender + subject + preview) that opens the thread.
       "notification:new": (notification) => {
-        addNotification(normalizeNotification(notification));
-        // id-keyed so react-hot-toast collapses any accidental duplicate into one.
-        toast(notification.title || "New notification", {
-          icon: "🔔",
-          id: notification.id ? `notif-${notification.id}` : undefined,
-        });
+        const n = normalizeNotification(notification);
+        addNotification(n);
+        showNotificationToast(n, openNotification);
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
       },
       // New inbound message — refresh the inbox list + unread badge instantly.
@@ -52,7 +56,7 @@ export function useNotifications() {
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
       },
     });
-  }, [isAuthenticated, addNotification, queryClient]);
+  }, [isAuthenticated, addNotification, queryClient, router]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
 
