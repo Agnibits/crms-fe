@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, Inbox, Plus, Ticket } from "lucide-react";
+import { CheckCircle2, Clock, Inbox, LifeBuoy, Mail, Plus, Ticket } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
 import { ticketHooks } from "@/features/tickets/hooks";
+import { useEmailChannels } from "@/features/email/hooks";
 import NewTicketDialog from "@/features/tickets/NewTicketDialog";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatNumber, formatRelative } from "@/utils/format";
@@ -27,6 +28,9 @@ export default function TicketsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isPending, error, refetch } = ticketHooks.useList(t.queryParams);
   const stats = ticketHooks.useList({ limit: 1000 });
+  // A support mailbox = a channel that receives (IMAP) AND auto-creates tickets.
+  const { data: channels = [], isPending: channelsPending } = useEmailChannels();
+  const hasSupportMailbox = channels.some((c) => c.autoCreateTickets && c.imapHost);
 
   const kpis = useMemo(() => {
     const items = stats.data?.items ?? [];
@@ -89,6 +93,30 @@ export default function TicketsPage() {
           </Button>
         }
       />
+
+      {!channelsPending && !hasSupportMailbox && (
+        <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <LifeBuoy className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Turn customer emails into tickets automatically</p>
+              <p className="text-sm text-muted-foreground">
+                Connect a dedicated support mailbox (e.g. support@yourcompany.com). Every email to
+                it opens a ticket here, and your replies go back out from that same address.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            className="shrink-0"
+            onClick={() => router.push("/settings/email")}
+          >
+            <Mail className="h-4 w-4" /> Connect support mailbox
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
