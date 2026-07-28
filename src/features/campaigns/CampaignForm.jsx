@@ -10,6 +10,7 @@ import { FormInput, FormSelect, FormTextarea } from "@/components/forms/fields";
 import AiEmailDialog from "@/features/ai/AiEmailDialog";
 import { campaignSchema, CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
 import { useAudiencePreview } from "@/features/campaigns/hooks";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { cn } from "@/utils/cn";
 
 const AUDIENCE_OPTIONS = CAMPAIGN_AUDIENCES;
@@ -59,6 +60,9 @@ export default function CampaignForm({
   const message = watch("message") ?? "";
   const audience = watch("audience");
   const audiencePreview = useAudiencePreview(audience ? { type: audience } : null);
+  const audienceLabel = AUDIENCE_OPTIONS.find((a) => a.value === audience)?.label || "your audience";
+  const { company } = useMyCompany();
+  const senderName = company?.name || "Your company";
 
   const submit = (values) => {
     const payload = {
@@ -193,8 +197,8 @@ export default function CampaignForm({
                         <Mail className="h-3.5 w-3.5" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">AgniBits CRM</p>
-                        <p className="text-xs text-muted-foreground">to: {watch("audience") || "your audience"}</p>
+                        <p className="truncate text-sm font-medium">{senderName}</p>
+                        <p className="text-xs text-muted-foreground">to: {audienceLabel}</p>
                       </div>
                     </div>
                     <p className="mt-3 truncate text-sm font-semibold">

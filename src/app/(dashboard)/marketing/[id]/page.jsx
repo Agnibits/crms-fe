@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { campaignHooks, useSendCampaign } from "@/features/campaigns/hooks";
+import { useMyCompany } from "@/hooks/useMyCompany";
 import { CAMPAIGN_STATUSES } from "@/constants/options";
 import { CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
 import { formatDateTime, formatNumber, formatPercent, formatRelative } from "@/utils/format";
@@ -40,6 +41,7 @@ export default function CampaignDetailPage() {
   });
   const remove = campaignHooks.useRemove({ onSuccess: () => router.push("/marketing") });
   const sendCampaign = useSendCampaign();
+  const { company } = useMyCompany();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const rates = useMemo(() => {
@@ -256,7 +258,7 @@ export default function CampaignDetailPage() {
                       <Mail className="h-3.5 w-3.5" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">AgniBits CRM</p>
+                      <p className="truncate text-sm font-medium">{company?.name || "Your company"}</p>
                       <p className="text-xs text-muted-foreground">
                         to: {audienceLabel}
                       </p>
