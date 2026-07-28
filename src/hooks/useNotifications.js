@@ -59,6 +59,10 @@ export function useNotifications() {
       "conversation:message": () => {
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
       },
+      // New support ticket (from a support mailbox) — refresh the tickets list.
+      "ticket:new": () => {
+        queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      },
     });
   }, [isAuthenticated, addNotification, queryClient, router]);
 
