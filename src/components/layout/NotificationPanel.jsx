@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EmptyState from "@/components/common/EmptyState";
 import NotificationItem from "@/components/common/NotificationItem";
+import { notificationHref } from "@/services/notification.service";
 import { useNotificationStore } from "@/store/notification.store";
 import { useNotifications } from "@/hooks/useNotifications";
 
@@ -32,10 +33,10 @@ export default function NotificationPanel() {
       markLocal(notification.id); // instant feedback
       markAsRead.mutate(notification.id);
     }
-    const conversationId = notification.data?.conversationId;
-    if (conversationId) {
+    const href = notificationHref(notification);
+    if (href) {
       setPanelOpen(false);
-      router.push(`/inbox?c=${conversationId}`);
+      router.push(href);
     }
   };
 

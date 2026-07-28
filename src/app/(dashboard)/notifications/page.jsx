@@ -7,6 +7,7 @@ import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import NotificationItem from "@/components/common/NotificationItem";
+import { notificationHref } from "@/services/notification.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +35,8 @@ export default function NotificationsPage() {
       storeMarkAsRead(notification.id); // instant feedback
       markAsRead.mutate(notification.id);
     }
-    const conversationId = notification.data?.conversationId;
-    if (conversationId) router.push(`/inbox?c=${conversationId}`);
+    const href = notificationHref(notification);
+    if (href) router.push(href);
   };
 
   const handleMarkAll = () => {

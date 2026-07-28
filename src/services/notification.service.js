@@ -8,6 +8,15 @@ import { ENDPOINTS } from "@/constants/endpoints";
 export const normalizeNotification = (n) =>
   n && typeof n === "object" ? { ...n, read: n.read ?? n.isRead ?? false } : n;
 
+/** Where a notification should navigate when opened. Support-mailbox mail lands
+ *  as a ticket (→ helpdesk); a general email opens its inbox thread. */
+export function notificationHref(notification) {
+  const data = notification?.data || {};
+  if (data.kind === "ticket" && data.ticketId) return `/tickets/${data.ticketId}`;
+  if (data.conversationId) return `/inbox?c=${data.conversationId}`;
+  return null;
+}
+
 export const notificationService = {
   list: async (params = {}, { signal } = {}) => {
     const res = unwrap(await api.get(ENDPOINTS.notifications, { params, signal }));

@@ -11,6 +11,8 @@ import {
   Info,
   ChevronDown,
   ExternalLink,
+  LifeBuoy,
+  Inbox as InboxIcon,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,12 +169,21 @@ function ConnectedChannel({ channel, onTest, onTestImap, onDelete, onToggleTicke
             <Mail className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="flex items-center gap-2 font-medium">
+            <p className="flex flex-wrap items-center gap-2 font-medium">
               {channel.fromEmail}
               {channel.isActive === false ? (
                 <Badge variant="secondary">Inactive</Badge>
               ) : (
                 <Badge className="bg-success/15 text-success">Active</Badge>
+              )}
+              {channel.autoCreateTickets ? (
+                <Badge variant="outline" className="gap-1 border-violet-500/30 text-violet-600 dark:text-violet-300">
+                  <LifeBuoy className="h-3 w-3" /> Support
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="gap-1 text-muted-foreground">
+                  <InboxIcon className="h-3 w-3" /> General inbox
+                </Badge>
               )}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">

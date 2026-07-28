@@ -3,7 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationService, normalizeNotification } from "@/services/notification.service";
+import {
+  notificationService,
+  normalizeNotification,
+  notificationHref,
+} from "@/services/notification.service";
 import { showNotificationToast } from "@/components/common/NotificationToast";
 import { connectSocket } from "@/services/socket";
 import { useNotificationStore } from "@/store/notification.store";
@@ -39,8 +43,8 @@ export function useNotifications() {
   useEffect(() => {
     if (!isAuthenticated) return;
     const openNotification = (n) => {
-      const conversationId = n?.data?.conversationId;
-      if (conversationId) router.push(`/inbox?c=${conversationId}`);
+      const href = notificationHref(n);
+      if (href) router.push(href);
     };
     return connectSocket({
       // A new notification (e.g. inbound email) — push it into the bell instantly
