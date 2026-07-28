@@ -204,9 +204,16 @@ export default function CampaignForm({
                     <p className="mt-3 truncate text-sm font-semibold">
                       {subject || "Your subject line appears here"}
                     </p>
-                    <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-xs text-muted-foreground">
-                      {body || "The first lines of your email body will show up in this preview…"}
-                    </p>
+                    {body ? (
+                      <div
+                        className="mt-1 line-clamp-4 text-xs text-muted-foreground [&_a]:text-primary [&_a]:underline"
+                        dangerouslySetInnerHTML={{ __html: body }}
+                      />
+                    ) : (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        The first lines of your email body will show up in this preview…
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -204,7 +204,10 @@ export default function CampaignDetailPage() {
             </p>
             <Progress value={rates.clickRate} className="mt-3" />
             <p className="mt-1.5 text-xs text-muted-foreground">
-              {formatPercent(rates.clickRate)} click rate · {formatPercent(rates.clickToOpen)} of opens
+              {formatPercent(rates.clickRate)} click rate
+              {rates.opened > 0 && rates.clicked <= rates.opened
+                ? ` · ${formatPercent(rates.clickToOpen)} of opens`
+                : ""}
             </p>
           </CardContent>
         </Card>
@@ -265,9 +268,16 @@ export default function CampaignDetailPage() {
                     </div>
                   </div>
                   <p className="mt-3 text-sm font-semibold">{campaign.subject || "—"}</p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-                    {campaign.body || "No body content saved for this campaign."}
-                  </p>
+                  {campaign.body ? (
+                    <div
+                      className="mt-1 text-sm text-muted-foreground [&_a]:text-primary [&_a]:underline [&_p]:my-1"
+                      dangerouslySetInnerHTML={{ __html: campaign.body }}
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      No body content saved for this campaign.
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
