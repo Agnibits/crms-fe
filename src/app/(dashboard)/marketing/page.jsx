@@ -35,6 +35,7 @@ import {
 import { useTableState } from "@/hooks/useTableState";
 import { campaignHooks } from "@/features/campaigns/hooks";
 import { CAMPAIGN_STATUSES } from "@/constants/options";
+import { CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
 import { formatDate, formatNumber, formatPercent } from "@/utils/format";
 
 export default function MarketingPage() {
@@ -88,7 +89,16 @@ export default function MarketingPage() {
           <StatusBadge value={row.original.status} options={CAMPAIGN_STATUSES} />
         ),
       },
-      { accessorKey: "audience", header: "Audience" },
+      {
+        accessorKey: "audience",
+        header: "Audience",
+        cell: ({ row }) => {
+          const label = CAMPAIGN_AUDIENCES.find(
+            (a) => a.value === row.original.audience?.type
+          )?.label;
+          return <span className="text-sm">{label || "—"}</span>;
+        },
+      },
       {
         accessorKey: "sent",
         header: "Sent",
