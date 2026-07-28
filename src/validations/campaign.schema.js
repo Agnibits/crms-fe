@@ -1,10 +1,11 @@
 import { z } from "zod";
 
+// Who a campaign is sent to. `value` maps to the backend audience type; the
+// server resolves it to that CRM group's emailable records at send time.
 export const CAMPAIGN_AUDIENCES = [
-  "All Customers",
-  "Active Leads",
-  "Churned Customers",
-  "Newsletter Subscribers",
+  { value: "CUSTOMERS", label: "All Customers" },
+  { value: "LEADS", label: "All Leads" },
+  { value: "CONTACTS", label: "All Contacts" },
 ];
 
 export const campaignSchema = z

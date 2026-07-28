@@ -25,8 +25,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { campaignHooks } from "@/features/campaigns/hooks";
+import { campaignHooks, useSendCampaign } from "@/features/campaigns/hooks";
 import { CAMPAIGN_STATUSES } from "@/constants/options";
+import { CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
 import { formatDateTime, formatNumber, formatPercent, formatRelative } from "@/utils/format";
 
 export default function CampaignDetailPage() {
@@ -38,6 +39,7 @@ export default function CampaignDetailPage() {
     onSuccess: (data) => router.push(`/marketing/${data?.id ?? ""}`),
   });
   const remove = campaignHooks.useRemove({ onSuccess: () => router.push("/marketing") });
+  const sendCampaign = useSendCampaign();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const rates = useMemo(() => {
@@ -62,6 +64,9 @@ export default function CampaignDetailPage() {
   const TypeIcon = isEmail ? Mail : MessageSquare;
   const canPause = ["running", "scheduled"].includes(campaign.status);
   const canResume = campaign.status === "paused";
+  const canSend = isEmail && ["draft", "scheduled", "paused"].includes(campaign.status);
+  const audienceLabel =
+    CAMPAIGN_AUDIENCES.find((a) => a.value === campaign.audience?.type)?.label || "your audience";
 
   const duplicate = () => {
     create.mutate({
@@ -102,7 +107,7 @@ export default function CampaignDetailPage() {
               <TypeIcon className="h-3.5 w-3.5" /> {isEmail ? "Email campaign" : "SMS campaign"}
             </span>
             <span className="inline-flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" /> {campaign.audience || "—"}
+              <Users className="h-3.5 w-3.5" /> {audienceLabel}
             </span>
             <span className="inline-flex items-center gap-1">
               <CalendarClock className="h-3.5 w-3.5" />
@@ -134,6 +139,11 @@ export default function CampaignDetailPage() {
                 )}
               </Button>
             )}
+            {canSend && (
+              <Button disabled={sendCampaign.isPending} onClick={() => sendCampaign.mutate(campaign.id)}>
+                <Send /> {sendCampaign.isPending ? "Sending…" : "Send now"}
+              </Button>
+            )}
             <Button variant="outline" disabled={create.isPending} onClick={duplicate}>
               <Copy /> Duplicate
             </Button>
@@ -158,7 +168,7 @@ export default function CampaignDetailPage() {
               {formatNumber(rates.sent)}
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              {isEmail ? "emails" : "messages"} delivered to {campaign.audience || "audience"}
+              {isEmail ? "emails" : "messages"} delivered to {audienceLabel}
             </p>
           </CardContent>
         </Card>
@@ -248,7 +258,7 @@ export default function CampaignDetailPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">AgniBits CRM</p>
                       <p className="text-xs text-muted-foreground">
-                        to: {campaign.audience || "your audience"}
+                        to: {audienceLabel}
                       </p>
                     </div>
                   </div>

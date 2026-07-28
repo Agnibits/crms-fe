@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { FormInput, FormSelect, FormTextarea } from "@/components/forms/fields";
 import AiEmailDialog from "@/features/ai/AiEmailDialog";
 import { campaignSchema, CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
+import { useAudiencePreview } from "@/features/campaigns/hooks";
 import { cn } from "@/utils/cn";
 
-const AUDIENCE_OPTIONS = CAMPAIGN_AUDIENCES.map((a) => ({ value: a, label: a }));
+const AUDIENCE_OPTIONS = CAMPAIGN_AUDIENCES;
 
 const TYPE_OPTIONS = [
   { value: "email", label: "Email", icon: Mail, hint: "Rich subject + body sent to inboxes" },
@@ -40,9 +41,13 @@ export default function CampaignForm({
       subject: "",
       body: "",
       message: "",
-      audience: "",
       scheduledAt: "",
       ...defaultValues,
+      // Backend stores audience as { type }; the select works on the type string.
+      audience:
+        (typeof defaultValues?.audience === "object"
+          ? defaultValues?.audience?.type
+          : defaultValues?.audience) || "CUSTOMERS",
     },
   });
 
@@ -52,12 +57,14 @@ export default function CampaignForm({
   const subject = watch("subject");
   const body = watch("body");
   const message = watch("message") ?? "";
+  const audience = watch("audience");
+  const audiencePreview = useAudiencePreview(audience ? { type: audience } : null);
 
   const submit = (values) => {
     const payload = {
       name: values.name.trim(),
       type: values.type,
-      audience: values.audience,
+      audience: values.audience ? { type: values.audience } : undefined,
       scheduledAt: values.scheduledAt ? new Date(values.scheduledAt).toISOString() : null,
     };
     if (values.type === "email") {
@@ -147,6 +154,13 @@ export default function CampaignForm({
               placeholder="Who should receive this?"
             />
           </div>
+          {audience && (
+            <p className="-mt-1 text-xs text-muted-foreground">
+              {audiencePreview.isPending
+                ? "Counting recipients…"
+                : `Reaches ${audiencePreview.data?.count ?? 0} recipient(s) with an email on file.`}
+            </p>
+          )}
 
           {type === "email" ? (
             <div className="grid gap-4 lg:grid-cols-2">
