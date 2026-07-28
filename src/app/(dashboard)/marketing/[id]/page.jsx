@@ -69,6 +69,14 @@ export default function CampaignDetailPage() {
   const canSend = isEmail && ["draft", "scheduled", "paused"].includes(campaign.status);
   const audienceLabel =
     CAMPAIGN_AUDIENCES.find((a) => a.value === campaign.audience?.type)?.label || "your audience";
+  // A completed campaign shouldn't read "Not scheduled" — show when it went out.
+  const timingLabel = campaign.completedAt
+    ? `Sent ${formatDateTime(campaign.completedAt)}`
+    : campaign.startedAt
+      ? `Sending since ${formatDateTime(campaign.startedAt)}`
+      : campaign.scheduledAt
+        ? `Scheduled for ${formatDateTime(campaign.scheduledAt)}`
+        : "Not scheduled";
 
   const duplicate = () => {
     create.mutate({
@@ -113,7 +121,7 @@ export default function CampaignDetailPage() {
             </span>
             <span className="inline-flex items-center gap-1">
               <CalendarClock className="h-3.5 w-3.5" />
-              {campaign.scheduledAt ? formatDateTime(campaign.scheduledAt) : "Not scheduled"}
+              {timingLabel}
             </span>
           </span>
         }
@@ -244,6 +252,12 @@ export default function CampaignDetailPage() {
             <p className="text-xs text-muted-foreground">
               Created {formatRelative(campaign.createdAt)} · percentages relative to total sent.
             </p>
+            {rates.clicked > rates.opened && (
+              <p className="text-xs text-muted-foreground">
+                Clicks can exceed opens — some inboxes block the open-tracking pixel, and security
+                scanners follow links without loading images.
+              </p>
+            )}
           </CardContent>
         </Card>
 
