@@ -13,6 +13,7 @@ import { ticketService } from "@/services/ticket.service";
 import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
 import { formatRelative } from "@/utils/format";
+import { stripQuotedText } from "@/utils/email";
 import { cn } from "@/utils/cn";
 
 /**
@@ -106,7 +107,7 @@ export default function TicketChat({ ticket, className }) {
                           : "rounded-bl-sm bg-muted"
                       )}
                     >
-                      {message.body}
+                      {stripQuotedText(message.body)}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {message.author} · {formatRelative(message.createdAt)}
