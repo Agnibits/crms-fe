@@ -29,6 +29,13 @@ function fromBackend(o) {
   if (!o || typeof o !== "object") return o;
   return {
     ...o,
+    // Prisma serialises Decimal as a STRING — coerce so forecast sums and column
+    // totals do real math instead of string-concatenating ("0" + "250000").
+    amount: o.amount != null ? Number(o.amount) : 0,
+    probability: o.probability != null ? Number(o.probability) : 0,
+    // Keep the stage id for board grouping; expose the readable name separately.
+    stageId: o.stageId ?? o.stage?.id,
+    stageName: o.stage?.name ?? o.stageName,
     stage: o.stage?.name ?? o.stageName ?? o.stage,
     expectedCloseDate: o.closeDate ?? o.expectedCloseDate,
     customerName: o.customer?.name ?? o.customerName,

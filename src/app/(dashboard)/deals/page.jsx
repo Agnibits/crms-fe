@@ -85,6 +85,12 @@ function OpportunityCard({ opportunity }) {
       }
     : undefined;
 
+  // An open deal whose expected close date has passed needs attention.
+  const isOverdue =
+    opportunity.status === "OPEN" &&
+    opportunity.expectedCloseDate &&
+    new Date(opportunity.expectedCloseDate) < new Date();
+
   return (
     <div
       ref={setNodeRef}
@@ -112,8 +118,14 @@ function OpportunityCard({ opportunity }) {
           {opportunity.probability}%
         </span>
       </div>
-      <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+      <p
+        className={cn(
+          "mt-2 flex items-center gap-1 text-xs",
+          isOverdue ? "font-medium text-destructive" : "text-muted-foreground"
+        )}
+      >
         <CalendarDays className="h-3 w-3" /> {formatDate(opportunity.expectedCloseDate)}
+        {isOverdue && " · overdue"}
       </p>
     </div>
   );
