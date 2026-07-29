@@ -13,9 +13,11 @@ import { normalizeList } from "./normalize";
  */
 const ACTIVITY_TO_EVENT_TYPE = {
   CALL: "call", MEETING: "meeting", EMAIL: "email", NOTE: "note", WHATSAPP: "whatsapp", SMS: "sms",
+  EVENT: "event", FOLLOW_UP: "follow_up", REMINDER: "reminder",
 };
 const EVENT_TO_ACTIVITY_TYPE = {
   call: "CALL", meeting: "MEETING", email: "EMAIL", note: "NOTE", whatsapp: "WHATSAPP", sms: "SMS",
+  event: "EVENT", follow_up: "FOLLOW_UP", reminder: "REMINDER",
 };
 
 function toEvent(a) {

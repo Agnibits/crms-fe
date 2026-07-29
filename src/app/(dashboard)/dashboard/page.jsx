@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CalendarDays,
+  Clock,
   DollarSign,
   FileText,
   Handshake,
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const a = attention.data || {};
   const attentionItems = [
     { label: "Tasks due", count: a.tasksDue || 0, icon: ListChecks, href: "/tasks" },
+    { label: "Follow-ups due", count: a.followUpsDue || 0, icon: Clock, href: "/calendar" },
     { label: "Deals overdue", count: a.dealsOverdue || 0, icon: AlertTriangle, href: "/deals" },
     { label: "Quotes pending", count: a.quotesPending || 0, icon: FileText, href: "/quotes" },
     { label: "Open tickets", count: a.ticketsOpen || 0, icon: LifeBuoy, href: "/tickets" },
@@ -158,7 +160,7 @@ export default function DashboardPage() {
           )}
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {attentionItems.map((item) => {
               const Icon = item.icon;
               const active = item.count > 0;
