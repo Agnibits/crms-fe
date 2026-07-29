@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import {
   Download,
   Eye,
+  FileArchive,
   FileSpreadsheet,
   FileText,
   File as FileIcon,
@@ -13,6 +14,7 @@ import {
   LayoutGrid,
   List,
   MoreHorizontal,
+  Presentation,
   Search,
   Trash2,
   Upload,
@@ -61,9 +63,20 @@ const fileHooks = createCrudHooks({
 
 const FILE_TYPE_META = {
   pdf: { icon: FileText, className: "text-red-500", bg: "bg-red-500/10" },
+  xls: { icon: FileSpreadsheet, className: "text-emerald-500", bg: "bg-emerald-500/10" },
   xlsx: { icon: FileSpreadsheet, className: "text-emerald-500", bg: "bg-emerald-500/10" },
+  csv: { icon: FileSpreadsheet, className: "text-emerald-500", bg: "bg-emerald-500/10" },
   png: { icon: ImageIcon, className: "text-violet-500", bg: "bg-violet-500/10" },
+  jpg: { icon: ImageIcon, className: "text-violet-500", bg: "bg-violet-500/10" },
+  jpeg: { icon: ImageIcon, className: "text-violet-500", bg: "bg-violet-500/10" },
+  gif: { icon: ImageIcon, className: "text-violet-500", bg: "bg-violet-500/10" },
+  webp: { icon: ImageIcon, className: "text-violet-500", bg: "bg-violet-500/10" },
+  doc: { icon: FileText, className: "text-blue-500", bg: "bg-blue-500/10" },
   docx: { icon: FileText, className: "text-blue-500", bg: "bg-blue-500/10" },
+  rtf: { icon: FileText, className: "text-blue-500", bg: "bg-blue-500/10" },
+  ppt: { icon: Presentation, className: "text-orange-500", bg: "bg-orange-500/10" },
+  pptx: { icon: Presentation, className: "text-orange-500", bg: "bg-orange-500/10" },
+  zip: { icon: FileArchive, className: "text-amber-500", bg: "bg-amber-500/10" },
 };
 
 function typeMeta(type) {
