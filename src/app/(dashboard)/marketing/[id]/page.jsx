@@ -15,6 +15,7 @@ import {
   Trash2,
   Users,
   CalendarClock,
+  CheckCircle2,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -23,9 +24,11 @@ import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { campaignHooks, useSendCampaign } from "@/features/campaigns/hooks";
+import { campaignHooks, useSendCampaign, useCampaignRecipients } from "@/features/campaigns/hooks";
 import { useMyCompany } from "@/hooks/useMyCompany";
 import { CAMPAIGN_STATUSES } from "@/constants/options";
 import { CAMPAIGN_AUDIENCES } from "@/validations/campaign.schema";
@@ -42,6 +45,7 @@ export default function CampaignDetailPage() {
   const remove = campaignHooks.useRemove({ onSuccess: () => router.push("/marketing") });
   const sendCampaign = useSendCampaign();
   const { company } = useMyCompany();
+  const recipientsQuery = useCampaignRecipients(id);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const rates = useMemo(() => {
@@ -313,6 +317,83 @@ export default function CampaignDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recipients — who engaged, for follow-up */}
+      {isEmail && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base">Recipients</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {recipientsQuery.isPending ? (
+              <div className="space-y-2 p-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (recipientsQuery.data ?? []).length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">
+                No recipients yet — this campaign hasn&apos;t been sent.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-xs font-medium text-muted-foreground">
+                      <th className="px-4 py-2.5">Recipient</th>
+                      <th className="px-4 py-2.5">Status</th>
+                      <th className="px-4 py-2.5">Opened</th>
+                      <th className="px-4 py-2.5">Clicked</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {(recipientsQuery.data ?? []).map((r) => (
+                      <tr key={r.id} className="hover:bg-muted/40">
+                        <td className="px-4 py-2.5">
+                          <p className="font-medium">{r.name || r.email}</p>
+                          {r.name && <p className="text-xs text-muted-foreground">{r.email}</p>}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <Badge
+                            variant="outline"
+                            className={
+                              r.status === "SENT"
+                                ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-300"
+                                : r.status === "FAILED"
+                                  ? "border-destructive/30 text-destructive"
+                                  : ""
+                            }
+                          >
+                            {r.status === "SENT" ? "Sent" : r.status === "FAILED" ? "Failed" : "Pending"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {r.openedAt ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> {formatRelative(r.openedAt)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {r.clickedAt ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-300">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> {formatRelative(r.clickedAt)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <ConfirmDialog
         open={confirmDelete}
