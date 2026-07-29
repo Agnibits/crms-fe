@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -112,6 +112,124 @@ async function downloadFile(file) {
   }
 }
 
+const PREVIEWABLE = new Set(["pdf", "txt", "csv"]);
+
+/** Simple CSV → table (first row as header). Best-effort split; fine for preview. */
+function CsvTable({ text }) {
+  const rows = String(text || "")
+    .trim()
+    .split(/\r?\n/)
+    .slice(0, 100)
+    .map((r) => r.split(","));
+  if (rows.length === 0) return null;
+  const [head, ...body] = rows;
+  return (
+    <div className="max-h-72 overflow-auto rounded-xl border">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b bg-muted/40">
+            {head.map((c, i) => (
+              <th key={i} className="px-2 py-1.5 text-left font-medium">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {body.map((r, i) => (
+            <tr key={i} className="border-b last:border-0">
+              {r.map((c, j) => (
+                <td key={j} className="px-2 py-1">
+                  {c}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** In-app viewer: images inline, PDF in a (blob) iframe, text/CSV rendered.
+ *  Everything else falls back to a type icon (download from the dialog). */
+function FilePreview({ file }) {
+  const [state, setState] = useState({ loading: false });
+
+  useEffect(() => {
+    if (!file || isImage(file) || !PREVIEWABLE.has(file.type)) {
+      setState({ loading: false });
+      return undefined;
+    }
+    let alive = true;
+    let objectUrl;
+    setState({ loading: true });
+    (async () => {
+      try {
+        const res = await fetch(file.url);
+        if (file.type === "pdf") {
+          // Blob URL is same-origin, so it isn't blocked by X-Frame-Options.
+          objectUrl = URL.createObjectURL(await res.blob());
+          if (alive) setState({ loading: false, pdfUrl: objectUrl });
+        } else {
+          const text = await res.text();
+          if (alive) setState({ loading: false, text });
+        }
+      } catch {
+        if (alive) setState({ loading: false, error: true });
+      }
+    })();
+    return () => {
+      alive = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  const meta = typeMeta(file.type);
+  const Icon = meta.icon;
+
+  if (isImage(file)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={file.url}
+        alt={file.name}
+        className="max-h-72 w-full rounded-xl border bg-muted/40 object-contain"
+      />
+    );
+  }
+  if (PREVIEWABLE.has(file.type)) {
+    if (state.loading) {
+      return (
+        <div className="flex h-72 items-center justify-center rounded-xl border bg-muted/40 text-sm text-muted-foreground">
+          Loading preview…
+        </div>
+      );
+    }
+    if (state.error) {
+      return (
+        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed bg-muted/40 text-sm text-muted-foreground">
+          Couldn&apos;t load preview — try downloading.
+        </div>
+      );
+    }
+    if (file.type === "pdf") {
+      return <iframe src={state.pdfUrl} title={file.name} className="h-96 w-full rounded-xl border" />;
+    }
+    if (file.type === "csv") return <CsvTable text={state.text} />;
+    return (
+      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl border bg-muted/40 p-3 text-xs">
+        {state.text}
+      </pre>
+    );
+  }
+  return (
+    <div className="flex h-40 items-center justify-center rounded-xl border border-dashed bg-muted/40">
+      <Icon className={cn("h-12 w-12", meta.className)} />
+    </div>
+  );
+}
+
 function FileActions({ file, onPreview, onDelete }) {
   return (
     <DropdownMenu>
@@ -175,9 +293,6 @@ export default function FilesPage() {
     upload.mutate(selected);
     e.target.value = "";
   };
-
-  const previewMeta = previewFile ? typeMeta(previewFile.type) : null;
-  const PreviewIcon = previewMeta?.icon ?? FileIcon;
 
   return (
     <div className="space-y-6">
@@ -374,18 +489,7 @@ export default function FilesPage() {
           </DialogHeader>
           {previewFile && (
             <div className="space-y-4">
-              {isImage(previewFile) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewFile.url}
-                  alt={previewFile.name}
-                  className="max-h-72 w-full rounded-xl border bg-muted/40 object-contain"
-                />
-              ) : (
-                <div className="flex h-40 items-center justify-center rounded-xl border border-dashed bg-muted/40">
-                  <PreviewIcon className={cn("h-12 w-12", previewMeta?.className)} />
-                </div>
-              )}
+              <FilePreview file={previewFile} />
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">Uploaded by</p>
