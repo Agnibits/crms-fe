@@ -114,7 +114,7 @@ export default function UsersPage() {
       {
         accessorKey: "department",
         header: "Department",
-        cell: ({ row }) => row.original.department || "—",
+        cell: ({ row }) => row.original.department?.name || "—",
       },
       {
         accessorKey: "branch",

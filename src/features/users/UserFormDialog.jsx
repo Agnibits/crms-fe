@@ -19,14 +19,10 @@ import { userSchema } from "@/validations/user.schema";
 import { ASSIGNABLE_ROLES, BACKEND_ROLE_LABELS, SUPER_ADMIN_ROLE } from "@/constants/roles";
 import { userHooks } from "@/features/users/hooks";
 import { useBranchOptions, toBranchId } from "@/features/branches/hooks";
+import { useDepartmentOptions } from "@/features/departments/hooks";
 
 // SUPER_ADMIN is reserved and never offered here.
 const ROLE_OPTIONS = ASSIGNABLE_ROLES;
-
-const DEPARTMENT_OPTIONS = ["Sales", "Marketing", "Support", "Operations"].map((d) => ({
-  value: d,
-  label: d,
-}));
 
 /**
  * Create / edit a user inside a dialog.
@@ -41,6 +37,7 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
   const update = userHooks.useUpdate();
   const submitting = create.isPending || update.isPending;
   const { options: branchOptions, hasBranches } = useBranchOptions();
+  const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
 
   const [active, setActive] = useState(true);
 
@@ -59,7 +56,7 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
       password: "",
       role: user?.rawRole ?? "USER",
       phone: user?.phone ?? "",
-      department: user?.department ?? "",
+      departmentId: user?.departmentId ?? "",
       branchId: user?.branchId ?? "",
     },
   });
@@ -174,14 +171,23 @@ export default function UserFormDialog({ open, onOpenChange, user = null }) {
                 className="sm:col-span-2"
               />
             )}
-            <FormSelect
-              control={control}
-              name="department"
-              label="Department"
-              error={errors.department}
-              options={DEPARTMENT_OPTIONS}
-              placeholder="Select department"
-            />
+            {hasDepartments ? (
+              <FormSelect
+                control={control}
+                name="departmentId"
+                label="Department"
+                error={errors.departmentId}
+                options={departmentOptions}
+                placeholder="Select department"
+              />
+            ) : (
+              <div className="space-y-1.5">
+                <Label>Department</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground">
+                  Add departments in Settings to assign one
+                </div>
+              </div>
+            )}
             {hasBranches ? (
               <FormSelect
                 control={control}
