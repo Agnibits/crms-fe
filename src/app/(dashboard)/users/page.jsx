@@ -37,9 +37,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useAuth } from "@/hooks/useAuth";
 import { userHooks } from "@/features/users/hooks";
 import UserFormDialog from "@/features/users/UserFormDialog";
-import { ASSIGNABLE_ROLES, BACKEND_ROLE_LABELS, SUPER_ADMIN_ROLE } from "@/constants/roles";
+import {
+  ASSIGNABLE_ROLES,
+  BACKEND_ROLE_LABELS,
+  ROLE_RANK,
+  SUPER_ADMIN_ROLE,
+} from "@/constants/roles";
 import { formatNumber, formatRelative } from "@/utils/format";
 
 /** Colored role badge options (StatusBadge-compatible), keyed by backend role. */
@@ -63,6 +69,8 @@ const USER_STATUSES = [
 ];
 
 export default function UsersPage() {
+  const { user: me } = useAuth();
+  const myRank = ROLE_RANK[me?.rawRole] ?? 0;
   const t = useTableState();
   const { data, isPending, error, refetch } = userHooks.useList(t.queryParams);
   // Wide fetch just for the KPI tiles (mock data is small).
@@ -89,6 +97,11 @@ export default function UsersPage() {
           <div className="flex items-center gap-3">
             <UserAvatar name={row.original.name} src={row.original.avatar} className="h-8 w-8" />
             <span className="font-medium">{row.original.name}</span>
+            {row.original.id === me?.id && (
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                You
+              </span>
+            )}
           </div>
         ),
       },
@@ -122,8 +135,13 @@ export default function UsersPage() {
         cell: ({ row }) => {
           const user = row.original;
           const isActive = user.status === "active";
-          // The reserved super admin is read-only: no suspend / delete.
-          const isSuperAdmin = user.rawRole === SUPER_ADMIN_ROLE;
+          const isSelf = user.id === me?.id;
+          // The API rejects any action on a user of equal-or-higher rank, and
+          // blocks acting on your own account — so only surface the menu when
+          // the actor genuinely outranks the target. Otherwise every item would
+          // just error. Users manage their own account from Profile settings.
+          const canManage = !isSelf && (ROLE_RANK[user.rawRole] ?? 0) < myRank;
+          if (!canManage) return null;
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -140,41 +158,35 @@ export default function UsersPage() {
                 <DropdownMenuItem onClick={() => setFormDialog({ open: true, user })}>
                   <Pencil /> Edit
                 </DropdownMenuItem>
-                {!isSuperAdmin && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      patch.mutate({ id: user.id, status: isActive ? "inactive" : "active" })
-                    }
-                  >
-                    {isActive ? (
-                      <>
-                        <UserX /> Deactivate
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck /> Activate
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                )}
-                {!isSuperAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => setDeleteId(user.id)}
-                    >
-                      <Trash2 /> Delete
-                    </DropdownMenuItem>
-                  </>
-                )}
+                <DropdownMenuItem
+                  onClick={() =>
+                    patch.mutate({ id: user.id, status: isActive ? "inactive" : "active" })
+                  }
+                >
+                  {isActive ? (
+                    <>
+                      <UserX /> Deactivate
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck /> Activate
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(user.id)}
+                >
+                  <Trash2 /> Delete
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           );
         },
       },
     ],
-    [patch]
+    [patch, me?.id, myRank]
   );
 
   return (

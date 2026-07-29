@@ -47,6 +47,23 @@ export const ASSIGNABLE_ROLES = [
 
 export const ASSIGNABLE_ROLE_VALUES = ASSIGNABLE_ROLES.map((r) => r.value);
 
+/**
+ * Mirrors the backend ROLE_HIERARCHY (config/constants.js). The API rejects any
+ * action on a user of equal-or-higher rank ("You cannot manage a user with an
+ * equal or higher role"), so the UI uses these ranks to only offer row actions
+ * that will actually succeed. Keyed by backend role.
+ */
+export const ROLE_RANK = {
+  SUPER_ADMIN: 100,
+  ADMIN: 90,
+  MANAGER: 70,
+  SALES_MANAGER: 60,
+  SALES_EXECUTIVE: 40,
+  MARKETING: 40,
+  CUSTOMER_SUPPORT: 40,
+  USER: 10,
+};
+
 /** Fine-grained permissions used for RBAC checks (mirrors API permissions). */
 export const PERMISSIONS = {
   DASHBOARD_VIEW: "dashboard:view",
