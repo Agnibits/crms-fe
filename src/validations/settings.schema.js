@@ -96,7 +96,13 @@ export const currencySchema = z.object({
 /* ── Org structure rows (branches / departments / teams) ─────── */
 export const branchSchema = z.object({
   name: z.string().min(2, "Branch name must be at least 2 characters").max(80, "Branch name is too long"),
+  code: z.string().max(20, "Code is too long").optional().or(z.literal("")),
+  phone: z.string().max(30, "Phone is too long").optional().or(z.literal("")),
+  email: z.string().email("Enter a valid email").optional().or(z.literal("")),
+  addressLine: z.string().max(120, "Address is too long").optional().or(z.literal("")),
   city: z.string().min(1, "City is required").max(60, "City name is too long"),
+  state: z.string().max(60, "State is too long").optional().or(z.literal("")),
+  postalCode: z.string().max(20, "Postal code is too long").optional().or(z.literal("")),
   country: z.string().min(1, "Country is required").max(60, "Country name is too long"),
   isPrimary: z.boolean().optional(),
 });

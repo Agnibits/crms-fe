@@ -24,7 +24,18 @@ const ORG_SECTIONS = {
 // Map the mock form fields to real Prisma columns (extra fields would 400 Prisma).
 function toOrgPayload(key, v = {}) {
   if (key === "branches") {
-    return { name: v.name, city: v.city || undefined, country: v.country || undefined, isHeadOffice: !!v.isPrimary };
+    return {
+      name: v.name,
+      code: v.code || undefined,
+      phone: v.phone || undefined,
+      email: v.email || undefined,
+      addressLine: v.addressLine || undefined,
+      city: v.city || undefined,
+      state: v.state || undefined,
+      postalCode: v.postalCode || undefined,
+      country: v.country || undefined,
+      isHeadOffice: !!v.isPrimary,
+    };
   }
   if (key === "departments") {
     return { name: v.name, branchId: v.branchId || undefined };

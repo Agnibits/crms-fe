@@ -26,6 +26,7 @@ import {
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
+import { cn } from "@/utils/cn";
 import { FormInput, FormNumber, FormSelect, FormSwitch } from "@/components/forms/fields";
 import { useSettingItems } from "@/features/settings/hooks";
 
@@ -106,16 +107,28 @@ export default function SectionCrudTable({
       placeholder: field.placeholder,
       className: field.className,
     };
+    let node;
     switch (field.type) {
       case "number":
-        return <FormNumber register={register} {...common} />;
+        node = <FormNumber register={register} {...common} />;
+        break;
       case "select":
-        return <FormSelect control={control} options={field.options || []} {...common} />;
+        node = <FormSelect control={control} options={field.options || []} {...common} />;
+        break;
       case "switch":
-        return <FormSwitch control={control} {...common} />;
+        node = <FormSwitch control={control} {...common} />;
+        break;
       default:
-        return <FormInput register={register} {...common} />;
+        node = <FormInput register={register} {...common} />;
     }
+    // Fields are full-width by default; opt a field into half-width with `half`
+    // (switches always span full). Keeps single-field sections unchanged.
+    const spanHalf = field.half && field.type !== "switch";
+    return (
+      <div key={field.name} className={cn("min-w-0", !spanHalf && "sm:col-span-2")}>
+        {node}
+      </div>
+    );
   };
 
   return (
@@ -200,7 +213,7 @@ export default function SectionCrudTable({
 
       {/* Add / edit dialog */}
       <Dialog open={dialog.open} onOpenChange={(open) => (open ? null : closeDialog())}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {dialog.item ? `Edit ${itemLabel.toLowerCase()}` : `Add ${itemLabel.toLowerCase()}`}
@@ -212,7 +225,7 @@ export default function SectionCrudTable({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-            <div className="grid gap-4">{fields.map(renderField)}</div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{fields.map(renderField)}</div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog} disabled={submitting}>
                 Cancel
