@@ -14,7 +14,7 @@ const base = createCrudService(ENDPOINTS.users);
 const inner = makeMapper({
   enums: ["status"],
   // Drops the free-text "department" label + create-only avatar/emailVerified/lastLoginAt.
-  allow: ["email", "password", "phone", "status", "companyId", "departmentId", "teamId"],
+  allow: ["email", "password", "phone", "status", "companyId", "departmentId", "teamId", "branchId"],
 });
 
 const mapper = {
