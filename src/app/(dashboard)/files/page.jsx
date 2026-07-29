@@ -86,6 +86,32 @@ function typeMeta(type) {
 const IMAGE_TYPES = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
 const isImage = (file) => IMAGE_TYPES.has(file?.type) && !!file?.url;
 
+/**
+ * Force a real download (not open-in-tab). The file is served cross-origin and
+ * inline, so `window.open`/`<a download>` just renders it — fetch it as a blob
+ * and download the local object URL instead.
+ */
+async function downloadFile(file) {
+  if (!file?.url) {
+    toast.error("File URL unavailable");
+    return;
+  }
+  try {
+    const res = await fetch(file.url);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name || "download";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    window.open(file.url, "_blank"); // fallback: at least show it
+  }
+}
+
 function FileActions({ file, onPreview, onDelete }) {
   return (
     <DropdownMenu>
@@ -98,9 +124,7 @@ function FileActions({ file, onPreview, onDelete }) {
         <DropdownMenuItem onClick={() => onPreview(file)}>
           <Eye /> Preview
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => (file.url ? window.open(file.url, "_blank") : toast.error("File URL unavailable"))}
-        >
+        <DropdownMenuItem onClick={() => downloadFile(file)}>
           <Download /> Download
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -380,15 +404,7 @@ export default function FilesPage() {
                   <p className="font-medium">{formatBytes(previewFile.size)}</p>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() =>
-                  previewFile.url
-                    ? window.open(previewFile.url, "_blank")
-                    : toast.error("File URL unavailable")
-                }
-              >
+              <Button variant="outline" className="w-full" onClick={() => downloadFile(previewFile)}>
                 <Download /> Download
               </Button>
             </div>
