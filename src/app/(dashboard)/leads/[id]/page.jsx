@@ -324,6 +324,15 @@ export default function LeadDetailPage() {
                     <p className="text-sm font-medium">{lead.company || "—"}</p>
                   </div>
                 </div>
+                {lead.branch?.name && (
+                  <div className="flex items-start gap-2">
+                    <Building2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Branch</p>
+                      <p className="text-sm font-medium">{lead.branch.name}</p>
+                    </div>
+                  </div>
+                )}
                 {lead.notes && (
                   <div className="sm:col-span-2">
                     <p className="text-xs text-muted-foreground">Notes</p>

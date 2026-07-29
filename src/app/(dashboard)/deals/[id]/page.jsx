@@ -253,6 +253,12 @@ export default function OpportunityDetailPage() {
                   <span className="text-muted-foreground">Customer</span>
                   <span className="font-medium">{opportunity.customerName}</span>
                 </div>
+                {opportunity.branch?.name && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Branch</span>
+                    <span className="font-medium">{opportunity.branch.name}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Stage</span>
                   <StatusBadge value={opportunity.stage} options={stageOptions} />
