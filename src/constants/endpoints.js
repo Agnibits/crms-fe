@@ -48,6 +48,7 @@ export const ENDPOINTS = {
   users: "/users",
   roles: "/roles",
   permissions: "/roles/permissions",
+  rolesMatrix: "/roles/matrix",
   // Monthly sales targets that back the dashboard's revenue-vs-target chart
   salesTargets: "/sales-targets",
   // SUPER_ADMIN-only tenant (company) management
