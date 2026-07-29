@@ -12,7 +12,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useRoleMatrix, useUpdateRolePermissions } from "@/features/roles/hooks";
+
+const DATA_SCOPE_LABELS = {
+  ALL: "All branches",
+  OWN_BRANCH: "Own branch only",
+};
 
 /** Catalog (ordered) → [{ group, items:[{key,label}] }] preserving first-seen order. */
 function groupPermissions(catalog) {
@@ -30,6 +43,7 @@ function groupPermissions(catalog) {
 
 function RoleCard({ role, catalog, groups, onSave, saving }) {
   const [granted, setGranted] = useState(() => new Set(role.permissions));
+  const [scope, setScope] = useState(role.dataScope || "ALL");
   const [dirty, setDirty] = useState(false);
 
   const toggle = (key) => {
@@ -42,13 +56,19 @@ function RoleCard({ role, catalog, groups, onSave, saving }) {
     setDirty(true);
   };
 
+  const changeScope = (value) => {
+    setScope(value);
+    setDirty(true);
+  };
+
   const reset = () => {
     setGranted(new Set(role.permissions));
+    setScope(role.dataScope || "ALL");
     setDirty(false);
   };
 
   const save = () => {
-    onSave(role, [...granted], () => setDirty(false));
+    onSave(role, { permissions: [...granted], dataScope: scope }, () => setDirty(false));
   };
 
   const count = role.editable ? granted.size : catalog.length;
@@ -91,6 +111,25 @@ function RoleCard({ role, catalog, groups, onSave, saving }) {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
+        {role.editable && (
+          <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Label className="text-sm">Data access</Label>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Which records this role can see across the CRM.
+              </p>
+            </div>
+            <Select value={scope} onValueChange={changeScope} disabled={saving}>
+              <SelectTrigger className="w-full sm:w-52" aria-label="Data access scope">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">{DATA_SCOPE_LABELS.ALL}</SelectItem>
+                <SelectItem value="OWN_BRANCH">{DATA_SCOPE_LABELS.OWN_BRANCH}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {groups.map(({ group, items }) => (
           <div key={group}>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -127,9 +166,9 @@ export default function RolesPage() {
   const groups = useMemo(() => groupPermissions(catalog), [catalog]);
   const savingRole = update.isPending ? update.variables?.role : null;
 
-  const handleSave = (role, permissions, onDone) => {
+  const handleSave = (role, { permissions, dataScope }, onDone) => {
     update.mutate(
-      { role: role.role, permissions, label: role.label },
+      { role: role.role, permissions, dataScope, label: role.label },
       { onSuccess: onDone }
     );
   };
