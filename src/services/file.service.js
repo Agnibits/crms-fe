@@ -2,8 +2,8 @@
 
 import { createCrudService } from "./crud.factory";
 import { ENDPOINTS } from "@/constants/endpoints";
-import { api, unwrap } from "./api";
 import { API_URL } from "@/constants/app";
+import { tokenStorage } from "@/utils/storage";
 
 // Uploaded files are served statically from the API origin (no /api/v1 prefix).
 const API_ORIGIN = API_URL.replace(/\/api\/v\d+\/?$/, "");
@@ -34,16 +34,23 @@ export const fileService = {
   async getById(id, opts) {
     return fromBackend(await base.getById(id, opts));
   },
-  /** Real multipart upload to the backend's /files/upload endpoint. */
+  /**
+   * Upload via the browser's native fetch so the multipart/form-data boundary is
+   * set automatically. (The shared axios instance defaults Content-Type to
+   * application/json, which corrupts FormData uploads.)
+   */
   async upload(file, { relatedType, relatedId } = {}) {
     const form = new FormData();
     form.append("file", file);
     if (relatedType) form.append("relatedType", relatedType);
     if (relatedId) form.append("relatedId", relatedId);
-    // Override the instance's default JSON content-type so axios detects the
-    // FormData and sets multipart/form-data WITH the required boundary.
-    return fromBackend(
-      unwrap(await api.post("/files/upload", form, { headers: { "Content-Type": undefined } }))
-    );
+    const res = await fetch(`${API_URL}/files/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenStorage.getAccessToken() || ""}` },
+      body: form,
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(body?.message || `Upload failed (${res.status})`);
+    return fromBackend(body?.data ?? body);
   },
 };
