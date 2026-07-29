@@ -16,10 +16,21 @@ export default function QuoteDocument({ quote, company }) {
   if (!quote) return null;
   const items = quote.items ?? [];
 
-  const sellerAddress = [company?.addressLine, company?.city, company?.country]
+  // When the quote is issued from a specific branch, its address/contact head
+  // the document; otherwise fall back to the company's own details.
+  const branch = quote.branch;
+  const sellerAddress = (
+    branch
+      ? [branch.addressLine, branch.city, branch.state, branch.postalCode, branch.country]
+      : [company?.addressLine, company?.city, company?.country]
+  )
     .filter(Boolean)
     .join(", ");
-  const sellerContact = [company?.email, company?.phone].filter(Boolean).join(" · ");
+  const sellerContact = (
+    branch ? [branch.email, branch.phone] : [company?.email, company?.phone]
+  )
+    .filter(Boolean)
+    .join(" · ");
   const logoUrl = absoluteUploadUrl(company?.logoUrl);
 
   const cust = quote.customer ?? {};
@@ -63,6 +74,7 @@ export default function QuoteDocument({ quote, company }) {
             )}
             <div>
               <p className="text-base font-semibold leading-tight">{company?.name ?? "—"}</p>
+              {branch?.name && <p className="text-xs font-medium text-foreground">{branch.name}</p>}
               {company?.website && (
                 <p className="text-xs text-muted-foreground">{company.website}</p>
               )}

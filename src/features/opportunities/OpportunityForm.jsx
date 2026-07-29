@@ -14,6 +14,7 @@ import {
 import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useCustomerOptions } from "@/features/contacts/hooks";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { useStageOptions } from "./useStageOptions";
 
 /** Shared create/edit opportunity form. */
@@ -26,6 +27,7 @@ export default function OpportunityForm({
 }) {
   const { options: userOptions } = useUsersOptions();
   const customers = useCustomerOptions();
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
   const { stageOptions } = useStageOptions();
 
   const {
@@ -45,6 +47,7 @@ export default function OpportunityForm({
       amount: "",
       expectedCloseDate: "",
       ownerId: "",
+      branchId: "",
       ...defaultValues,
       // <input type="date"> needs yyyy-MM-dd
       ...(defaultValues?.expectedCloseDate
@@ -133,6 +136,16 @@ export default function OpportunityForm({
             placeholder="Assign an owner…"
             error={errors.ownerId}
           />
+          {hasBranches && (
+            <FormSelect
+              control={control}
+              name="branchId"
+              label="Branch / Office"
+              options={branchOptions}
+              placeholder="Select branch (optional)"
+              error={errors.branchId}
+            />
+          )}
         </CardContent>
       </Card>
 

@@ -25,6 +25,7 @@ export const leadSchema = z
   rating: z.enum(["hot", "warm", "cold"]).optional(),
   ownerId: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
   })
   // A lead is unreachable without at least one contact channel.

@@ -26,4 +26,5 @@ export const opportunitySchema = z.object({
   ),
   expectedCloseDate: z.string().min(1, "Expected close date is required"),
   ownerId: z.string().optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
 });

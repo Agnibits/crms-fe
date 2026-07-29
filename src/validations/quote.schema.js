@@ -15,6 +15,7 @@ export const quoteItemSchema = z.object({
 
 export const quoteSchema = z.object({
   customerId: z.string().min(1, "Select a customer"),
+  branchId: z.string().optional().or(z.literal("")),
   items: z.array(quoteItemSchema).min(1, "Add at least one line item"),
   discount: z
     .number({ invalid_type_error: "Enter a discount amount" })

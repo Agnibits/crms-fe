@@ -21,6 +21,7 @@ import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fie
 import { quoteSchema } from "@/validations/quote.schema";
 import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { formatCurrency } from "@/utils/format";
 
 // unit is left blank until a product is picked — it's the product's unit,
@@ -39,6 +40,7 @@ function defaultValidUntil() {
  */
 export default function QuoteBuilder({ defaultValues, onSubmit, submitting = false, submitLabel = "Save Quote" }) {
   const customers = useCustomerOptions(100);
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
   const products = productHooks.useList({ page: 1, limit: 100, status: "active" });
 
   const customerOptions = (customers.data?.items ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -54,6 +56,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       customerId: defaultValues?.customerId ?? "",
+      branchId: defaultValues?.branchId ?? "",
       items: defaultValues?.items?.length
         ? defaultValues.items.map((it) => ({
             productId: it.productId,
@@ -134,6 +137,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       customerId: values.customerId,
       customerName: customer?.name ?? defaultValues?.customerName ?? "",
       status: defaultValues?.status ?? "draft",
+      branchId: values.branchId || undefined,
       items,
       subtotal,
       discount: values.discount || 0,
@@ -168,6 +172,17 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
             required
             error={errors.validUntil}
           />
+          {hasBranches && (
+            <FormSelect
+              control={control}
+              name="branchId"
+              label="Issuing branch"
+              options={branchOptions}
+              placeholder="Company default"
+              hint="Shown as the issuing office on the quote."
+              error={errors.branchId}
+            />
+          )}
         </CardContent>
       </Card>
 

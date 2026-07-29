@@ -20,7 +20,7 @@ const mapper = makeMapper({
   allow: [
     "name", "title", "company", "email", "phone", "source", "campaign",
     "industry", "value", "rating", "status", "probability",
-    "assignedUserId", "notes", "city",
+    "assignedUserId", "notes", "city", "branchId",
   ],
 });
 

@@ -16,6 +16,7 @@ import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/op
 import { leadSchema } from "@/validations/lead.schema";
 import { leadService } from "@/services/lead.service";
 import { useUsersOptions } from "./useUsersOptions";
+import { useBranchOptions, toBranchId } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit lead form.
@@ -29,6 +30,7 @@ export default function LeadForm({
   onCancel,
 }) {
   const { options: userOptions } = useUsersOptions();
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
 
   // Cities this company has already used — real data, not a hardcoded list.
   const { data: citySuggestions = [] } = useQuery({
@@ -55,13 +57,16 @@ export default function LeadForm({
       rating: "warm",
       ownerId: "",
       city: "",
+      branchId: "",
       notes: "",
       ...defaultValues,
     },
   });
 
+  const submit = handleSubmit((v) => onSubmit({ ...v, branchId: toBranchId(v.branchId) }));
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={submit} className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Lead Details</CardTitle>
@@ -147,6 +152,16 @@ export default function LeadForm({
             suggestions={citySuggestions}
             error={errors.city}
           />
+          {hasBranches && (
+            <FormSelect
+              control={control}
+              name="branchId"
+              label="Branch / Office"
+              options={branchOptions}
+              placeholder="Select branch (optional)"
+              error={errors.branchId}
+            />
+          )}
           <FormTextarea
             register={register}
             name="notes"

@@ -55,6 +55,7 @@ async function toBackend(v = {}) {
     closeDate: v.expectedCloseDate || undefined,
     customerId: v.customerId || undefined,
     ownerId: v.ownerId || undefined,
+    branchId: v.branchId || undefined,
     notes: v.notes || undefined,
     pipelineId: pipe?.id,
     stageId: match?.id,

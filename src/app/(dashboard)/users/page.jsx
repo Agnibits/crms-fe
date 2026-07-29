@@ -117,6 +117,11 @@ export default function UsersPage() {
         cell: ({ row }) => row.original.department || "—",
       },
       {
+        accessorKey: "branch",
+        header: "Branch",
+        cell: ({ row }) => row.original.branch?.name || "—",
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => <StatusBadge value={row.original.status} options={USER_STATUSES} />,

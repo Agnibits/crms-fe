@@ -35,10 +35,20 @@ export default function InvoiceDocument({ invoice, company }) {
     country: cust.country,
     contact: [cust.email, cust.phone].filter(Boolean).join(" · "),
   };
-  const sellerAddress = [company?.addressLine, company?.city, company?.country]
+  // Issued from a branch → use its address/contact; else the company's own.
+  const branch = invoice.branch;
+  const sellerAddress = (
+    branch
+      ? [branch.addressLine, branch.city, branch.state, branch.postalCode, branch.country]
+      : [company?.addressLine, company?.city, company?.country]
+  )
     .filter(Boolean)
     .join(", ");
-  const sellerContact = [company?.email, company?.phone].filter(Boolean).join(" · ");
+  const sellerContact = (
+    branch ? [branch.email, branch.phone] : [company?.email, company?.phone]
+  )
+    .filter(Boolean)
+    .join(" · ");
   const logoUrl = absoluteUploadUrl(company?.logoUrl);
 
   return (
@@ -83,6 +93,7 @@ export default function InvoiceDocument({ invoice, company }) {
           )}
           <div>
             <p className="text-lg font-bold tracking-tight">{company?.name ?? "—"}</p>
+            {branch?.name && <p className="text-xs font-medium text-foreground">{branch.name}</p>}
             {sellerAddress && <p className="text-xs text-muted-foreground">{sellerAddress}</p>}
             {sellerContact && <p className="text-xs text-muted-foreground">{sellerContact}</p>}
           </div>

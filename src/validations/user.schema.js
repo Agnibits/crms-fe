@@ -21,4 +21,5 @@ export const userSchema = z.object({
   }),
   phone: z.string().max(24, "Phone number is too long").optional().or(z.literal("")),
   department: z.string().max(60, "Department name is too long").optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
 });
