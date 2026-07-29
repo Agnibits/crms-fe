@@ -318,13 +318,13 @@ export default function FilesPage() {
           </DialogHeader>
           {previewFile && (
             <div className="space-y-4">
-              {previewFile.type === "png" ? (
-                <div className="flex h-48 items-center justify-center rounded-xl border border-dashed bg-muted/40">
-                  <div className="text-center">
-                    <ImageIcon className="mx-auto h-10 w-10 text-violet-500" />
-                    <p className="mt-2 text-xs text-muted-foreground">Image preview placeholder</p>
-                  </div>
-                </div>
+              {["png", "jpg", "jpeg", "gif", "webp"].includes(previewFile.type) && previewFile.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewFile.url}
+                  alt={previewFile.name}
+                  className="max-h-72 w-full rounded-xl border bg-muted/40 object-contain"
+                />
               ) : (
                 <div className="flex h-40 items-center justify-center rounded-xl border border-dashed bg-muted/40">
                   <PreviewIcon className={cn("h-12 w-12", previewMeta?.className)} />
@@ -351,7 +351,11 @@ export default function FilesPage() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => toast.success("Download started")}
+                onClick={() =>
+                  previewFile.url
+                    ? window.open(previewFile.url, "_blank")
+                    : toast.error("File URL unavailable")
+                }
               >
                 <Download /> Download
               </Button>
