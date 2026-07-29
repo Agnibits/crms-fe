@@ -83,6 +83,9 @@ function typeMeta(type) {
   return FILE_TYPE_META[type] || { icon: FileIcon, className: "text-muted-foreground", bg: "bg-muted" };
 }
 
+const IMAGE_TYPES = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
+const isImage = (file) => IMAGE_TYPES.has(file?.type) && !!file?.url;
+
 function FileActions({ file, onPreview, onDelete }) {
   return (
     <DropdownMenu>
@@ -234,26 +237,35 @@ export default function FilesPage() {
             const meta = typeMeta(file.type);
             const Icon = meta.icon;
             return (
-              <Card key={file.id} className="transition-shadow hover:shadow-md">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <span
-                      className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-xl",
-                        meta.bg
-                      )}
-                    >
-                      <Icon className={cn("h-6 w-6", meta.className)} />
+              <Card
+                key={file.id}
+                className="group cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+                onClick={() => setPreviewFile(file)}
+              >
+                <div className="relative flex h-32 items-center justify-center border-b bg-muted/40">
+                  {isImage(file) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={file.url} alt={file.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className={cn("flex h-14 w-14 items-center justify-center rounded-xl", meta.bg)}>
+                      <Icon className={cn("h-7 w-7", meta.className)} />
                     </span>
+                  )}
+                  <div
+                    className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <FileActions file={file} onPreview={setPreviewFile} onDelete={setDeleteId} />
                   </div>
-                  <p className="mt-3 truncate text-sm font-medium" title={file.name}>
+                </div>
+                <CardContent className="p-3">
+                  <p className="truncate text-sm font-medium" title={file.name}>
                     {file.name}
                   </p>
                   <p className="mt-0.5 text-xs uppercase text-muted-foreground">
                     {file.type} · {formatBytes(file.size)}
                   </p>
-                  <p className="mt-2 truncate text-xs text-muted-foreground">
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
                     {file.uploadedBy} · {formatRelative(file.createdAt)}
                   </p>
                 </CardContent>
@@ -279,10 +291,30 @@ export default function FilesPage() {
                 const meta = typeMeta(file.type);
                 const Icon = meta.icon;
                 return (
-                  <TableRow key={file.id}>
+                  <TableRow
+                    key={file.id}
+                    className="cursor-pointer"
+                    onClick={() => setPreviewFile(file)}
+                  >
                     <TableCell>
-                      <span className="flex items-center gap-2">
-                        <Icon className={cn("h-4 w-4 shrink-0", meta.className)} />
+                      <span className="flex items-center gap-2.5">
+                        {isImage(file) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={file.url}
+                            alt=""
+                            className="h-8 w-8 shrink-0 rounded object-cover"
+                          />
+                        ) : (
+                          <span
+                            className={cn(
+                              "flex h-8 w-8 shrink-0 items-center justify-center rounded",
+                              meta.bg
+                            )}
+                          >
+                            <Icon className={cn("h-4 w-4", meta.className)} />
+                          </span>
+                        )}
                         <span className="max-w-[280px] truncate font-medium">{file.name}</span>
                       </span>
                     </TableCell>
@@ -294,7 +326,7 @@ export default function FilesPage() {
                     <TableCell className="text-muted-foreground">
                       {formatRelative(file.createdAt)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <FileActions file={file} onPreview={setPreviewFile} onDelete={setDeleteId} />
                     </TableCell>
                   </TableRow>
@@ -318,7 +350,7 @@ export default function FilesPage() {
           </DialogHeader>
           {previewFile && (
             <div className="space-y-4">
-              {["png", "jpg", "jpeg", "gif", "webp"].includes(previewFile.type) && previewFile.url ? (
+              {isImage(previewFile) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewFile.url}
