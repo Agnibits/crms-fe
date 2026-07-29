@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
   Download,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/table";
 import { createCrudHooks } from "@/hooks/useCrud";
 import { fileService } from "@/services/file.service";
+import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
 import { formatBytes, formatRelative } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -80,7 +82,9 @@ function FileActions({ file, onPreview, onDelete }) {
         <DropdownMenuItem onClick={() => onPreview(file)}>
           <Eye /> Preview
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => toast.success("Download started")}>
+        <DropdownMenuItem
+          onClick={() => (file.url ? window.open(file.url, "_blank") : toast.error("File URL unavailable"))}
+        >
           <Download /> Download
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -101,8 +105,16 @@ export default function FilesPage() {
   const [previewFile, setPreviewFile] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
 
+  const queryClient = useQueryClient();
   const { data, isPending, error, refetch } = fileHooks.useList({ limit: 200 });
-  const create = fileHooks.useCreate();
+  const upload = useMutation({
+    mutationFn: (file) => fileService.upload(file),
+    onSuccess: () => {
+      toast.success("File uploaded");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.files });
+    },
+    onError: (e) => toastError(e, "Upload failed"),
+  });
   const remove = fileHooks.useRemove();
 
   const files = useMemo(() => {
@@ -120,16 +132,7 @@ export default function FilesPage() {
   const onUpload = (e) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
-    const ext = selected.name.includes(".")
-      ? selected.name.split(".").pop().toLowerCase()
-      : "file";
-    create.mutate({
-      name: selected.name,
-      type: ext,
-      size: selected.size,
-      url: "#",
-      uploadedBy: "You",
-    });
+    upload.mutate(selected);
     e.target.value = "";
   };
 
@@ -151,8 +154,8 @@ export default function FilesPage() {
               aria-hidden
               tabIndex={-1}
             />
-            <Button onClick={() => inputRef.current?.click()} disabled={create.isPending}>
-              <Upload /> {create.isPending ? "Uploading…" : "Upload"}
+            <Button onClick={() => inputRef.current?.click()} disabled={upload.isPending}>
+              <Upload /> {upload.isPending ? "Uploading…" : "Upload"}
             </Button>
           </>
         }
