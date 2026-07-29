@@ -1,5 +1,6 @@
 "use client";
 
+import { Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import SectionCrudTable from "@/features/settings/SectionCrudTable";
 import { branchSchema } from "@/validations/settings.schema";
@@ -11,6 +12,7 @@ export default function BranchesSettingsPage() {
       itemLabel="Branch"
       title="Branches"
       description="Manage your office locations."
+      icon={Building2}
       schema={branchSchema}
       columns={[
         { key: "name", header: "Name", className: "font-medium" },

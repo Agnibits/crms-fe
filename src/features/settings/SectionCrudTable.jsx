@@ -29,6 +29,13 @@ import ErrorState from "@/components/common/ErrorState";
 import { FormInput, FormNumber, FormSelect, FormSwitch } from "@/components/forms/fields";
 import { useSettingItems } from "@/features/settings/hooks";
 
+/** Naive English pluralizer good enough for section labels (branch→branches). */
+function pluralize(word = "") {
+  if (/(s|x|z|ch|sh)$/i.test(word)) return `${word}es`;
+  if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
+  return `${word}s`;
+}
+
 function buildFormValues(fields, item) {
   return Object.fromEntries(
     fields.map((f) => {
@@ -50,6 +57,7 @@ export default function SectionCrudTable({
   itemLabel = "Item",
   title,
   description,
+  icon,
   columns = [],
   fields = [],
   schema,
@@ -132,7 +140,8 @@ export default function SectionCrudTable({
           </div>
         ) : items.length === 0 ? (
           <EmptyState
-            title={emptyTitle || `No ${itemLabel.toLowerCase()}s yet`}
+            icon={icon}
+            title={emptyTitle || `No ${pluralize(itemLabel.toLowerCase())} yet`}
             description={emptyDescription || `Add your first ${itemLabel.toLowerCase()} to get started.`}
             actionLabel={`Add ${itemLabel.toLowerCase()}`}
             onAction={() => setDialog({ open: true, item: null })}

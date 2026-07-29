@@ -21,22 +21,6 @@ const ORG_SECTIONS = {
   teams: "/organization/teams",
 };
 
-// /organization/* create requires a companyId (UUID). Resolve the org's company once.
-let _companyId;
-async function companyId() {
-  if (_companyId !== undefined) return _companyId;
-  try {
-    const res = await api.get("/organization/companies", { params: { limit: 1 } });
-    const body = res?.data;
-    const inner = body?.data !== undefined ? body.data : body;
-    const list = Array.isArray(inner) ? inner : inner?.items ?? [];
-    _companyId = list[0]?.id ?? null;
-  } catch {
-    _companyId = null;
-  }
-  return _companyId;
-}
-
 // Map the mock form fields to real Prisma columns (extra fields would 400 Prisma).
 function toOrgPayload(key, v = {}) {
   if (key === "branches") {
@@ -107,11 +91,10 @@ export const settingsService = {
 
   async create(key, payload) {
     const url = ORG_SECTIONS[key] || `/settings/${key}`;
-    if (ORG_SECTIONS[key]) {
-      const body = { ...toOrgPayload(key, payload), companyId: await companyId() };
-      return unwrap(await api.post(url, body));
-    }
-    return unwrap(await api.post(url, payload));
+    // The server derives companyId from the authenticated tenant context — never
+    // sent from the client (that would be a cross-tenant write vector).
+    const body = ORG_SECTIONS[key] ? toOrgPayload(key, payload) : payload;
+    return unwrap(await api.post(url, body));
   },
 
   async updateItem(key, id, payload) {
