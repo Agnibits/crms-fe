@@ -22,6 +22,10 @@ export const dashboardService = {
   getStats: async ({ signal } = {}) =>
     unwrap(await api.get(ENDPOINTS.dashboard.stats, { signal })),
 
+  // "Needs attention" command-center feed: counts + the most urgent tasks.
+  getAttention: async ({ signal } = {}) =>
+    unwrap(await api.get("/dashboard/attention", { signal })),
+
   // monthly-revenue returns [{ month: "YYYY-MM", revenue }] — label the months
   // readably and keep `target` only when the API actually sends one.
   getSalesChart: async (params = {}, { signal } = {}) => {

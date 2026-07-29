@@ -4,10 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
+  AlertTriangle,
   ArrowRight,
   CalendarDays,
   DollarSign,
+  FileText,
   Handshake,
+  Inbox,
+  LifeBuoy,
   ListChecks,
   Mail,
   MessageSquare,
@@ -34,7 +38,9 @@ import { Progress } from "@/components/ui/progress";
 import { TASK_STATUSES, PRIORITIES } from "@/constants/options";
 import { useAuthStore } from "@/store/auth.store";
 import { formatCurrency, formatDate, formatNumber, formatRelative } from "@/utils/format";
+import { cn } from "@/utils/cn";
 import {
+  useAttention,
   useDashboardStats,
   useFunnel,
   usePipeline,
@@ -61,8 +67,18 @@ export default function DashboardPage() {
   const pipeline = usePipeline();
   const activities = useRecentActivities();
   const tasks = useUpcomingTasks();
+  const attention = useAttention();
 
   const s = stats.data;
+  const a = attention.data || {};
+  const attentionItems = [
+    { label: "Tasks due", count: a.tasksDue || 0, icon: ListChecks, href: "/tasks" },
+    { label: "Deals overdue", count: a.dealsOverdue || 0, icon: AlertTriangle, href: "/deals" },
+    { label: "Quotes pending", count: a.quotesPending || 0, icon: FileText, href: "/quotes" },
+    { label: "Open tickets", count: a.ticketsOpen || 0, icon: LifeBuoy, href: "/tickets" },
+    { label: "Unread inbox", count: a.unreadInbox || 0, icon: Inbox, href: "/inbox" },
+  ];
+  const attentionTotal = attentionItems.reduce((n, i) => n + i.count, 0);
 
   // A specific, actionable subtitle beats a generic "here's what's happening".
   const firstName = user?.name?.split(" ")[0] || "there";
@@ -132,6 +148,48 @@ export default function DashboardPage() {
           index={3}
         />
       </div>
+
+      {/* Needs Attention — the command-center action feed */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <CardTitle className="text-base">Needs Attention</CardTitle>
+          {!attention.isPending && attentionTotal === 0 && (
+            <span className="text-xs text-muted-foreground">You&apos;re all caught up</span>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {attentionItems.map((item) => {
+              const Icon = item.icon;
+              const active = item.count > 0;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => router.push(item.href)}
+                  className={cn(
+                    "flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors hover:bg-muted/50",
+                    active && "border-primary/20 bg-primary/[0.03]"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-lg",
+                      active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="mt-1 text-2xl font-semibold tabular-nums">
+                    {attention.isPending ? "—" : item.count}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Sales + conversion */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">

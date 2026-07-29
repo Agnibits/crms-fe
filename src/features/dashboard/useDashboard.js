@@ -41,3 +41,10 @@ export const useUpcomingTasks = () =>
     queryKey: [...key, "tasks"],
     queryFn: ({ signal }) => dashboardService.getUpcomingTasks({ signal }),
   });
+
+export const useAttention = () =>
+  useQuery({
+    queryKey: [...key, "attention"],
+    queryFn: ({ signal }) => dashboardService.getAttention({ signal }),
+    refetchInterval: 60_000, // keep the action feed fresh
+  });
