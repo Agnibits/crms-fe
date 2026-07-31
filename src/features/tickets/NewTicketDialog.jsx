@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FormInput, FormTextarea, FormSelect } from "@/components/forms/fields";
 import { ticketHooks, useAgents } from "@/features/tickets/hooks";
+import { useDepartmentOptions } from "@/features/departments/hooks";
 import { createCrudService } from "@/services/crud.factory";
 import { ENDPOINTS } from "@/constants/endpoints";
 import { QUERY_KEYS } from "@/constants/app";
@@ -29,12 +30,14 @@ const schema = z.object({
   customerId: z.string().optional(),
   priority: z.string().optional(),
   assignedUserId: z.string().optional(),
+  departmentId: z.string().optional(),
 });
 
 /** Raise a new support ticket (agent-created, e.g. phone/walk-in requests). */
 export default function NewTicketDialog({ open, onOpenChange }) {
   const create = ticketHooks.useCreate();
   const agents = useAgents();
+  const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
   const customers = useQuery({
     queryKey: [...QUERY_KEYS.customers, "list", { page: 1, limit: 100, sortBy: "name", sortOrder: "asc" }],
     queryFn: ({ signal }) =>
@@ -56,6 +59,7 @@ export default function NewTicketDialog({ open, onOpenChange }) {
       customerId: "",
       priority: "medium",
       assignedUserId: "",
+      departmentId: "",
     },
   });
 
@@ -118,14 +122,26 @@ export default function NewTicketDialog({ open, onOpenChange }) {
               error={errors.priority}
             />
           </div>
-          <FormSelect
-            control={control}
-            name="assignedUserId"
-            label="Assign to"
-            options={agentOptions}
-            placeholder="Unassigned"
-            error={errors.assignedUserId}
-          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormSelect
+              control={control}
+              name="assignedUserId"
+              label="Assign to"
+              options={agentOptions}
+              placeholder="Unassigned"
+              error={errors.assignedUserId}
+            />
+            {hasDepartments && (
+              <FormSelect
+                control={control}
+                name="departmentId"
+                label="Department"
+                options={departmentOptions}
+                placeholder="Route to department"
+                error={errors.departmentId}
+              />
+            )}
+          </div>
 
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={close} disabled={create.isPending}>

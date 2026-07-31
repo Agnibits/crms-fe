@@ -1,25 +1,57 @@
 "use client";
 
+import { Network } from "lucide-react";
 import SectionCrudTable from "@/features/settings/SectionCrudTable";
 import { departmentSchema } from "@/validations/settings.schema";
+import { useBranchOptions } from "@/features/branches/hooks";
+import { useUsersOptions } from "@/features/leads/useUsersOptions";
 
 export default function DepartmentsSettingsPage() {
+  const { options: branchOptions } = useBranchOptions({ includeNone: false });
+  const { options: userOptions } = useUsersOptions();
+
   return (
     <SectionCrudTable
       sectionKey="departments"
       itemLabel="Department"
       title="Departments"
-      description="Organise your teams into departments."
+      description="Organise your teams into departments. Tickets can be routed to a department."
+      icon={Network}
       schema={departmentSchema}
       columns={[
         { key: "name", header: "Name", className: "font-medium" },
-        { key: "head", header: "Head" },
-        { key: "members", header: "Members", className: "text-right tabular-nums" },
+        { key: "branch", header: "Branch", render: (d) => d.branch?.name || "—" },
+        {
+          key: "head",
+          header: "Head",
+          render: (d) =>
+            d.head ? `${d.head.firstName ?? ""} ${d.head.lastName ?? ""}`.trim() : "—",
+        },
+        {
+          key: "members",
+          header: "Members",
+          className: "text-right tabular-nums",
+          render: (d) => d._count?.users ?? 0,
+        },
       ]}
       fields={[
         { name: "name", label: "Department name", required: true, placeholder: "e.g. Sales" },
-        { name: "head", label: "Department head", placeholder: "e.g. Jane Doe" },
-        { name: "members", label: "Members", type: "number", placeholder: "0" },
+        { name: "code", label: "Code", half: true, placeholder: "e.g. SAL" },
+        {
+          name: "branchId",
+          label: "Branch",
+          half: true,
+          type: "select",
+          options: branchOptions,
+          placeholder: "Company-wide",
+        },
+        {
+          name: "headId",
+          label: "Department head",
+          type: "select",
+          options: userOptions,
+          placeholder: "Select a head (optional)",
+        },
       ]}
     />
   );

@@ -38,7 +38,12 @@ function toOrgPayload(key, v = {}) {
     };
   }
   if (key === "departments") {
-    return { name: v.name, branchId: v.branchId || undefined };
+    return {
+      name: v.name,
+      code: v.code || undefined,
+      branchId: v.branchId || undefined,
+      headId: v.headId || undefined,
+    };
   }
   if (key === "teams") {
     return { name: v.name, departmentId: v.departmentId || undefined };

@@ -9,7 +9,7 @@ const base = createCrudService(ENDPOINTS.tickets);
 
 const inner = makeMapper({
   enums: ["status", "priority"],
-  allow: ["subject", "description", "priority", "status", "customerId", "assignedUserId"],
+  allow: ["subject", "description", "priority", "status", "customerId", "assignedUserId", "departmentId"],
 });
 
 const mapper = {

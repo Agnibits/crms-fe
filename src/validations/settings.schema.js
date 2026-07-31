@@ -109,14 +109,9 @@ export const branchSchema = z.object({
 
 export const departmentSchema = z.object({
   name: z.string().min(2, "Department name must be at least 2 characters").max(80, "Department name is too long"),
-  head: optionalText(80, "Name is too long"),
-  members: optionalNumber(
-    z
-      .number({ invalid_type_error: "Members must be a number" })
-      .int("Members must be a whole number")
-      .min(0, "Members can't be negative")
-      .max(10000, "That's a lot of people — check the number")
-  ),
+  code: z.string().max(20, "Code is too long").optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
+  headId: z.string().optional().or(z.literal("")),
 });
 
 export const teamSchema = z.object({

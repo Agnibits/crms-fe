@@ -60,6 +60,11 @@ export default function TicketsPage() {
       },
       { accessorKey: "customerName", header: "Customer" },
       {
+        accessorKey: "department",
+        header: "Department",
+        cell: ({ row }) => row.original.department?.name || "—",
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, CalendarDays, Hash, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Building2, CalendarDays, Hash, Network, RefreshCcw } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
@@ -79,6 +79,16 @@ export default function TicketDetailPage() {
                   {ticket.customerName}
                 </span>
               </div>
+              {ticket.department?.name && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Network className="h-3.5 w-3.5" /> Department
+                  </span>
+                  <span className="max-w-[55%] truncate text-right font-medium">
+                    {ticket.department.name}
+                  </span>
+                </div>
+              )}
               <Separator />
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
