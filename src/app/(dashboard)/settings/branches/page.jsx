@@ -15,12 +15,29 @@ export default function BranchesSettingsPage() {
       icon={Building2}
       schema={branchSchema}
       columns={[
-        { key: "name", header: "Name", className: "font-medium" },
-        { key: "city", header: "City" },
-        { key: "country", header: "Country" },
+        {
+          key: "name",
+          header: "Name",
+          className: "w-[30%] font-medium",
+          render: (item) => (
+            <div className="min-w-0">
+              <p className="truncate font-medium">{item.name}</p>
+              {item.code && <p className="truncate text-xs text-muted-foreground">{item.code}</p>}
+            </div>
+          ),
+        },
+        { key: "city", header: "City", className: "w-[22%]" },
+        { key: "country", header: "Country", className: "w-[22%]" },
+        {
+          key: "phone",
+          header: "Phone",
+          className: "w-[16%] text-muted-foreground",
+          render: (item) => item.phone || "—",
+        },
         {
           key: "isPrimary",
           header: "Primary",
+          className: "w-[10%]",
           render: (item) =>
             item.isPrimary ? <Badge variant="secondary">Primary</Badge> : <span className="text-muted-foreground">—</span>,
         },

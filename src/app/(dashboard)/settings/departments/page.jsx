@@ -21,18 +21,42 @@ export default function DepartmentsSettingsPage() {
       icon={Network}
       schema={departmentSchema}
       columns={[
-        { key: "name", header: "Name", className: "font-medium" },
-        { key: "branch", header: "Branch", render: (d) => d.branch?.name || "—" },
+        {
+          key: "name",
+          header: "Name",
+          className: "w-[28%] font-medium",
+          render: (d) => (
+            <div className="min-w-0">
+              <p className="truncate font-medium">{d.name}</p>
+              {d.description && (
+                <p className="truncate text-xs text-muted-foreground">{d.description}</p>
+              )}
+            </div>
+          ),
+        },
+        {
+          key: "code",
+          header: "Code",
+          className: "w-[12%] text-muted-foreground",
+          render: (d) => d.code || "—",
+        },
+        {
+          key: "branch",
+          header: "Branch",
+          className: "w-[24%]",
+          render: (d) => d.branch?.name || "Company-wide",
+        },
         {
           key: "head",
           header: "Head",
+          className: "w-[24%]",
           render: (d) =>
             d.head ? `${d.head.firstName ?? ""} ${d.head.lastName ?? ""}`.trim() : "—",
         },
         {
           key: "members",
           header: "Members",
-          className: "text-right tabular-nums",
+          className: "w-[12%] text-right tabular-nums",
           render: (d) => d._count?.users ?? 0,
         },
       ]}

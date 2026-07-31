@@ -168,7 +168,7 @@ export default function SectionCrudTable({
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   {columns.map((col) => (
-                    <TableHead key={col.key} className={col.className}>
+                    <TableHead key={col.key} className={cn(col.className, col.headClassName)}>
                       {col.header}
                     </TableHead>
                   ))}
