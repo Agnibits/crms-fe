@@ -56,7 +56,7 @@ export default function DepartmentsSettingsPage() {
         {
           key: "members",
           header: "Members",
-          className: "w-[12%] text-right tabular-nums",
+          className: "w-[12%] tabular-nums",
           render: (d) => d._count?.users ?? 0,
         },
       ]}
