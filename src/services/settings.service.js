@@ -41,6 +41,7 @@ function toOrgPayload(key, v = {}) {
     return {
       name: v.name,
       code: v.code || undefined,
+      description: v.description || undefined,
       branchId: v.branchId || undefined,
       headId: v.headId || undefined,
     };

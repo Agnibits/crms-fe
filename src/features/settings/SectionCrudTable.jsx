@@ -27,7 +27,7 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import { cn } from "@/utils/cn";
-import { FormInput, FormNumber, FormSelect, FormSwitch } from "@/components/forms/fields";
+import { FormInput, FormNumber, FormSelect, FormSwitch, FormTextarea } from "@/components/forms/fields";
 import { useSettingItems } from "@/features/settings/hooks";
 
 /** Naive English pluralizer good enough for section labels (branch→branches). */
@@ -117,6 +117,9 @@ export default function SectionCrudTable({
         break;
       case "switch":
         node = <FormSwitch control={control} {...common} />;
+        break;
+      case "textarea":
+        node = <FormTextarea register={register} rows={field.rows ?? 3} {...common} />;
         break;
       default:
         node = <FormInput register={register} {...common} />;

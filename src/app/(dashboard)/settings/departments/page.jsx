@@ -52,6 +52,13 @@ export default function DepartmentsSettingsPage() {
           options: userOptions,
           placeholder: "Select a head (optional)",
         },
+        {
+          name: "description",
+          label: "Description",
+          type: "textarea",
+          rows: 3,
+          placeholder: "What this department handles (optional)",
+        },
       ]}
     />
   );

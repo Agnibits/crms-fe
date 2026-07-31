@@ -110,6 +110,7 @@ export const branchSchema = z.object({
 export const departmentSchema = z.object({
   name: z.string().min(2, "Department name must be at least 2 characters").max(80, "Department name is too long"),
   code: z.string().max(20, "Code is too long").optional().or(z.literal("")),
+  description: z.string().max(500, "Description is too long").optional().or(z.literal("")),
   branchId: z.string().optional().or(z.literal("")),
   headId: z.string().optional().or(z.literal("")),
 });
