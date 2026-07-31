@@ -7,8 +7,10 @@ import { useBranchOptions } from "@/features/branches/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 
 export default function DepartmentsSettingsPage() {
-  const { options: branchOptions } = useBranchOptions({ includeNone: false });
-  const { options: userOptions } = useUsersOptions();
+  // "Company-wide" (none) is selectable so a department can be un-linked from a branch.
+  const { options: branchOptions } = useBranchOptions({ noneLabel: "Company-wide" });
+  const { options: rawUserOptions } = useUsersOptions();
+  const userOptions = [{ value: "__none__", label: "No head" }, ...rawUserOptions];
 
   return (
     <SectionCrudTable

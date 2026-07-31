@@ -11,14 +11,14 @@ const NONE_VALUE = "__none__";
  * branch). Shares the settings-branches query cache so edits reflect everywhere.
  * The list is prefixed with a "No branch" sentinel so a selection can be cleared.
  */
-export function useBranchOptions({ includeNone = true } = {}) {
+export function useBranchOptions({ includeNone = true, noneLabel = "No branch" } = {}) {
   const query = useQuery({
     queryKey: [...QUERY_KEYS.settings, "branches"],
     queryFn: ({ signal }) => settingsService.list("branches", { signal }),
     staleTime: 60_000,
   });
   const branches = (query.data ?? []).map((b) => ({ value: b.id, label: b.name }));
-  const options = includeNone ? [{ value: NONE_VALUE, label: "No branch" }, ...branches] : branches;
+  const options = includeNone ? [{ value: NONE_VALUE, label: noneLabel }, ...branches] : branches;
   return { ...query, options, branches, hasBranches: branches.length > 0 };
 }
 

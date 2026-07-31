@@ -21,6 +21,11 @@ const ORG_SECTIONS = {
   teams: "/organization/teams",
 };
 
+// A relation selector's "none" sentinel / empty → explicit null so an existing
+// link can be CLEARED on update (undefined would just leave it unchanged).
+const NONE = "__none__";
+const idOrNull = (v) => (v && v !== NONE ? v : null);
+
 // Map the mock form fields to real Prisma columns (extra fields would 400 Prisma).
 function toOrgPayload(key, v = {}) {
   if (key === "branches") {
@@ -42,8 +47,8 @@ function toOrgPayload(key, v = {}) {
       name: v.name,
       code: v.code || undefined,
       description: v.description || undefined,
-      branchId: v.branchId || undefined,
-      headId: v.headId || undefined,
+      branchId: idOrNull(v.branchId),
+      headId: idOrNull(v.headId),
     };
   }
   if (key === "teams") {
