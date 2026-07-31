@@ -18,7 +18,7 @@ const mapper = makeMapper({
   allow: [
     "name", "company", "email", "phone", "mobile", "website", "industry",
     "addressLine", "country", "state", "city", "postalCode", "taxId",
-    "notes", "status", "source", "ownerId", "employees",
+    "notes", "status", "source", "ownerId", "employees", "branchId",
   ],
 });
 

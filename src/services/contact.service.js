@@ -29,7 +29,7 @@ const inner = makeMapper({
   // Drops the derived "customerName" label (customerId carries the relation).
   allow: [
     "email", "phone", "designation", "department", "birthday", "linkedin",
-    "notes", "isPrimary", "customerId", "city",
+    "notes", "isPrimary", "customerId", "city", "branchId",
   ],
 });
 

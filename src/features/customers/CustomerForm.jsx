@@ -14,6 +14,7 @@ import {
 } from "@/components/forms/fields";
 import { customerSchema } from "@/validations/customer.schema";
 import { CUSTOMER_STATUSES } from "@/constants/options";
+import { useBranchOptions } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit customer form.
@@ -26,6 +27,7 @@ export default function CustomerForm({
   submitLabel = "Save customer",
 }) {
   const router = useRouter();
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
 
   const {
     register,
@@ -35,6 +37,7 @@ export default function CustomerForm({
   } = useForm({
     resolver: zodResolver(customerSchema),
     defaultValues: {
+      branchId: defaultValues?.branchId ?? "",
       name: defaultValues?.name ?? "",
       contactName: defaultValues?.contactName ?? "",
       email: defaultValues?.email ?? "",
@@ -112,6 +115,16 @@ export default function CustomerForm({
             options={CUSTOMER_STATUSES}
             placeholder="Select status"
           />
+          {hasBranches && (
+            <FormSelect
+              control={control}
+              name="branchId"
+              label="Branch / Office"
+              error={errors.branchId}
+              options={branchOptions}
+              placeholder="Select branch (optional)"
+            />
+          )}
         </CardContent>
       </Card>
 

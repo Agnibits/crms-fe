@@ -9,6 +9,7 @@ export const contactSchema = z.object({
   phone: z.string().max(25, "Phone number is too long").optional().or(z.literal("")),
   jobTitle: z.string().max(80, "Job title is too long").optional().or(z.literal("")),
   customerId: z.string().optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
   city: z.string().max(60).optional().or(z.literal("")),
   department: z.string().max(100, "Department is too long").optional().or(z.literal("")),
   birthday: z.string().optional().or(z.literal("")),

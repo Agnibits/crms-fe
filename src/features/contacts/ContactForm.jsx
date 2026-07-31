@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { FormInput, FormSelect, FormSwitch, FormTextarea } from "@/components/forms/fields";
 import { contactSchema } from "@/validations/contact.schema";
 import { useCustomerOptions } from "@/features/contacts/hooks";
+import { useBranchOptions } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit contact form.
@@ -22,6 +23,7 @@ export default function ContactForm({
 }) {
   const router = useRouter();
   const customers = useCustomerOptions();
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
 
   const {
     register,
@@ -36,6 +38,7 @@ export default function ContactForm({
       phone: defaultValues?.phone ?? "",
       jobTitle: defaultValues?.jobTitle ?? "",
       customerId: defaultValues?.customerId ?? "",
+      branchId: defaultValues?.branchId ?? "",
       city: defaultValues?.city ?? "",
       department: defaultValues?.department ?? "",
       birthday: defaultValues?.birthday ? String(defaultValues.birthday).slice(0, 10) : "",
@@ -101,6 +104,16 @@ export default function ContactForm({
             placeholder={customers.isPending ? "Loading customers…" : "Select customer (optional)"}
             disabled={customers.isPending}
           />
+          {hasBranches && (
+            <FormSelect
+              control={control}
+              name="branchId"
+              label="Branch / Office"
+              error={errors.branchId}
+              options={branchOptions}
+              placeholder="Select branch (optional)"
+            />
+          )}
           <FormInput register={register} name="city" label="City" error={errors.city} placeholder="Mumbai" />
           <FormInput
             register={register}

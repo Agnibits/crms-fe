@@ -31,4 +31,5 @@ export const customerSchema = z.object({
   address: z.string().max(160, "Address is too long").optional().or(z.literal("")),
   employees: optionalNumber,
   notes: z.string().max(1000, "Notes are too long").optional().or(z.literal("")),
+  branchId: z.string().optional().or(z.literal("")),
 });
