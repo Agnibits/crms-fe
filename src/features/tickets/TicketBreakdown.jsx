@@ -18,6 +18,9 @@ import { formatNumber } from "@/utils/format";
 
 const UNASSIGNED = "__unassigned__";
 
+/** Beyond this the grid stops being scannable, so the rest is summarised. */
+const TOP_BRANCHES = 6;
+
 function useTicketBreakdown() {
   return useQuery({
     queryKey: ["tickets", "breakdown"],
@@ -51,20 +54,35 @@ export default function TicketBreakdown({ onSelect }) {
   const usedBranch = new Set(cells.map((c) => c.branchId ?? UNASSIGNED));
   const usedDept = new Set(cells.map((c) => c.departmentId ?? UNASSIGNED));
 
-  const branches = [
-    ...(data.branches ?? []).filter((b) => usedBranch.has(b.id)),
-    ...(usedBranch.has(UNASSIGNED) ? [{ id: null, name: "No branch" }] : []),
-  ];
   const departments = [
     ...(data.departments ?? []).filter((d) => usedDept.has(d.id)),
     ...(usedDept.has(UNASSIGNED) ? [{ id: null, name: "Unrouted" }] : []),
   ];
+
+  const withBacklog = (data.branches ?? []).filter((b) => usedBranch.has(b.id));
+  const total = (b) => departments.reduce((n, d) => n + (counts.get(key(b, d.id)) || 0), 0);
+
+  // With dozens of offices nobody reads a 50-row grid — they want the worst
+  // few. Rank by backlog and keep the tail as one honest summary line.
+  const ranked = withBacklog.map((b) => ({ ...b, total: total(b.id) }))
+    .sort((a, b) => b.total - a.total);
+  const shown = ranked.slice(0, TOP_BRANCHES);
+  const hidden = ranked.slice(TOP_BRANCHES);
+  const hiddenTotal = hidden.reduce((n, b) => n + b.total, 0);
+
+  const branches = [
+    ...shown,
+    // "No branch" is a data-hygiene bucket, not an office — always last, never
+    // competing for a place in the ranking.
+    ...(usedBranch.has(UNASSIGNED) ? [{ id: null, name: "No branch" }] : []),
+  ];
   if (branches.length <= 1 && departments.length <= 1) return null;
 
-  const rowTotal = (b) =>
-    departments.reduce((n, d) => n + (counts.get(key(b.id, d.id)) || 0), 0);
-  const colTotal = (d) => branches.reduce((n, b) => n + (counts.get(key(b.id, d.id)) || 0), 0);
-  const grand = branches.reduce((n, b) => n + rowTotal(b), 0);
+  const rowTotal = (b) => total(b.id);
+  const colTotal = (d) =>
+    [...withBacklog.map((b) => b.id), ...(usedBranch.has(UNASSIGNED) ? [null] : [])]
+      .reduce((n, id) => n + (counts.get(key(id, d.id)) || 0), 0);
+  const grand = cells.reduce((n, c) => n + c.count, 0);
 
   const Cell = ({ value, branchId, departmentId, bold }) => {
     if (!value) return <span className="text-muted-foreground">—</span>;
@@ -88,7 +106,9 @@ export default function TicketBreakdown({ onSelect }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Open tickets by branch and department</CardTitle>
         <CardDescription>
-          Where the backlog sits. Click a number to filter the list below.
+          {hidden.length > 0
+            ? `The ${shown.length} offices with the largest backlog. Click a number to filter the list below.`
+            : "Where the backlog sits. Click a number to filter the list below."}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -125,6 +145,16 @@ export default function TicketBreakdown({ onSelect }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {hidden.length > 0 && (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={departments.length + 1} className="text-muted-foreground">
+                    + {formatNumber(hidden.length)} more offices with a smaller backlog
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {formatNumber(hiddenTotal)}
+                  </TableCell>
+                </TableRow>
+              )}
               <TableRow className="border-t-2 hover:bg-transparent">
                 <TableCell className="font-medium">All branches</TableCell>
                 {departments.map((d) => (
