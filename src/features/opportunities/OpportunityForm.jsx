@@ -15,6 +15,7 @@ import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useCustomerOptions } from "@/features/contacts/hooks";
 import { useBranchOptions } from "@/features/branches/hooks";
+import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { useStageOptions } from "./useStageOptions";
 
 /** Shared create/edit opportunity form. */
@@ -28,6 +29,7 @@ export default function OpportunityForm({
   const { options: userOptions } = useUsersOptions();
   const customers = useCustomerOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const { lockProps } = useFieldLocks("opportunity");
   const { stageOptions } = useStageOptions();
 
   const {
@@ -120,6 +122,7 @@ export default function OpportunityForm({
             required
             min={0}
             error={errors.amount}
+            {...lockProps("amount")}
           />
           <FormDatePicker
             register={register}

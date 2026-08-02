@@ -15,6 +15,7 @@ import {
 import CategoriesDialog from "@/features/products/CategoriesDialog";
 import { productSchema } from "@/validations/product.schema";
 import { productCategoryHooks, useProductUnits } from "@/features/products/hooks";
+import { useFieldLocks } from "@/hooks/useFieldLocks";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" },
@@ -56,6 +57,10 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
     setImageFile(null);
     setImagePreview(defaultValues?.imageUrl ?? null);
   };
+
+  // Price fields an admin has made read-only for this role render disabled,
+  // so nobody edits a value the API is going to discard.
+  const { lockProps } = useFieldLocks("product");
 
   const {
     register,
@@ -221,6 +226,7 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
             error={errors.price}
             min={0}
             placeholder="0.00"
+            {...lockProps("sellingPrice")}
           />
           <FormNumber
             register={register}
@@ -229,6 +235,7 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
             error={errors.cost}
             min={0}
             placeholder="0.00"
+            {...lockProps("costPrice")}
           />
           {!isService && (
             <>

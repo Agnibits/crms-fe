@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fields";
 import { useCustomerOptions } from "@/features/contacts/hooks";
 import { useBranchOptions } from "@/features/branches/hooks";
+import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
 /** yyyy-MM-dd, `days` from today. */
@@ -45,6 +46,7 @@ export default function InvoiceForm({
   const router = useRouter();
   const customers = useCustomerOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const { isLocked } = useFieldLocks("invoice");
   const noCustomers = !customers.isPending && customers.options.length === 0;
 
   const {
@@ -211,6 +213,7 @@ export default function InvoiceForm({
                   step="0.01"
                   placeholder="0.00"
                   aria-invalid={!!errors.items?.[i]?.unitPrice}
+                  disabled={isLocked("items[].unitPrice")}
                   {...register(`items.${i}.unitPrice`, {
                     required: "Required",
                     validate: (v) => Number(v) > 0 || "Must be > 0",

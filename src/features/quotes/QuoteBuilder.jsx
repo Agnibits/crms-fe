@@ -22,6 +22,7 @@ import { quoteSchema } from "@/validations/quote.schema";
 import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
 import { useBranchOptions } from "@/features/branches/hooks";
+import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
 // unit is left blank until a product is picked — it's the product's unit,
@@ -41,6 +42,7 @@ function defaultValidUntil() {
 export default function QuoteBuilder({ defaultValues, onSubmit, submitting = false, submitLabel = "Save Quote" }) {
   const customers = useCustomerOptions(100);
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const { isLocked } = useFieldLocks("quote");
   const products = productHooks.useList({ page: 1, limit: 100, status: "active" });
 
   const customerOptions = (customers.data?.items ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -270,6 +272,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
                         aria-label="Unit price"
                         className="text-right tabular-nums"
                         aria-invalid={!!itemErrors?.unitPrice}
+                        disabled={isLocked("items[].unitPrice")}
                         {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
                       />
                       {itemErrors?.unitPrice && (
@@ -323,8 +326,12 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
                 step="any"
                 placeholder="0"
                 aria-invalid={!!errors.discount}
+                disabled={isLocked("discount")}
                 {...register("discount", { valueAsNumber: true })}
               />
+              {isLocked("discount") && (
+                <p className="text-xs text-muted-foreground">Read-only for your role</p>
+              )}
               {errors.discount && (
                 <p className="text-xs font-medium text-destructive">{errors.discount.message}</p>
               )}
