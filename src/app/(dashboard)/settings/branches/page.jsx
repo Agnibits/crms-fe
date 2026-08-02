@@ -52,7 +52,12 @@ export default function BranchesSettingsPage() {
         { name: "state", label: "State / Region", half: true },
         { name: "postalCode", label: "Postal code", half: true },
         { name: "country", label: "Country", required: true, half: true },
-        { name: "isPrimary", label: "Primary branch", type: "switch", hint: "Mark as the main office" },
+        {
+          name: "isPrimary",
+          label: "Primary branch",
+          type: "switch",
+          hint: "Your head office. Only one branch can be primary — turning this on removes it from the current one.",
+        },
       ]}
     />
   );
