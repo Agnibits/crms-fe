@@ -1,7 +1,15 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Building2, LifeBuoy, Network, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  LifeBuoy,
+  Network,
+  Users,
+} from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
@@ -72,6 +80,8 @@ export default function DepartmentDetailPage() {
   const ticketTotal = tickets.data?.total ?? 0;
   const urgentCount = tickets.data?.urgent ?? 0;
   const hasMore = ticketTotal > ticketList.length;
+  // Only worth flagging when there is actually work routed here to miss.
+  const noTicketAccess = ticketTotal > 0 ? memberList.filter((u) => !u.canHandleTickets) : [];
   const head = d.head ? `${d.head.firstName ?? ""} ${d.head.lastName ?? ""}`.trim() : null;
 
   return (
@@ -122,7 +132,17 @@ export default function DepartmentDetailPage() {
         <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-base">Members</CardTitle>
-            <CardDescription>People assigned to this department.</CardDescription>
+            <CardDescription>
+              {noTicketAccess.length > 0 ? (
+                <span className="text-amber-700 dark:text-amber-500">
+                  {noTicketAccess.length === 1
+                    ? `${noTicketAccess[0].firstName} can't open this department's tickets — their role doesn't allow it.`
+                    : `${noTicketAccess.length} members can't open this department's tickets — their roles don't allow it.`}
+                </span>
+              ) : (
+                "People assigned to this department."
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {members.error ? (
@@ -164,6 +184,17 @@ export default function DepartmentDetailPage() {
                           {u.id === d.headId && (
                             <Badge variant="secondary" className="shrink-0">
                               Head
+                            </Badge>
+                          )}
+                          {/* Membership and role are independent, so someone can
+                              sit in a team whose work their role can't open. */}
+                          {!u.canHandleTickets && ticketTotal > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 gap-1 border-amber-500/30 text-amber-700 dark:text-amber-500"
+                              title={`${BACKEND_ROLE_LABELS[u.role] || u.role} can't open support tickets`}
+                            >
+                              <AlertTriangle className="h-3 w-3" /> No ticket access
                             </Badge>
                           )}
                         </div>
