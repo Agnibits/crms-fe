@@ -1,7 +1,9 @@
 "use client";
 
-import { createCrudService } from "./crud.factory";
+import { createCrudService, buildListParams } from "./crud.factory";
 import { ENDPOINTS } from "@/constants/endpoints";
+import { API_URL } from "@/constants/app";
+import { tokenStorage } from "@/utils/storage";
 import { withMapping } from "./crudMap";
 
 /**
@@ -30,4 +32,29 @@ function fromBackend(log) {
   };
 }
 
-export const auditService = withMapping(base, { fromBackend });
+export const auditService = {
+  ...withMapping(base, { fromBackend }),
+  /**
+   * Download the CSV the server builds for the current filters — the whole
+   * filtered set, not the page on screen, since a partial export is useless to
+   * an auditor. Uses fetch (not the axios instance) so the response stays a
+   * blob rather than being parsed as JSON.
+   */
+  async exportCsv(params = {}) {
+    const query = new URLSearchParams(buildListParams(params)).toString();
+    const res = await fetch(`${API_URL}${ENDPOINTS.auditLogs}/export?${query}`, {
+      headers: { Authorization: `Bearer ${tokenStorage.getAccessToken() || ""}` },
+    });
+    if (!res.ok) throw new Error(`Export failed (${res.status})`);
+    const blob = await res.blob();
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+};

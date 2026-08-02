@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { ArrowRight, ShieldAlert } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, Download, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import RoleGate from "@/components/common/RoleGate";
 import EmptyState from "@/components/common/EmptyState";
@@ -14,8 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useTableState } from "@/hooks/useTableState";
 import { useAuditLogs } from "@/features/audit/hooks";
+import { auditService } from "@/services/audit.service";
+import { toastError } from "@/services/api";
 import { formatDateTime, titleCase } from "@/utils/format";
 
 const ACTIONS = [
@@ -100,6 +103,19 @@ function Changes({ changes, action }) {
 export default function AuditLogPage() {
   const t = useTableState();
   const { data, isPending, error, refetch } = useAuditLogs(t.queryParams);
+  const [exporting, setExporting] = useState(false);
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      // Export what's filtered, not what's paged — the server builds the file.
+      await auditService.exportCsv(t.queryParams);
+    } catch (e) {
+      toastError(e, "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -168,6 +184,11 @@ export default function AuditLogPage() {
         <PageHeader
           title="Audit Log"
           description="Every change made in the CRM — who did it, when, and what the value was before."
+          actions={
+            <Button variant="outline" onClick={exportCsv} loading={exporting}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+          }
         />
 
         <DataTable
