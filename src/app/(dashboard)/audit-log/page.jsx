@@ -50,7 +50,7 @@ const NO_DIFF_TEXT = {
   UPDATE: "No field changes recorded",
 };
 
-/** Renders the recorded before → after pairs for one entry. */
+/** Renders the recorded change for one entry. */
 function Changes({ changes, action }) {
   const entries = changes ? Object.entries(changes) : [];
   if (!entries.length) {
@@ -63,16 +63,34 @@ function Changes({ changes, action }) {
 
   return (
     <div className="space-y-1">
-      {entries.map(([field, { from, to }]) => (
+      {entries.map(([field, change]) => (
         <div key={field} className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="font-medium">{fieldLabel(field)}</span>
-          <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground line-through">
-            {formatValue(from)}
-          </span>
-          <ArrowRight className="h-3 w-3 text-muted-foreground" />
-          <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400">
-            {formatValue(to)}
-          </span>
+          {/* Permission edits record added/removed lists rather than a scalar swap. */}
+          {Array.isArray(change?.added) || Array.isArray(change?.removed) ? (
+            <>
+              {change.added?.length > 0 && (
+                <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400">
+                  + {change.added.join(", ")}
+                </span>
+              )}
+              {change.removed?.length > 0 && (
+                <span className="rounded bg-destructive/10 px-1.5 py-0.5 font-medium text-destructive">
+                  − {change.removed.join(", ")}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground line-through">
+                {formatValue(change?.from)}
+              </span>
+              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+              <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400">
+                {formatValue(change?.to)}
+              </span>
+            </>
+          )}
         </div>
       ))}
     </div>
@@ -114,7 +132,14 @@ export default function AuditLogPage() {
       {
         accessorKey: "entity",
         header: "Record",
-        cell: ({ row }) => row.original.entity || "—",
+        cell: ({ row }) => (
+          <div className="min-w-0">
+            <p className="truncate">{fieldLabel(row.original.entity) || "—"}</p>
+            {row.original.target && (
+              <p className="truncate text-xs text-muted-foreground">{row.original.target}</p>
+            )}
+          </div>
+        ),
       },
       {
         accessorKey: "changes",

@@ -21,6 +21,12 @@ function fromBackend(log) {
     userEmail: user?.email ?? "",
     // { field: { from, to } } — recorded on updates that actually changed something.
     changes: log.metadata?.changes ?? null,
+    // Something identifiable about the record, when the entry carries one
+    // (role for a permission edit, filename for a file, keys for settings).
+    target:
+      log.metadata?.role ||
+      log.metadata?.name ||
+      (Array.isArray(log.metadata?.keys) ? log.metadata.keys.join(", ") : null),
   };
 }
 
