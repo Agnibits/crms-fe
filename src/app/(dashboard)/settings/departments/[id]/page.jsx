@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, LifeBuoy, Network, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, LifeBuoy, Network, Users } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
@@ -64,7 +64,12 @@ export default function DepartmentDetailPage() {
 
   const d = department.data;
   const memberList = members.data ?? [];
-  const ticketList = tickets.data ?? [];
+  // The API returns a small page plus the real totals, so a long queue reports
+  // its true size here and gets worked on the tickets list instead.
+  const ticketList = tickets.data?.items ?? [];
+  const ticketTotal = tickets.data?.total ?? 0;
+  const urgentCount = tickets.data?.urgent ?? 0;
+  const hasMore = ticketTotal > ticketList.length;
   const head = d.head ? `${d.head.firstName ?? ""} ${d.head.lastName ?? ""}`.trim() : null;
 
   return (
@@ -91,9 +96,14 @@ export default function DepartmentDetailPage() {
         />
         <StatCard
           title="Open tickets"
-          value={formatNumber(ticketList.length)}
+          value={formatNumber(ticketTotal)}
           icon={LifeBuoy}
-          hint="Unresolved and routed here"
+          // Queue size alone doesn't say how bad it is — call out what's hot.
+          hint={
+            urgentCount
+              ? `${formatNumber(urgentCount)} urgent or high priority`
+              : "Unresolved and routed here"
+          }
           loading={tickets.isPending}
           index={1}
         />
@@ -167,9 +177,25 @@ export default function DepartmentDetailPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base">Open tickets</CardTitle>
-            <CardDescription>Oldest first — the queue to work through.</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
+            <div>
+              <CardTitle className="text-base">Open tickets</CardTitle>
+              <CardDescription>
+                {hasMore
+                  ? `Longest waiting ${ticketList.length} of ${formatNumber(ticketTotal)}.`
+                  : "Oldest first — the queue to work through."}
+              </CardDescription>
+            </div>
+            {ticketTotal > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => router.push(`/tickets?departmentId=${d.id}`)}
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             {tickets.error ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Clock, Inbox, LifeBuoy, Mail, Plus, Ticket } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatCard from "@/components/common/StatCard";
@@ -25,7 +25,9 @@ import { formatNumber, formatRelative } from "@/utils/format";
 
 export default function TicketsPage() {
   const router = useRouter();
-  const t = useTableState();
+  // Landing here from a department's page arrives pre-filtered to its queue.
+  const departmentId = useSearchParams().get("departmentId");
+  const t = useTableState({ initialFilters: departmentId ? { departmentId } : {} });
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isPending, error, refetch } = ticketHooks.useList(t.queryParams);
   const stats = ticketHooks.useList({ limit: 1000 });
