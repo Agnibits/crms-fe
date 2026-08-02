@@ -38,10 +38,28 @@ function formatValue(value) {
   return String(value);
 }
 
+// Only updates carry a field diff — say what happened for the rest instead of
+// showing a column full of dashes.
+const NO_DIFF_TEXT = {
+  CREATE: "Record created",
+  DELETE: "Record deleted",
+  LOGIN: "Signed in",
+  LOGOUT: "Signed out",
+  EXPORT: "Data exported",
+  IMPORT: "Data imported",
+  UPDATE: "No field changes recorded",
+};
+
 /** Renders the recorded before → after pairs for one entry. */
-function Changes({ changes }) {
+function Changes({ changes, action }) {
   const entries = changes ? Object.entries(changes) : [];
-  if (!entries.length) return <span className="text-muted-foreground">—</span>;
+  if (!entries.length) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {NO_DIFF_TEXT[action] || "—"}
+      </span>
+    );
+  }
 
   return (
     <div className="space-y-1">
@@ -102,7 +120,9 @@ export default function AuditLogPage() {
         accessorKey: "changes",
         header: "What changed",
         enableSorting: false,
-        cell: ({ row }) => <Changes changes={row.original.changes} />,
+        cell: ({ row }) => (
+          <Changes changes={row.original.changes} action={row.original.action} />
+        ),
       },
     ],
     []
