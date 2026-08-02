@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Building2, CalendarDays, Hash, Network, RefreshCcw } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import StatusBadge from "@/components/common/StatusBadge";
 import ErrorState from "@/components/common/ErrorState";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import UserAvatar from "@/components/common/UserAvatar";
 import TicketChat from "@/features/tickets/TicketChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,7 @@ import {
 import { ticketHooks, useAgents } from "@/features/tickets/hooks";
 import { useDepartmentOptions } from "@/features/departments/hooks";
 import { useBranchOptions } from "@/features/branches/hooks";
+import { useAuthStore } from "@/store/auth.store";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatDateTime, formatRelative } from "@/utils/format";
 
@@ -36,6 +39,22 @@ export default function TicketDetailPage() {
   const agents = useAgents();
   const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const me = useAuthStore((s) => s.user);
+  // Handing a ticket to another office is a legitimate move, but for someone
+  // limited to their own branch it's one-way: the moment it lands elsewhere
+  // they can't see it, let alone pull it back. Confirm before that happens.
+  const [pendingBranch, setPendingBranch] = useState(undefined);
+
+  const applyBranch = (id, branchId) => {
+    patch.mutate({ id, branchId });
+    setPendingBranch(undefined);
+  };
+
+  /** Apply straight away unless the move would put it out of the user's reach. */
+  const chooseBranch = (id, branchId) => {
+    if (me?.dataScope === "OWN_BRANCH" && branchId !== me?.branchId) setPendingBranch(branchId);
+    else applyBranch(id, branchId);
+  };
 
   if (isPending) return <LoadingSpinner fullPage label="Loading ticket…" />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -173,9 +192,7 @@ export default function TicketDetailPage() {
                   <Label htmlFor="ticket-branch">Branch</Label>
                   <Select
                     value={ticket.branchId ?? NONE}
-                    onValueChange={(v) =>
-                      patch.mutate({ id: ticket.id, branchId: v === NONE ? null : v })
-                    }
+                    onValueChange={(v) => chooseBranch(ticket.id, v === NONE ? null : v)}
                     disabled={patch.isPending}
                   >
                     <SelectTrigger id="ticket-branch" className="w-full">
@@ -246,6 +263,20 @@ export default function TicketDetailPage() {
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingBranch !== undefined}
+        onOpenChange={(open) => !open && setPendingBranch(undefined)}
+        title="Hand this ticket to another office?"
+        description={
+          pendingBranch
+            ? `It moves to ${branchOptions.find((b) => b.value === pendingBranch)?.label ?? "that branch"}, and you won't be able to see or reopen it afterwards.`
+            : "It moves out of every branch, and you won't be able to see or reopen it afterwards."
+        }
+        confirmLabel="Hand over"
+        loading={patch.isPending}
+        onConfirm={() => applyBranch(ticket.id, pendingBranch)}
+      />
     </div>
   );
 }
