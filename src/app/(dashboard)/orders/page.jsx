@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { orderHooks } from "@/features/orders/hooks";
 import { orderService } from "@/services/order.service";
 import { toastError } from "@/services/api";
@@ -64,6 +65,8 @@ function RowStatusSelect({ order, onChange }) {
 export default function OrdersPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("order:delete");
   const { data, isPending, error, refetch } = orderHooks.useList(t.queryParams);
   const queryClient = useQueryClient();
   // Status goes through the dedicated /status endpoint (enforces transitions).
@@ -124,12 +127,14 @@ export default function OrdersPage() {
               <DropdownMenuItem onClick={() => router.push(`/orders/${row.original.id}`)}>
                 <Eye className="h-4 w-4" /> View
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -195,7 +200,9 @@ export default function OrdersPage() {
             <Download className="h-4 w-4" /> Export
           </Button>
         }
-        bulkActions={(rows, clear) => (
+        bulkActions={
+          canDelete
+            ? (rows, clear) => (
           <Button
             variant="destructive"
             size="sm"
@@ -203,7 +210,9 @@ export default function OrdersPage() {
           >
             <Trash2 className="h-4 w-4" /> Delete
           </Button>
-        )}
+        )
+            : undefined
+        }
       />
       <ConfirmDialog
         open={!!deleteId}

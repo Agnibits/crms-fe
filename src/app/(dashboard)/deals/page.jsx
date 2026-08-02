@@ -53,6 +53,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { opportunityHooks } from "@/features/opportunities/hooks";
 import { opportunityService } from "@/services/opportunity.service";
 import { useStageOptions } from "@/features/opportunities/useStageOptions";
@@ -232,6 +233,8 @@ function PipelineBoard({ items, stages, isPending, error, refetch }) {
 export default function OpportunitiesPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("opportunity:delete");
   const list = opportunityHooks.useList(t.queryParams);
   // Full-ish snapshot for the forecast row + pipeline board.
   const all = opportunityHooks.useList({ limit: 200 });
@@ -340,12 +343,14 @@ export default function OpportunitiesPage() {
               >
                 <Pencil /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -463,7 +468,9 @@ export default function OpportunitiesPage() {
                 <Download /> Export
               </Button>
             }
-            bulkActions={(rows, clear) => (
+            bulkActions={
+              canDelete
+                ? (rows, clear) => (
               <Button
                 variant="destructive"
                 size="sm"
@@ -474,7 +481,9 @@ export default function OpportunitiesPage() {
               >
                 <Trash2 /> Delete
               </Button>
-            )}
+            )
+                : undefined
+            }
           />
         </TabsContent>
 

@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contactHooks } from "@/features/contacts/hooks";
+import { useCan } from "@/hooks/usePermissions";
 import { formatDate, birthdayStatus } from "@/utils/format";
 
 function DefItem({ label, children }) {
@@ -41,6 +42,7 @@ export default function ContactDetailPage() {
   const { data: contact, isPending, error, refetch } = contactHooks.useDetail(id);
   const remove = contactHooks.useRemove();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const canDelete = useCan()("contact:delete");
 
   if (isPending) {
     return (
@@ -71,9 +73,11 @@ export default function ContactDetailPage() {
             <Button variant="outline" onClick={() => router.push(`/contacts/${id}/edit`)}>
               <Pencil /> Edit
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-              <Trash2 /> Delete
-            </Button>
+            {canDelete && (
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 /> Delete
+              </Button>
+            )}
           </>
         }
       />

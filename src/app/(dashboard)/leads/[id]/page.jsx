@@ -52,6 +52,7 @@ import {
   LEAD_RATINGS,
   findOption,
 } from "@/constants/options";
+import { useCan } from "@/hooks/usePermissions";
 import { formatCurrency, formatDate, formatRelative, getInitials } from "@/utils/format";
 
 
@@ -68,6 +69,7 @@ export default function LeadDetailPage() {
   const [convertOpen, setConvertOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const canDelete = useCan()("lead:delete");
   const [logOpen, setLogOpen] = useState(false);
   const [logType, setLogType] = useState("call");
 
@@ -169,12 +171,14 @@ export default function LeadDetailPage() {
                   <Merge /> Merge duplicates
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 /> Delete
-                </DropdownMenuItem>
+                {canDelete && (
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 /> Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </>

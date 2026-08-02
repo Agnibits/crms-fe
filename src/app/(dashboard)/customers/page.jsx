@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { customerHooks, useCustomerIndustries } from "@/features/customers/hooks";
 import ImportCustomersDialog from "@/features/customers/ImportCustomersDialog";
 import { CUSTOMER_STATUSES } from "@/constants/options";
@@ -53,6 +54,8 @@ const EXPORT_COLUMNS = [
 export default function CustomersPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("customer:delete");
   const industryOptions = useCustomerIndustries().data ?? [];
   const { data, isPending, error, refetch } = customerHooks.useList(t.queryParams);
   const remove = customerHooks.useRemove();
@@ -124,12 +127,14 @@ export default function CustomersPage() {
               <DropdownMenuItem onClick={() => router.push(`/customers/${row.original.id}/edit`)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -216,7 +221,9 @@ export default function CustomersPage() {
             </Button>
           </>
         }
-        bulkActions={(rows, clear) => (
+        bulkActions={
+          canDelete
+            ? (rows, clear) => (
           <Button
             variant="destructive"
             size="sm"
@@ -227,7 +234,9 @@ export default function CustomersPage() {
           >
             <Trash2 /> Delete selected
           </Button>
-        )}
+        )
+            : undefined
+        }
       />
 
       <ImportCustomersDialog open={importOpen} onOpenChange={setImportOpen} />

@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { quoteHooks } from "@/features/quotes/hooks";
 import { QUOTE_STATUSES } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
@@ -30,6 +31,8 @@ import { formatCurrency, formatDate } from "@/utils/format";
 export default function QuotesPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("quote:delete");
   const { data, isPending, error, refetch } = quoteHooks.useList(t.queryParams);
   const remove = quoteHooks.useRemove();
   const bulkRemove = quoteHooks.useBulkRemove();
@@ -87,12 +90,14 @@ export default function QuotesPage() {
               <DropdownMenuItem onClick={() => router.push(`/quotes/${row.original.id}`)}>
                 <Eye className="h-4 w-4" /> View
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -164,7 +169,9 @@ export default function QuotesPage() {
             <Download className="h-4 w-4" /> Export
           </Button>
         }
-        bulkActions={(rows, clear) => (
+        bulkActions={
+          canDelete
+            ? (rows, clear) => (
           <Button
             variant="destructive"
             size="sm"
@@ -172,7 +179,9 @@ export default function QuotesPage() {
           >
             <Trash2 className="h-4 w-4" /> Delete
           </Button>
-        )}
+        )
+            : undefined
+        }
       />
       <ConfirmDialog
         open={!!deleteId}

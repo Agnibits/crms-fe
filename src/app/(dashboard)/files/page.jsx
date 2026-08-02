@@ -49,6 +49,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { createCrudHooks } from "@/hooks/useCrud";
+import { useCan } from "@/hooks/usePermissions";
 import { fileService } from "@/services/file.service";
 import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
@@ -231,6 +232,8 @@ function FilePreview({ file }) {
 }
 
 function FileActions({ file, onPreview, onDelete }) {
+  // Deleting a document is separately granted — don't offer it otherwise.
+  const canDelete = useCan()("file:delete");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -245,12 +248,14 @@ function FileActions({ file, onPreview, onDelete }) {
         <DropdownMenuItem onClick={() => downloadFile(file)}>
           <Download /> Download
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={() => onDelete(file.id)}
-        >
-          <Trash2 /> Delete
-        </DropdownMenuItem>
+        {canDelete && (
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => onDelete(file.id)}
+          >
+            <Trash2 /> Delete
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

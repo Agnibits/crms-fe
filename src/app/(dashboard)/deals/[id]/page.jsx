@@ -42,6 +42,7 @@ import { useStageOptions } from "@/features/opportunities/useStageOptions";
 import { opportunityService } from "@/services/opportunity.service";
 import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
+import { useCan } from "@/hooks/usePermissions";
 import { formatCurrency, formatDate, formatRelative } from "@/utils/format";
 
 const STATUS_OPTIONS = [
@@ -60,6 +61,7 @@ export default function OpportunityDetailPage() {
   const { stageOptions } = useStageOptions();
   const patch = opportunityHooks.usePatch();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const canDelete = useCan()("opportunity:delete");
   const [winOpen, setWinOpen] = useState(false);
   const [loseOpen, setLoseOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
@@ -157,9 +159,11 @@ export default function OpportunityDetailPage() {
             >
               <Pencil /> Edit
             </Button>
-            <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-              <Trash2 /> Delete
-            </Button>
+            {canDelete && (
+              <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 /> Delete
+              </Button>
+            )}
           </>
         }
       />

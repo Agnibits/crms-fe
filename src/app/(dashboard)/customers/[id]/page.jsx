@@ -49,6 +49,7 @@ import { opportunityService } from "@/services/opportunity.service";
 import { useStageOptions } from "@/features/opportunities/useStageOptions";
 import { CUSTOMER_STATUSES, INVOICE_STATUSES } from "@/constants/options";
 import { QUERY_KEYS } from "@/constants/app";
+import { useCan } from "@/hooks/usePermissions";
 import {
   formatBytes,
   formatCurrency,
@@ -111,6 +112,7 @@ export default function CustomerDetailPage() {
 
   const remove = customerHooks.useRemove();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const canDelete = useCan()("customer:delete");
   const [logOpen, setLogOpen] = useState(false);
 
   const dealItems = deals.data?.items ?? [];
@@ -204,9 +206,11 @@ export default function CustomerDetailPage() {
             <Button variant="outline" onClick={() => router.push(`/customers/${id}/edit`)}>
               <Pencil /> Edit
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-              <Trash2 /> Delete
-            </Button>
+            {canDelete && (
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 /> Delete
+              </Button>
+            )}
           </>
         }
       />

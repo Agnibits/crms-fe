@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { productHooks, useUploadProductImage } from "@/features/products/hooks";
+import { useCan } from "@/hooks/usePermissions";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/utils/format";
 
 const PRODUCT_STATUSES = [
@@ -50,6 +51,7 @@ export default function ProductDetailPage() {
   const uploadImage = useUploadProductImage();
   const fileRef = useRef(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const canDelete = useCan()("product:delete");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const onPickImage = (e) => {
@@ -101,9 +103,11 @@ export default function ProductDetailPage() {
             <Button variant="outline" onClick={() => router.push(`/products/${id}/edit`)}>
               <Pencil className="h-4 w-4" /> Edit
             </Button>
-            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" /> Delete
-            </Button>
+            {canDelete && (
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="h-4 w-4" /> Delete
+              </Button>
+            )}
           </>
         }
       />

@@ -48,6 +48,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { productHooks, productCategoryHooks } from "@/features/products/hooks";
 import { exportToCsv } from "@/utils/export";
 import { formatCurrency, formatNumber } from "@/utils/format";
@@ -192,6 +193,8 @@ export default function ProductsPage() {
   const bulkRemove = productHooks.useBulkRemove();
   const [deleteId, setDeleteId] = useState(null);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  // Don't offer a delete this role can't perform — the API would just 403.
+  const canDelete = useCan()("product:delete");
 
   const columns = useMemo(
     () => [
@@ -266,18 +269,20 @@ export default function ProductsPage() {
               <DropdownMenuItem onClick={() => router.push(`/products/${row.original.id}/edit`)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [router]
+    [router, canDelete]
   );
 
   return (
@@ -359,15 +364,21 @@ export default function ProductsPage() {
                 <Download className="h-4 w-4" /> Export
               </Button>
             }
-            bulkActions={(rows, clear) => (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => bulkRemove.mutate(rows.map((r) => r.id), { onSuccess: clear })}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </Button>
-            )}
+            bulkActions={
+              canDelete
+                ? (rows, clear) => (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() =>
+                        bulkRemove.mutate(rows.map((r) => r.id), { onSuccess: clear })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </Button>
+                  )
+                : undefined
+            }
           />
         </TabsContent>
 

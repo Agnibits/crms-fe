@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { leadHooks } from "@/features/leads/hooks";
 import LeadKanban from "@/features/leads/LeadKanban";
 import { LEAD_STAGES, LEAD_SOURCES, LEAD_RATINGS, findOption } from "@/constants/options";
@@ -42,6 +43,8 @@ import { formatCurrency, formatDate } from "@/utils/format";
 export default function LeadsPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("lead:delete");
   const { data, isPending, error, refetch } = leadHooks.useList(t.queryParams);
   const remove = leadHooks.useRemove();
   const bulkRemove = leadHooks.useBulkRemove();
@@ -114,12 +117,14 @@ export default function LeadsPage() {
               <DropdownMenuItem onClick={() => router.push(`/leads/${row.original.id}/edit`)}>
                 <Pencil /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
@@ -222,7 +227,9 @@ export default function LeadsPage() {
                 <Download /> Export
               </Button>
             }
-            bulkActions={(rows, clear) => (
+            bulkActions={
+              canDelete
+                ? (rows, clear) => (
               <Button
                 variant="destructive"
                 size="sm"
@@ -233,7 +240,9 @@ export default function LeadsPage() {
               >
                 <Trash2 /> Delete
               </Button>
-            )}
+            )
+                : undefined
+            }
           />
         </TabsContent>
 

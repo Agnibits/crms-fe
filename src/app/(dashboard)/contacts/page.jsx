@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
+import { useCan } from "@/hooks/usePermissions";
 import { contactHooks, useCustomerOptions } from "@/features/contacts/hooks";
 import { exportToCsv } from "@/utils/export";
 import { formatDate, birthdayStatus } from "@/utils/format";
@@ -50,6 +51,8 @@ const EXPORT_COLUMNS = [
 export default function ContactsPage() {
   const router = useRouter();
   const t = useTableState();
+  // Hide a delete this role can't perform — the API would only 403.
+  const canDelete = useCan()("contact:delete");
   const { data, isPending, error, refetch } = contactHooks.useList(t.queryParams);
   const { options: customerOptions } = useCustomerOptions();
   const remove = contactHooks.useRemove();
@@ -139,12 +142,14 @@ export default function ContactsPage() {
               <DropdownMenuItem onClick={() => router.push(`/contacts/${row.original.id}/edit`)}>
                 <Pencil className="h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteId(row.original.id)}
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(row.original.id)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
