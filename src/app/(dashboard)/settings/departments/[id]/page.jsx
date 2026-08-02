@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useBranchOptions } from "@/features/branches/hooks";
 import {
   useDepartment,
   useDepartmentMembers,
@@ -37,6 +38,7 @@ export default function DepartmentDetailPage() {
   const department = useDepartment(id);
   const members = useDepartmentMembers(id);
   const tickets = useDepartmentTickets(id);
+  const { hasBranches } = useBranchOptions({ includeNone: false });
 
   if (department.error) return <ErrorState error={department.error} onRetry={department.refetch} />;
 
@@ -146,6 +148,7 @@ export default function DepartmentDetailPage() {
                   <TableRow className="hover:bg-transparent">
                     <TableHead>Name</TableHead>
                     <TableHead>Role</TableHead>
+                    {hasBranches && <TableHead>Branch</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -168,6 +171,11 @@ export default function DepartmentDetailPage() {
                       <TableCell className="text-muted-foreground">
                         {BACKEND_ROLE_LABELS[u.role] || u.role}
                       </TableCell>
+                      {hasBranches && (
+                        <TableCell className="text-muted-foreground">
+                          {u.branch?.name || "—"}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
