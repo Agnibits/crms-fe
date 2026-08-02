@@ -4,6 +4,7 @@ import { createCrudService } from "./crud.factory";
 import { ENDPOINTS } from "@/constants/endpoints";
 import { makeMapper, withMapping, splitName } from "./crudMap";
 import { normalizeUser, toBackendRole } from "./normalize";
+import { api, unwrap } from "./api";
 
 /**
  * User CRUD service. Reads are normalized like the auth user (name/avatar/role).
@@ -28,4 +29,12 @@ const mapper = {
   fromBackend: normalizeUser,
 };
 
-export const userService = withMapping(base, mapper);
+export const userService = {
+  ...withMapping(base, mapper),
+  /**
+   * Admin-set a member's password. Needed when they can't receive the emailed
+   * reset link; signs them out of every device.
+   */
+  setPassword: async (id, password) =>
+    unwrap(await api.patch(`${ENDPOINTS.users}/${id}/password`, { password })),
+};

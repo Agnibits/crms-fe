@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  KeyRound,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -40,6 +41,7 @@ import { useTableState } from "@/hooks/useTableState";
 import { useAuth } from "@/hooks/useAuth";
 import { userHooks } from "@/features/users/hooks";
 import UserFormDialog from "@/features/users/UserFormDialog";
+import SetPasswordDialog from "@/features/users/SetPasswordDialog";
 import {
   ASSIGNABLE_ROLES,
   BACKEND_ROLE_LABELS,
@@ -79,6 +81,7 @@ export default function UsersPage() {
   const remove = userHooks.useRemove();
 
   const [formDialog, setFormDialog] = useState({ open: false, user: null });
+  const [passwordUser, setPasswordUser] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
 
   const allUsers = all.data?.items ?? [];
@@ -162,6 +165,9 @@ export default function UsersPage() {
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem onClick={() => setFormDialog({ open: true, user })}>
                   <Pencil /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPasswordUser(user)}>
+                  <KeyRound /> Set password
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
@@ -282,6 +288,12 @@ export default function UsersPage() {
           open={formDialog.open}
           onOpenChange={(open) => setFormDialog((prev) => ({ open, user: open ? prev.user : null }))}
           user={formDialog.user}
+        />
+
+        <SetPasswordDialog
+          open={!!passwordUser}
+          onOpenChange={(open) => !open && setPasswordUser(null)}
+          user={passwordUser}
         />
 
         <ConfirmDialog
