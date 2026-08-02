@@ -119,17 +119,18 @@ export default function DepartmentDetailPage() {
           loading={tickets.isPending}
           index={1}
         />
-        {/* Who runs it is the daily question; which office it serves is context,
-            and "Branch: Company-wide" read like a contradiction next to the
-            members table, where each person has a branch of their own. */}
+        {/* Who runs it is the daily question. The office line describes the TEAM
+            (is there one of these, or one per office?) — not what its members can
+            reach, which comes from their own branch and role. Saying
+            "Company-wide" here read like the latter. */}
         <StatCard
           title="Head"
           value={head || "Not set"}
           icon={UserCog}
           hint={
             d.branch?.name
-              ? `Works out of ${d.branch.name}`
-              : "Serves every office — members can be from any branch"
+              ? `A ${d.branch.name} team`
+              : "One team for the whole company"
           }
           index={2}
         />

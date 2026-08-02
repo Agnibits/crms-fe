@@ -9,8 +9,12 @@ import { useUsersOptions } from "@/features/leads/useUsersOptions";
 
 export default function DepartmentsSettingsPage() {
   const router = useRouter();
-  // "Company-wide" (none) is selectable so a department can be un-linked from a branch.
-  const { options: branchOptions } = useBranchOptions({ noneLabel: "Company-wide" });
+  // The "none" option is selectable so a team can be un-linked from an office.
+  // Worded about the team, not its reach — "company-wide" read as though members
+  // could see everything, which is decided by their branch and role instead.
+  const { options: branchOptions } = useBranchOptions({
+    noneLabel: "One team for the whole company",
+  });
   const { options: rawUserOptions } = useUsersOptions();
   const userOptions = [{ value: "__none__", label: "No head" }, ...rawUserOptions];
 
@@ -45,9 +49,9 @@ export default function DepartmentsSettingsPage() {
         },
         {
           key: "branch",
-          header: "Branch",
+          header: "Exists at",
           className: "w-[24%]",
-          render: (d) => d.branch?.name || "Company-wide",
+          render: (d) => d.branch?.name || "Whole company",
         },
         {
           key: "head",
@@ -71,12 +75,11 @@ export default function DepartmentsSettingsPage() {
           // separate dimensions — Zoho and Odoo don't nest them either. Only set
           // this when a team genuinely exists at one office.
           name: "branchId",
-          label: "Branch",
-          half: true,
+          label: "Exists at",
           type: "select",
           options: branchOptions,
-          placeholder: "Company-wide",
-          hint: "Only for a team that exists at one office. Members can be from any branch either way.",
+          placeholder: "One team for the whole company",
+          hint: "Pick an office only if you run a separate team per office (a Pune Sales and a Mumbai Sales). This is about the team, not its people — members can sit at any branch either way.",
         },
         {
           name: "headId",
