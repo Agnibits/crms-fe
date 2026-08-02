@@ -1,6 +1,15 @@
 "use client";
 
-import { BarChart3, Boxes, DollarSign, Download, ShieldAlert, TrendingUp, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  Boxes,
+  Building2,
+  DollarSign,
+  Download,
+  ShieldAlert,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import RoleGate from "@/components/common/RoleGate";
 import EmptyState from "@/components/common/EmptyState";
@@ -32,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useReport } from "@/features/reports/hooks";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { exportToCsv, exportToExcel, exportToPdf } from "@/utils/export";
 import { formatCurrency, formatNumber, titleCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -479,6 +489,184 @@ function EmployeesTab() {
   );
 }
 
+/** Which office earned what — the reason a multi-branch business tags records. */
+function BranchesTab() {
+  const { data, isPending, error, refetch } = useReport("branches");
+  if (error) return <ErrorState error={error} onRetry={refetch} />;
+
+  const rows = data?.branches ?? [];
+  const totals = data?.totals;
+  const topRevenue = rows[0]?.branchId ? rows[0] : null;
+  const topPipeline = [...rows]
+    .filter((r) => r.branchId)
+    .sort((a, b) => b.pipelineValue - a.pipelineValue)[0];
+  const maxRevenue = Math.max(...rows.map((r) => r.revenue), 1);
+
+  const chartData = rows.map((r) => ({ stage: r.branch, value: r.revenue, count: r.wonDeals }));
+  const exportRows = rows.map((r) => ({
+    branch: r.branch,
+    revenue: r.revenue,
+    pipelineValue: r.pipelineValue,
+    openDeals: r.openDeals,
+    wonDeals: r.wonDeals,
+    leads: r.leads,
+    customers: r.customers,
+  }));
+
+  return (
+    <div className="space-y-4">
+      <TabToolbar>
+        <ExportMenu
+          filename="branches-report"
+          title="Branch Performance Report"
+          disabled={isPending}
+          rows={exportRows}
+          columns={[
+            { key: "branch", label: "Branch" },
+            { key: "revenue", label: "Revenue" },
+            { key: "pipelineValue", label: "Open pipeline" },
+            { key: "openDeals", label: "Open deals" },
+            { key: "wonDeals", label: "Won deals" },
+            { key: "leads", label: "Leads" },
+            { key: "customers", label: "Customers" },
+          ]}
+        />
+      </TabToolbar>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Top office by revenue"
+          value={topRevenue ? topRevenue.branch : "—"}
+          icon={Trophy}
+          hint={topRevenue ? formatCurrency(topRevenue.revenue) : "No revenue recorded yet"}
+          loading={isPending}
+          index={0}
+        />
+        <StatCard
+          title="Biggest pipeline"
+          value={topPipeline ? topPipeline.branch : "—"}
+          icon={TrendingUp}
+          hint={topPipeline ? formatCurrency(topPipeline.pipelineValue) : "No open deals"}
+          loading={isPending}
+          index={1}
+        />
+        <StatCard
+          title="Offices reporting"
+          value={formatNumber(rows.filter((r) => r.branchId).length)}
+          icon={Building2}
+          hint="Branches with a row below"
+          loading={isPending}
+          index={2}
+        />
+      </div>
+
+      <ChartCard title="Revenue by branch" description="Collected payments per office">
+        <PipelineBarChart data={chartData} />
+      </ChartCard>
+
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Branch performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isPending ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-11 w-full" />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="No branches yet"
+              description="Add branches in Settings, then assign records to them to see this breakdown."
+              className="border-0 py-10"
+            />
+          ) : (
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Branch</TableHead>
+                    <TableHead className="text-right">Revenue</TableHead>
+                    <TableHead className="text-right">Open pipeline</TableHead>
+                    <TableHead className="text-right">Deals (open / won)</TableHead>
+                    <TableHead className="text-right">Leads</TableHead>
+                    <TableHead className="text-right">Customers</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((r) => (
+                    <TableRow key={r.branchId ?? "unassigned"}>
+                      <TableCell>
+                        <div className="min-w-0">
+                          <p
+                            className={cn(
+                              "truncate font-medium",
+                              !r.branchId && "text-muted-foreground"
+                            )}
+                          >
+                            {r.branch}
+                          </p>
+                          <Progress
+                            value={(r.revenue / maxRevenue) * 100}
+                            className="mt-1.5 h-1.5 w-32"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {formatCurrency(r.revenue)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatCurrency(r.pipelineValue)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(r.openDeals)} / {formatNumber(r.wonDeals)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(r.leads)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(r.customers)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {totals && (
+                    <TableRow className="border-t-2 font-medium hover:bg-transparent">
+                      <TableCell>Company total</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatCurrency(totals.revenue)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatCurrency(totals.pipelineValue)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(totals.openDeals)} / {formatNumber(totals.wonDeals)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(totals.leads)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(totals.customers)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {rows.some((r) => !r.branchId) && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              &ldquo;Unassigned&rdquo; covers records with no branch set — often ones created before
+              you added offices. Assign a branch on those records to move them into an office.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 /* ── Page ─────────────────────────────────────────────────────── */
 const TABS = [
   { value: "revenue", label: "Revenue", content: <RevenueTab /> },
@@ -487,9 +675,14 @@ const TABS = [
   { value: "sales", label: "Sales", content: <SalesTab /> },
   { value: "products", label: "Products", content: <ProductsTab /> },
   { value: "employees", label: "Employees", content: <EmployeesTab /> },
+  // Only meaningful once the company runs more than one office.
+  { value: "branches", label: "Branches", content: <BranchesTab />, needsBranches: true },
 ];
 
 export default function ReportsPage() {
+  const { hasBranches } = useBranchOptions({ includeNone: false });
+  const tabs = TABS.filter((tab) => !tab.needsBranches || hasBranches);
+
   return (
     <RoleGate
       roles={["admin", "manager"]}
@@ -508,13 +701,13 @@ export default function ReportsPage() {
         />
         <Tabs defaultValue="revenue" className="space-y-4">
           <TabsList className="h-auto flex-wrap justify-start">
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <TabsContent key={tab.value} value={tab.value}>
               {tab.content}
             </TabsContent>
