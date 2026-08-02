@@ -21,11 +21,12 @@ import {
 } from "@/components/ui/select";
 import { ticketHooks, useAgents } from "@/features/tickets/hooks";
 import { useDepartmentOptions } from "@/features/departments/hooks";
-
-/** Sentinel for "no department" — Radix Select can't hold an empty value. */
-const NO_DEPARTMENT = "__none__";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatDateTime, formatRelative } from "@/utils/format";
+
+/** Radix Select can't hold an empty value, so "unset" needs a stand-in. */
+const NONE = "__none__";
 
 export default function TicketDetailPage() {
   const { id } = useParams();
@@ -34,6 +35,7 @@ export default function TicketDetailPage() {
   const patch = ticketHooks.usePatch();
   const agents = useAgents();
   const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
+  const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
 
   if (isPending) return <LoadingSpinner fullPage label="Loading ticket…" />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -84,6 +86,16 @@ export default function TicketDetailPage() {
                   {ticket.customerName}
                 </span>
               </div>
+              {ticket.branch?.name && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Building2 className="h-3.5 w-3.5" /> Branch
+                  </span>
+                  <span className="max-w-[55%] truncate text-right font-medium">
+                    {ticket.branch.name}
+                  </span>
+                </div>
+              )}
               {ticket.department?.name && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -153,17 +165,42 @@ export default function TicketDetailPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Re-routing to another team is a normal triage step, not
-                  something you should only get one shot at when raising it. */}
+              {/* A ticket inherits its office from the customer; both this and
+                  the department stay changeable — triage is where they get
+                  corrected. */}
+              {hasBranches && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="ticket-branch">Branch</Label>
+                  <Select
+                    value={ticket.branchId ?? NONE}
+                    onValueChange={(v) =>
+                      patch.mutate({ id: ticket.id, branchId: v === NONE ? null : v })
+                    }
+                    disabled={patch.isPending}
+                  >
+                    <SelectTrigger id="ticket-branch" className="w-full">
+                      <SelectValue placeholder="No branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>No branch</SelectItem>
+                      {branchOptions.map((b) => (
+                        <SelectItem key={b.value} value={b.value}>
+                          {b.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {hasDepartments && (
                 <div className="space-y-1.5">
                   <Label htmlFor="ticket-department">Department</Label>
                   <Select
-                    value={ticket.departmentId ?? NO_DEPARTMENT}
+                    value={ticket.departmentId ?? NONE}
                     onValueChange={(v) =>
                       patch.mutate({
                         id: ticket.id,
-                        departmentId: v === NO_DEPARTMENT ? null : v,
+                        departmentId: v === NONE ? null : v,
                       })
                     }
                     disabled={patch.isPending}
@@ -172,7 +209,7 @@ export default function TicketDetailPage() {
                       <SelectValue placeholder="Unrouted" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NO_DEPARTMENT}>Unrouted</SelectItem>
+                      <SelectItem value={NONE}>Unrouted</SelectItem>
                       {departmentOptions.map((d) => (
                         <SelectItem key={d.value} value={d.value}>
                           {d.label}

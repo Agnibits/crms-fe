@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
 import DepartmentFilter from "@/features/departments/DepartmentFilter";
+import BranchFilter from "@/features/branches/BranchFilter";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { ticketHooks } from "@/features/tickets/hooks";
 import { useEmailChannels } from "@/features/email/hooks";
 import NewTicketDialog from "@/features/tickets/NewTicketDialog";
@@ -30,6 +32,7 @@ export default function TicketsPage() {
   const t = useTableState({ initialFilters: departmentId ? { departmentId } : {} });
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isPending, error, refetch } = ticketHooks.useList(t.queryParams);
+  const { hasBranches } = useBranchOptions({ includeNone: false });
   const stats = ticketHooks.useList({ limit: 1000 });
   // A support mailbox = a channel that receives (IMAP) AND auto-creates tickets.
   const { data: channels = [], isPending: channelsPending } = useEmailChannels();
@@ -67,6 +70,27 @@ export default function TicketsPage() {
         header: "Department",
         cell: ({ row }) => row.original.department?.name || "—",
       },
+      // A ticket belongs to the office that owns the customer.
+
+      ...(hasBranches
+
+        ? [
+
+            {
+
+              accessorKey: "branch",
+
+              header: "Branch",
+
+              enableSorting: false,
+
+              cell: ({ row }) => row.original.branch?.name || "—",
+
+            },
+
+          ]
+
+        : []),
       {
         accessorKey: "status",
         header: "Status",
@@ -87,7 +111,7 @@ export default function TicketsPage() {
         ),
       },
     ],
-    []
+    [hasBranches]
   );
 
   return (
@@ -208,6 +232,10 @@ export default function TicketsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <BranchFilter
+              value={t.filters.branchId}
+              onChange={(v) => t.setFilter("branchId", v)}
+            />
             <DepartmentFilter
               value={t.filters.departmentId}
               onChange={(v) => t.setFilter("departmentId", v)}
