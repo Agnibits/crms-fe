@@ -22,6 +22,7 @@ import { useBranchOptions } from "@/features/branches/hooks";
 import { ticketHooks } from "@/features/tickets/hooks";
 import { useEmailChannels } from "@/features/email/hooks";
 import NewTicketDialog from "@/features/tickets/NewTicketDialog";
+import TicketBreakdown from "@/features/tickets/TicketBreakdown";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatNumber, formatRelative } from "@/utils/format";
 
@@ -184,6 +185,13 @@ export default function TicketsPage() {
           index={3}
         />
       </div>
+      <TicketBreakdown
+        onSelect={({ branchId, departmentId }) => {
+          t.setFilter("branchId", branchId ?? "all");
+          t.setFilter("departmentId", departmentId ?? "all");
+        }}
+      />
+
 
       <DataTable
         columns={columns}
