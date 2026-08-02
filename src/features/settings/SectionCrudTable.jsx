@@ -64,6 +64,7 @@ export default function SectionCrudTable({
   schema,
   emptyTitle,
   emptyDescription,
+  onRowClick,
 }) {
   const { query, create, update, remove } = useSettingItems(sectionKey, { label: itemLabel });
   const items = Array.isArray(query.data) ? query.data : [];
@@ -179,7 +180,11 @@ export default function SectionCrudTable({
               </TableHeader>
               <TableBody>
                 {items.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow
+                    key={item.id}
+                    className={cn(onRowClick && "cursor-pointer")}
+                    onClick={onRowClick ? () => onRowClick(item) : undefined}
+                  >
                     {columns.map((col) => (
                       <TableCell key={col.key} className={col.className}>
                         {col.render ? col.render(item) : (item[col.key] ?? "—")}
@@ -191,7 +196,10 @@ export default function SectionCrudTable({
                           variant="ghost"
                           size="icon-sm"
                           aria-label={`Edit ${item.name || itemLabel}`}
-                          onClick={() => setDialog({ open: true, item })}
+                          onClick={(e) => {
+                            e.stopPropagation(); // don't also open the row
+                            setDialog({ open: true, item });
+                          }}
                         >
                           <Pencil />
                         </Button>
@@ -200,7 +208,10 @@ export default function SectionCrudTable({
                           size="icon-sm"
                           className="text-destructive hover:text-destructive"
                           aria-label={`Delete ${item.name || itemLabel}`}
-                          onClick={() => setDeleteId(item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteId(item.id);
+                          }}
                         >
                           <Trash2 />
                         </Button>

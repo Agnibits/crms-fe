@@ -159,7 +159,18 @@ const HELP = {
   },
 };
 
-function ConnectedChannel({ channel, onTest, onTestImap, onDelete, onToggleTickets, testing, testingImap, updating }) {
+function ConnectedChannel({
+  channel,
+  onTest,
+  onTestImap,
+  onDelete,
+  onToggleTickets,
+  onRouteDepartment,
+  testing,
+  testingImap,
+  updating,
+}) {
+  const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
   const canAutoTicket = !!channel.imapHost; // needs IMAP to receive
   return (
     <div className="space-y-3 rounded-lg border p-4">
@@ -223,9 +234,43 @@ function ConnectedChannel({ channel, onTest, onTestImap, onDelete, onToggleTicke
           aria-label="Auto-create support tickets from incoming email"
         />
       </div>
+      {/* Mailbox-level routing: billing@ opens tickets in Billing's queue, so
+          nobody has to triage by hand. Only relevant once tickets are on. */}
+      {channel.autoCreateTickets && hasDepartments && (
+        <div className="flex flex-col gap-2 rounded-md border bg-muted/30 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Route tickets to</p>
+            <p className="text-xs text-muted-foreground">
+              New tickets from this inbox land in this department&apos;s queue.
+            </p>
+          </div>
+          <Select
+            value={channel.departmentId ?? NO_DEPARTMENT}
+            onValueChange={(v) =>
+              onRouteDepartment(channel.id, v === NO_DEPARTMENT ? null : v)
+            }
+            disabled={updating}
+          >
+            <SelectTrigger className="w-full sm:w-52" aria-label="Route tickets to department">
+              <SelectValue placeholder="No department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_DEPARTMENT}>No department</SelectItem>
+              {departmentOptions.map((d) => (
+                <SelectItem key={d.value} value={d.value}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }
+
+/** Radix Select can't hold an empty value. */
+const NO_DEPARTMENT = "__none__";
 
 export default function EmailChannelsPage() {
   const { data: channels = [], isPending, error, refetch } = useEmailChannels();
@@ -335,6 +380,8 @@ export default function EmailChannelsPage() {
                   onTestImap={(id) => testImap.mutate(id)}
                   onDelete={(id) => del.mutate(id)}
                   onToggleTickets={(id, autoCreateTickets) => update.mutate({ id, autoCreateTickets })}
+
+                  onRouteDepartment={(id, departmentId) => update.mutate({ id, departmentId })}
                   testing={test.isPending && test.variables === c.id}
                   testingImap={testImap.isPending && testImap.variables === c.id}
                   updating={update.isPending && update.variables?.id === c.id}

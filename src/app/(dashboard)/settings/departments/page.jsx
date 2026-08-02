@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Network } from "lucide-react";
 import SectionCrudTable from "@/features/settings/SectionCrudTable";
 import { departmentSchema } from "@/validations/settings.schema";
@@ -7,6 +8,7 @@ import { useBranchOptions } from "@/features/branches/hooks";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 
 export default function DepartmentsSettingsPage() {
+  const router = useRouter();
   // "Company-wide" (none) is selectable so a department can be un-linked from a branch.
   const { options: branchOptions } = useBranchOptions({ noneLabel: "Company-wide" });
   const { options: rawUserOptions } = useUsersOptions();
@@ -19,6 +21,7 @@ export default function DepartmentsSettingsPage() {
       title="Departments"
       description="Organise your teams into departments. Tickets can be routed to a department."
       icon={Network}
+      onRowClick={(d) => router.push(`/settings/departments/${d.id}`)}
       schema={departmentSchema}
       columns={[
         {
