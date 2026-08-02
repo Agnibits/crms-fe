@@ -23,7 +23,7 @@ import ErrorState from "@/components/common/ErrorState";
 import CategoriesDialog from "@/features/products/CategoriesDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -99,17 +99,35 @@ function StockCell({ stock, type, stockStatus }) {
   );
 }
 
+const INVENTORY_PAGE_SIZE = 100;
+
 function InventoryTab() {
+  // Only GOODS carry stock — services are intentionally absent, which is why
+  // this tab's count is lower than the Products tab. Filtering server-side (not
+  // after paging) keeps the page full and the total honest.
   const { data, isPending, error, refetch } = productHooks.useList({
     page: 1,
-    limit: 100,
+    limit: INVENTORY_PAGE_SIZE,
     sortBy: "stock",
     sortOrder: "asc",
+    type: "GOODS",
   });
   const items = data?.items ?? [];
+  const total = data?.total ?? items.length;
+  const truncated = total > items.length;
 
   return (
     <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Stock levels</CardTitle>
+        <CardDescription>
+          {isPending
+            ? "Loading stock levels…"
+            : `${formatNumber(total)} stocked ${total === 1 ? "product" : "products"}, lowest stock first. Services aren't stocked, so they don't appear here.`}
+          {truncated &&
+            ` Showing the ${formatNumber(items.length)} lowest-stock items.`}
+        </CardDescription>
+      </CardHeader>
       <CardContent className="p-0">
         {error ? (
           <div className="p-4">
@@ -124,8 +142,8 @@ function InventoryTab() {
         ) : items.length === 0 ? (
           <EmptyState
             icon={Boxes}
-            title="No inventory to show"
-            description="Add products to start tracking stock levels."
+            title="No stocked products yet"
+            description="Only goods carry stock — add a product of type Goods to start tracking levels."
             className="border-0"
           />
         ) : (
@@ -141,24 +159,22 @@ function InventoryTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items
-                .filter((p) => p.type !== "SERVICE")
-                .map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{product.sku}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(product.stock)}
-                    </TableCell>
-                    <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatNumber(product.reorderLevel ?? 0)}
-                    </TableCell>
-                    <TableCell>
-                      <StockStatusBadge status={product.stockStatus} />
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {items.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{product.sku}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatNumber(product.stock)}
+                  </TableCell>
+                  <TableCell className="capitalize text-muted-foreground">{product.unit}</TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {formatNumber(product.reorderLevel ?? 0)}
+                  </TableCell>
+                  <TableCell>
+                    <StockStatusBadge status={product.stockStatus} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         )}
