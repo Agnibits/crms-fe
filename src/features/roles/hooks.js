@@ -20,8 +20,8 @@ export function useRoleMatrix() {
 export function useUpdateRolePermissions() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ role, permissions, dataScope }) =>
-      roleService.updateRolePermissions(role, { permissions, dataScope }),
+    mutationFn: ({ role, permissions, dataScope, lockedFields }) =>
+      roleService.updateRolePermissions(role, { permissions, dataScope, lockedFields }),
     onSuccess: (_data, { label }) => {
       toast.success(`Permissions updated${label ? ` for ${label}` : ""}`);
       qc.invalidateQueries({ queryKey: MATRIX_KEY });

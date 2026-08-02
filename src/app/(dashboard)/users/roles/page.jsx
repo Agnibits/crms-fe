@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, Save, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, RotateCcw, Save, ShieldCheck } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
 import RoleGate from "@/components/common/RoleGate";
 import EmptyState from "@/components/common/EmptyState";
@@ -42,10 +42,21 @@ function groupPermissions(catalog) {
   return order.map((group) => ({ group, items: map.get(group) }));
 }
 
-function RoleCard({ role, catalog, groups, onSave, saving }) {
+function RoleCard({ role, catalog, groups, lockableFields, onSave, saving }) {
   const [granted, setGranted] = useState(() => new Set(role.permissions));
   const [scope, setScope] = useState(role.dataScope || "ALL");
+  const [locked, setLocked] = useState(() => new Set(role.lockedFields || []));
   const [dirty, setDirty] = useState(false);
+
+  const toggleLock = (key) => {
+    setLocked((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setDirty(true);
+  };
 
   const toggle = (key) => {
     setGranted((prev) => {
@@ -65,11 +76,16 @@ function RoleCard({ role, catalog, groups, onSave, saving }) {
   const reset = () => {
     setGranted(new Set(role.permissions));
     setScope(role.dataScope || "ALL");
+    setLocked(new Set(role.lockedFields || []));
     setDirty(false);
   };
 
   const save = () => {
-    onSave(role, { permissions: [...granted], dataScope: scope }, () => setDirty(false));
+    onSave(
+      role,
+      { permissions: [...granted], dataScope: scope, lockedFields: [...locked] },
+      () => setDirty(false)
+    );
   };
 
   const count = role.editable ? granted.size : catalog.length;
@@ -161,6 +177,36 @@ function RoleCard({ role, catalog, groups, onSave, saving }) {
             </div>
           </div>
         ))}
+
+        {role.editable && lockableFields.length > 0 && (
+          <div className="rounded-lg border border-dashed p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Read-only fields
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tick a field to stop this role changing it. They can still edit the record —
+              the locked value simply stays as it is.
+            </p>
+            <div className="mt-2 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+              {lockableFields.map((field) => (
+                <label
+                  key={field.key}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
+                >
+                  <Checkbox
+                    checked={locked.has(field.key)}
+                    disabled={saving}
+                    onCheckedChange={() => toggleLock(field.key)}
+                  />
+                  <span className="flex items-center gap-1.5">
+                    {locked.has(field.key) && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    {field.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -172,12 +218,13 @@ export default function RolesPage() {
 
   const catalog = data?.permissions ?? [];
   const roles = data?.roles ?? [];
+  const lockableFields = data?.lockableFields ?? [];
   const groups = useMemo(() => groupPermissions(catalog), [catalog]);
   const savingRole = update.isPending ? update.variables?.role : null;
 
-  const handleSave = (role, { permissions, dataScope }, onDone) => {
+  const handleSave = (role, { permissions, dataScope, lockedFields }, onDone) => {
     update.mutate(
-      { role: role.role, permissions, dataScope, label: role.label },
+      { role: role.role, permissions, dataScope, lockedFields, label: role.label },
       { onSuccess: onDone }
     );
   };
@@ -222,6 +269,7 @@ export default function RolesPage() {
                 role={role}
                 catalog={catalog}
                 groups={groups}
+                lockableFields={lockableFields}
                 onSave={handleSave}
                 saving={savingRole === role.role}
               />

@@ -11,6 +11,12 @@ import { ENDPOINTS } from "@/constants/endpoints";
 export const roleService = {
   getMatrix: async () => unwrap(await api.get(ENDPOINTS.rolesMatrix)),
 
-  updateRolePermissions: async (role, { permissions, dataScope }) =>
-    unwrap(await api.put(`${ENDPOINTS.roles}/${role}/permissions`, { permissions, dataScope })),
+  updateRolePermissions: async (role, { permissions, dataScope, lockedFields }) =>
+    unwrap(
+      await api.put(`${ENDPOINTS.roles}/${role}/permissions`, {
+        permissions,
+        dataScope,
+        lockedFields,
+      })
+    ),
 };
