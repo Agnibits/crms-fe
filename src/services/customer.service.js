@@ -20,6 +20,7 @@ const mapper = makeMapper({
     "addressLine", "country", "state", "city", "postalCode", "taxId",
     "notes", "status", "source", "ownerId", "employees", "branchId",
   ],
+  nullable: ["branchId"],
 });
 
 export const customerService = {

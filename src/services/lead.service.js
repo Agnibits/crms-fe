@@ -22,6 +22,7 @@ const mapper = makeMapper({
     "industry", "value", "rating", "status", "probability",
     "assignedUserId", "notes", "city", "branchId",
   ],
+  nullable: ["branchId"],
 });
 
 export const leadService = {

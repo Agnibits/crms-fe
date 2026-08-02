@@ -23,6 +23,7 @@ function sanitizeItem(it = {}) {
 const inner = makeMapper({
   enums: ["status"],
   allow: ["customerId", "branchId", "title", "validUntil", "currency", "status", "discount", "tax", "items", "notes"],
+  nullable: ["branchId"],
 });
 
 const mapper = {

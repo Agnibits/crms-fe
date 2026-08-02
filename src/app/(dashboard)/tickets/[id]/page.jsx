@@ -20,6 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ticketHooks, useAgents } from "@/features/tickets/hooks";
+import { useDepartmentOptions } from "@/features/departments/hooks";
+
+/** Sentinel for "no department" — Radix Select can't hold an empty value. */
+const NO_DEPARTMENT = "__none__";
 import { TICKET_STATUSES, PRIORITIES } from "@/constants/options";
 import { formatDateTime, formatRelative } from "@/utils/format";
 
@@ -29,6 +33,7 @@ export default function TicketDetailPage() {
   const { data: ticket, isPending, error, refetch } = ticketHooks.useDetail(id);
   const patch = ticketHooks.usePatch();
   const agents = useAgents();
+  const { options: departmentOptions, hasDepartments } = useDepartmentOptions();
 
   if (isPending) return <LoadingSpinner fullPage label="Loading ticket…" />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -148,6 +153,35 @@ export default function TicketDetailPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Re-routing to another team is a normal triage step, not
+                  something you should only get one shot at when raising it. */}
+              {hasDepartments && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="ticket-department">Department</Label>
+                  <Select
+                    value={ticket.departmentId ?? NO_DEPARTMENT}
+                    onValueChange={(v) =>
+                      patch.mutate({
+                        id: ticket.id,
+                        departmentId: v === NO_DEPARTMENT ? null : v,
+                      })
+                    }
+                    disabled={patch.isPending}
+                  >
+                    <SelectTrigger id="ticket-department" className="w-full">
+                      <SelectValue placeholder="Unrouted" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_DEPARTMENT}>Unrouted</SelectItem>
+                      {departmentOptions.map((d) => (
+                        <SelectItem key={d.value} value={d.value}>
+                          {d.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 

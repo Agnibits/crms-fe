@@ -45,19 +45,36 @@ function toEnumFrontend(val) {
   return ENUM_OVERRIDES_REVERSE[val] || val.toLowerCase();
 }
 
-export function makeMapper({ rename = {}, enums = [], drop = [], allow = null } = {}) {
+export function makeMapper({
+  rename = {},
+  enums = [],
+  drop = [],
+  allow = null,
+  nullable = [],
+} = {}) {
   const reverse = Object.fromEntries(Object.entries(rename).map(([fe, be]) => [be, fe]));
   const enumSet = new Set(enums);
   // `allow` is the set of backend-valid field names (post-rename). When present,
   // any field not in it is dropped so Prisma never sees an unknown column.
   const allowSet = allow ? new Set(allow) : null;
+  // Empty normally means "not sent", which is right for a partial update — but
+  // it makes a relation impossible to CLEAR. List those fields here and an
+  // explicit null/"" is forwarded as null so the link can actually be removed.
+  const nullableSet = new Set(nullable);
 
   function toBackend(v = {}) {
     const out = {};
     for (const [k, val] of Object.entries(v)) {
       if (drop.includes(k)) continue;
-      if (val === undefined || val === null || val === "") continue;
       const key = rename[k] || k;
+      const isEmpty = val === undefined || val === null || val === "";
+      if (isEmpty) {
+        // `undefined` still means "untouched"; only an explicit null/"" clears.
+        if (val === undefined || !nullableSet.has(k)) continue;
+        if (allowSet && !allowSet.has(key)) continue;
+        out[key] = null;
+        continue;
+      }
       if (allowSet && !allowSet.has(key)) continue;
       out[key] = enumSet.has(k) ? toEnumBackend(val) : val;
     }

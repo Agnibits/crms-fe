@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import DepartmentFilter from "@/features/departments/DepartmentFilter";
 import { useAuth } from "@/hooks/useAuth";
 import { userHooks } from "@/features/users/hooks";
 import UserFormDialog from "@/features/users/UserFormDialog";
@@ -268,6 +269,7 @@ export default function UsersPage() {
           searchPlaceholder="Search users…"
           emptyTitle="No users found"
           toolbar={
+            <>
             <Select value={t.filters.role ?? "all"} onValueChange={(v) => t.setFilter("role", v)}>
               <SelectTrigger className="w-full sm:w-44" aria-label="Filter by role">
                 <SelectValue placeholder="All roles" />
@@ -281,6 +283,12 @@ export default function UsersPage() {
                 ))}
               </SelectContent>
             </Select>
+          
+              <DepartmentFilter
+                value={t.filters.departmentId}
+                onChange={(v) => t.setFilter("departmentId", v)}
+              />
+            </>
           }
         />
 

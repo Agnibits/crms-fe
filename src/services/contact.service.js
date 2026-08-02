@@ -31,6 +31,7 @@ const inner = makeMapper({
     "email", "phone", "designation", "department", "birthday", "linkedin",
     "notes", "isPrimary", "customerId", "city", "branchId",
   ],
+  nullable: ["branchId"],
 });
 
 const mapper = {

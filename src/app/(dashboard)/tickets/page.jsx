@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
+import DepartmentFilter from "@/features/departments/DepartmentFilter";
 import { ticketHooks } from "@/features/tickets/hooks";
 import { useEmailChannels } from "@/features/email/hooks";
 import NewTicketDialog from "@/features/tickets/NewTicketDialog";
@@ -205,6 +206,10 @@ export default function TicketsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <DepartmentFilter
+              value={t.filters.departmentId}
+              onChange={(v) => t.setFilter("departmentId", v)}
+            />
           </>
         }
       />

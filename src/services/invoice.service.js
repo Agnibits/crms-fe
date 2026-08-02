@@ -17,6 +17,7 @@ const inner = makeMapper({
   enums: ["status"],
   // Derived labels (number/customerName/balance) are never written back.
   allow: ["customerId", "orderId", "branchId", "dueDate", "currency", "status", "discount", "tax", "items", "notes"],
+  nullable: ["branchId"],
 });
 
 const mapper = {
