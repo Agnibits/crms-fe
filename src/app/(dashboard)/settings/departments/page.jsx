@@ -67,12 +67,16 @@ export default function DepartmentsSettingsPage() {
         { name: "name", label: "Department name", required: true, placeholder: "e.g. Sales" },
         { name: "code", label: "Code", half: true, placeholder: "e.g. SAL" },
         {
+          // Department (what the team does) and branch (where a person sits) are
+          // separate dimensions — Zoho and Odoo don't nest them either. Only set
+          // this when a team genuinely exists at one office.
           name: "branchId",
           label: "Branch",
           half: true,
           type: "select",
           options: branchOptions,
           placeholder: "Company-wide",
+          hint: "Only for a team that exists at one office. Members can be from any branch either way.",
         },
         {
           name: "headId",
