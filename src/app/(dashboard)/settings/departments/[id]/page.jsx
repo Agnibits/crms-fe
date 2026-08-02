@@ -5,9 +5,9 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  Building2,
   LifeBuoy,
   Network,
+  UserCog,
   Users,
 } from "lucide-react";
 import PageHeader from "@/components/common/PageHeader";
@@ -119,11 +119,18 @@ export default function DepartmentDetailPage() {
           loading={tickets.isPending}
           index={1}
         />
+        {/* Who runs it is the daily question; which office it serves is context,
+            and "Branch: Company-wide" read like a contradiction next to the
+            members table, where each person has a branch of their own. */}
         <StatCard
-          title="Branch"
-          value={d.branch?.name || "Company-wide"}
-          icon={Building2}
-          hint={head ? `Head: ${head}` : "No head assigned"}
+          title="Head"
+          value={head || "Not set"}
+          icon={UserCog}
+          hint={
+            d.branch?.name
+              ? `Works out of ${d.branch.name}`
+              : "Serves every office — members can be from any branch"
+          }
           index={2}
         />
       </div>
