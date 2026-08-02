@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRoleMatrix, useUpdateRolePermissions } from "@/features/roles/hooks";
+import { cn } from "@/utils/cn";
 
 const DATA_SCOPE_LABELS = {
   ALL: "All branches",
@@ -146,7 +147,15 @@ function RoleCard({ role, catalog, groups, onSave, saving }) {
                     disabled={!role.editable || saving}
                     onCheckedChange={() => toggle(perm.key)}
                   />
-                  <span className={role.editable ? "" : "text-muted-foreground"}>{perm.label}</span>
+                  {/* Destructive rights are called out so they're never granted by accident. */}
+                  <span
+                    className={cn(
+                      !role.editable && "text-muted-foreground",
+                      perm.danger && "text-amber-700 dark:text-amber-500"
+                    )}
+                  >
+                    {perm.label}
+                  </span>
                 </label>
               ))}
             </div>
