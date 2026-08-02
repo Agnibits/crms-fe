@@ -496,11 +496,20 @@ function BranchesTab() {
 
   const rows = data?.branches ?? [];
   const totals = data?.totals;
-  const topRevenue = rows[0]?.branchId ? rows[0] : null;
-  const topPipeline = [...rows]
-    .filter((r) => r.branchId)
+  const offices = rows.filter((r) => r.branchId);
+  // Only crown a winner when something was actually won — naming an office
+  // "top by revenue" next to Rs 0.00 reads as a broken report.
+  const topRevenue = offices.filter((r) => r.revenue > 0).sort((a, b) => b.revenue - a.revenue)[0];
+  const topPipeline = offices
+    .filter((r) => r.pipelineValue > 0)
     .sort((a, b) => b.pipelineValue - a.pipelineValue)[0];
   const maxRevenue = Math.max(...rows.map((r) => r.revenue), 1);
+
+  const unassigned = rows.find((r) => !r.branchId);
+  // When everything sits in Unassigned the report isn't wrong — the records just
+  // have no branch yet. Say that instead of showing a zero winner.
+  const allUnassignedRevenue = !topRevenue && (unassigned?.revenue ?? 0) > 0;
+  const allUnassignedPipeline = !topPipeline && (unassigned?.pipelineValue ?? 0) > 0;
 
   const chartData = rows.map((r) => ({ stage: r.branch, value: r.revenue, count: r.wonDeals }));
   const exportRows = rows.map((r) => ({
@@ -538,7 +547,13 @@ function BranchesTab() {
           title="Top office by revenue"
           value={topRevenue ? topRevenue.branch : "—"}
           icon={Trophy}
-          hint={topRevenue ? formatCurrency(topRevenue.revenue) : "No revenue recorded yet"}
+          hint={
+            topRevenue
+              ? formatCurrency(topRevenue.revenue)
+              : allUnassignedRevenue
+                ? `${formatCurrency(unassigned.revenue)} not attributed to any office yet`
+                : "No revenue recorded yet"
+          }
           loading={isPending}
           index={0}
         />
@@ -546,13 +561,19 @@ function BranchesTab() {
           title="Biggest pipeline"
           value={topPipeline ? topPipeline.branch : "—"}
           icon={TrendingUp}
-          hint={topPipeline ? formatCurrency(topPipeline.pipelineValue) : "No open deals"}
+          hint={
+            topPipeline
+              ? formatCurrency(topPipeline.pipelineValue)
+              : allUnassignedPipeline
+                ? `${formatCurrency(unassigned.pipelineValue)} not attributed to any office yet`
+                : "No open deals"
+          }
           loading={isPending}
           index={1}
         />
         <StatCard
           title="Offices reporting"
-          value={formatNumber(rows.filter((r) => r.branchId).length)}
+          value={formatNumber(offices.length)}
           icon={Building2}
           hint="Branches with a row below"
           loading={isPending}

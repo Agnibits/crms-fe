@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { FormInput, FormSelect, FormSwitch, FormTextarea } from "@/components/forms/fields";
 import { contactSchema } from "@/validations/contact.schema";
 import { useCustomerOptions } from "@/features/contacts/hooks";
-import { useBranchOptions } from "@/features/branches/hooks";
+import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit contact form.
@@ -24,6 +24,7 @@ export default function ContactForm({
   const router = useRouter();
   const customers = useCustomerOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
 
   const {
     register,
@@ -38,7 +39,7 @@ export default function ContactForm({
       phone: defaultValues?.phone ?? "",
       jobTitle: defaultValues?.jobTitle ?? "",
       customerId: defaultValues?.customerId ?? "",
-      branchId: defaultValues?.branchId ?? "",
+      branchId: defaultBranchId,
       city: defaultValues?.city ?? "",
       department: defaultValues?.department ?? "",
       birthday: defaultValues?.birthday ? String(defaultValues.birthday).slice(0, 10) : "",

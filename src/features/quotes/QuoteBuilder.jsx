@@ -21,7 +21,7 @@ import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fie
 import { quoteSchema } from "@/validations/quote.schema";
 import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
-import { useBranchOptions } from "@/features/branches/hooks";
+import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
@@ -42,6 +42,7 @@ function defaultValidUntil() {
 export default function QuoteBuilder({ defaultValues, onSubmit, submitting = false, submitLabel = "Save Quote" }) {
   const customers = useCustomerOptions(100);
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
   const { isLocked } = useFieldLocks("quote");
   const products = productHooks.useList({ page: 1, limit: 100, status: "active" });
 
@@ -58,7 +59,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       customerId: defaultValues?.customerId ?? "",
-      branchId: defaultValues?.branchId ?? "",
+      branchId: defaultBranchId,
       items: defaultValues?.items?.length
         ? defaultValues.items.map((it) => ({
             productId: it.productId,

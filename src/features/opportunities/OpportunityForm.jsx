@@ -14,7 +14,7 @@ import {
 import { opportunitySchema } from "@/validations/opportunity.schema";
 import { useUsersOptions } from "@/features/leads/useUsersOptions";
 import { useCustomerOptions } from "@/features/contacts/hooks";
-import { useBranchOptions } from "@/features/branches/hooks";
+import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { useStageOptions } from "./useStageOptions";
 
@@ -29,6 +29,7 @@ export default function OpportunityForm({
   const { options: userOptions } = useUsersOptions();
   const customers = useCustomerOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
   const { lockProps } = useFieldLocks("opportunity");
   const { stageOptions } = useStageOptions();
 
@@ -49,7 +50,7 @@ export default function OpportunityForm({
       amount: "",
       expectedCloseDate: "",
       ownerId: "",
-      branchId: "",
+      branchId: defaultBranchId,
       ...defaultValues,
       // <input type="date"> needs yyyy-MM-dd
       ...(defaultValues?.expectedCloseDate

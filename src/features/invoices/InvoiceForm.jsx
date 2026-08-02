@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fields";
 import { useCustomerOptions } from "@/features/contacts/hooks";
-import { useBranchOptions } from "@/features/branches/hooks";
+import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
@@ -46,6 +46,7 @@ export default function InvoiceForm({
   const router = useRouter();
   const customers = useCustomerOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
   const { isLocked } = useFieldLocks("invoice");
   const noCustomers = !customers.isPending && customers.options.length === 0;
 
@@ -58,7 +59,7 @@ export default function InvoiceForm({
   } = useForm({
     defaultValues: {
       customerId: "",
-      branchId: "",
+      branchId: defaultBranchId,
       dueDate: dateInDays(15),
       notes: "",
       items: [{ ...EMPTY_ITEM }],

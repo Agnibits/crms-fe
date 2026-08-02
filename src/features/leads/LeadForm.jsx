@@ -16,7 +16,7 @@ import { LEAD_STAGES_PICKABLE, LEAD_SOURCES, LEAD_RATINGS } from "@/constants/op
 import { leadSchema } from "@/validations/lead.schema";
 import { leadService } from "@/services/lead.service";
 import { useUsersOptions } from "./useUsersOptions";
-import { useBranchOptions, toBranchId } from "@/features/branches/hooks";
+import { useBranchOptions, toBranchId, useDefaultBranchId } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit lead form.
@@ -31,6 +31,7 @@ export default function LeadForm({
 }) {
   const { options: userOptions } = useUsersOptions();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
 
   // Cities this company has already used — real data, not a hardcoded list.
   const { data: citySuggestions = [] } = useQuery({
@@ -57,7 +58,7 @@ export default function LeadForm({
       rating: "warm",
       ownerId: "",
       city: "",
-      branchId: "",
+      branchId: defaultBranchId,
       notes: "",
       ...defaultValues,
     },

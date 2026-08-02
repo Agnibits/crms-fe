@@ -14,7 +14,7 @@ import {
 } from "@/components/forms/fields";
 import { customerSchema } from "@/validations/customer.schema";
 import { CUSTOMER_STATUSES } from "@/constants/options";
-import { useBranchOptions } from "@/features/branches/hooks";
+import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
 
 /**
  * Shared create/edit customer form.
@@ -28,6 +28,7 @@ export default function CustomerForm({
 }) {
   const router = useRouter();
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
+  const defaultBranchId = useDefaultBranchId(defaultValues);
 
   const {
     register,
@@ -37,7 +38,7 @@ export default function CustomerForm({
   } = useForm({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      branchId: defaultValues?.branchId ?? "",
+      branchId: defaultBranchId,
       name: defaultValues?.name ?? "",
       contactName: defaultValues?.contactName ?? "",
       email: defaultValues?.email ?? "",
