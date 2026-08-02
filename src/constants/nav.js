@@ -17,6 +17,7 @@ import {
   BarChart3,
   UserCog,
   Settings,
+  ScrollText,
   FolderOpen,
   Building2,
   Inbox,
@@ -92,6 +93,7 @@ export const NAV_SECTIONS = [
     title: "Admin",
     items: [
       { label: "User Management", href: "/users", icon: UserCog, roles: [ADMIN] },
+      { label: "Audit Log", href: "/audit-log", icon: ScrollText, roles: [ADMIN] },
       { label: "Settings", href: "/settings", icon: Settings, roles: [ADMIN, MANAGER] },
     ],
   },
