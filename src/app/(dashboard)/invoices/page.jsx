@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useTableState } from "@/hooks/useTableState";
+import BranchFilter from "@/features/branches/BranchFilter";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { invoiceHooks } from "@/features/invoices/hooks";
 import { INVOICE_STATUSES } from "@/constants/options";
 import { exportToCsv } from "@/utils/export";
@@ -30,6 +32,7 @@ const isOverdue = (inv) =>
 export default function InvoicesPage() {
   const router = useRouter();
   const t = useTableState();
+  const { hasBranches } = useBranchOptions({ includeNone: false });
   const { data, isPending, error, refetch } = invoiceHooks.useList(t.queryParams);
 
   // Wide slice for the summary cards (independent of table pagination/filters).
@@ -103,8 +106,20 @@ export default function InvoicesPage() {
           </span>
         ),
       },
+          // Only worth a column once the company runs more than one office.
+      ...(hasBranches
+        ? [
+            {
+              accessorKey: "branch",
+              header: "Branch",
+              enableSorting: false,
+              cell: ({ row }) => row.original.branch?.name || "—",
+            },
+          ]
+        : []),
+
     ],
-    []
+    [hasBranches]
   );
 
   return (
@@ -169,6 +184,7 @@ export default function InvoicesPage() {
         emptyTitle="No invoices found"
         emptyDescription="Invoices will appear here once orders are billed."
         toolbar={
+            <>
           <Select
             value={t.filters.status ?? "all"}
             onValueChange={(v) => t.setFilter("status", v)}
@@ -185,7 +201,10 @@ export default function InvoicesPage() {
               ))}
             </SelectContent>
           </Select>
-        }
+        
+              <BranchFilter value={t.filters.branchId} onChange={(v) => t.setFilter("branchId", v)} />
+            </>
+          }
         actions={
           <Button
             variant="outline"

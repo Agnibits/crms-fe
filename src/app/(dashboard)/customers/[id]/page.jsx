@@ -355,6 +355,9 @@ export default function CustomerDetailPage() {
                   )}
                 </DefItem>
                 <DefItem label="Industry">{customer.industry || "—"}</DefItem>
+                {customer.branch?.name && (
+                  <DefItem label="Branch">{customer.branch.name}</DefItem>
+                )}
                 <DefItem label="Status">
                   <StatusBadge value={customer.status} options={CUSTOMER_STATUSES} />
                 </DefItem>

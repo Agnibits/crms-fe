@@ -139,6 +139,7 @@ export default function ContactDetailPage() {
             <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
               {contact.jobTitle && <DefItem label="Job title">{contact.jobTitle}</DefItem>}
               {contact.department && <DefItem label="Department">{contact.department}</DefItem>}
+              {contact.branch?.name && <DefItem label="Branch">{contact.branch.name}</DefItem>}
               {contact.city && <DefItem label="City">{contact.city}</DefItem>}
               {contact.birthday && (
                 <DefItem label="Birthday">

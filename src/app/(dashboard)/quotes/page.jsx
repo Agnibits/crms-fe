@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTableState } from "@/hooks/useTableState";
+import BranchFilter from "@/features/branches/BranchFilter";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { useCan } from "@/hooks/usePermissions";
 import { quoteHooks } from "@/features/quotes/hooks";
 import { QUOTE_STATUSES } from "@/constants/options";
@@ -31,6 +33,7 @@ import { formatCurrency, formatDate } from "@/utils/format";
 export default function QuotesPage() {
   const router = useRouter();
   const t = useTableState();
+  const { hasBranches } = useBranchOptions({ includeNone: false });
   // Hide a delete this role can't perform — the API would only 403.
   const canDelete = useCan()("quote:delete");
   const { data, isPending, error, refetch } = quoteHooks.useList(t.queryParams);
@@ -102,8 +105,20 @@ export default function QuotesPage() {
           </DropdownMenu>
         ),
       },
+          // Only worth a column once the company runs more than one office.
+      ...(hasBranches
+        ? [
+            {
+              accessorKey: "branch",
+              header: "Branch",
+              enableSorting: false,
+              cell: ({ row }) => row.original.branch?.name || "—",
+            },
+          ]
+        : []),
+
     ],
-    [router]
+    [router, hasBranches]
   );
 
   return (
@@ -132,6 +147,7 @@ export default function QuotesPage() {
         emptyTitle="No quotes found"
         emptyDescription="Create your first quote to get started."
         toolbar={
+            <>
           <Select
             value={t.filters.status ?? "all"}
             onValueChange={(v) => t.setFilter("status", v)}
@@ -148,7 +164,10 @@ export default function QuotesPage() {
               ))}
             </SelectContent>
           </Select>
-        }
+        
+              <BranchFilter value={t.filters.branchId} onChange={(v) => t.setFilter("branchId", v)} />
+            </>
+          }
         actions={
           <Button
             variant="outline"

@@ -32,6 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTableState } from "@/hooks/useTableState";
+import BranchFilter from "@/features/branches/BranchFilter";
+import { useBranchOptions } from "@/features/branches/hooks";
 import { useCan } from "@/hooks/usePermissions";
 import { contactHooks, useCustomerOptions } from "@/features/contacts/hooks";
 import { exportToCsv } from "@/utils/export";
@@ -51,6 +53,7 @@ const EXPORT_COLUMNS = [
 export default function ContactsPage() {
   const router = useRouter();
   const t = useTableState();
+  const { hasBranches } = useBranchOptions({ includeNone: false });
   // Hide a delete this role can't perform — the API would only 403.
   const canDelete = useCan()("contact:delete");
   const { data, isPending, error, refetch } = contactHooks.useList(t.queryParams);
@@ -154,8 +157,20 @@ export default function ContactsPage() {
           </DropdownMenu>
         ),
       },
+          // Only worth a column once the company runs more than one office.
+      ...(hasBranches
+        ? [
+            {
+              accessorKey: "branch",
+              header: "Branch",
+              enableSorting: false,
+              cell: ({ row }) => row.original.branch?.name || "—",
+            },
+          ]
+        : []),
+
     ],
-    [router]
+    [router, hasBranches]
   );
 
   return (
@@ -184,6 +199,7 @@ export default function ContactsPage() {
         emptyTitle="No contacts found"
         emptyDescription="Try adjusting your search, or add your first contact."
         toolbar={
+            <>
           <Select
             value={t.filters.customerId ?? "all"}
             onValueChange={(v) => t.setFilter("customerId", v === "all" ? undefined : v)}
@@ -200,7 +216,10 @@ export default function ContactsPage() {
               ))}
             </SelectContent>
           </Select>
-        }
+        
+              <BranchFilter value={t.filters.branchId} onChange={(v) => t.setFilter("branchId", v)} />
+            </>
+          }
         actions={
           <Button
             variant="outline"
