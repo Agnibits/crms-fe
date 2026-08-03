@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FormInput, FormTextarea } from "@/components/forms/fields";
+import TemplatePicker from "@/features/email/TemplatePicker";
 import { useSendEmail } from "./hooks";
 
 const schema = z.object({
@@ -29,6 +30,7 @@ export default function ComposeDialog({ open, onOpenChange }) {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -53,13 +55,25 @@ export default function ComposeDialog({ open, onOpenChange }) {
           <FormInput register={register} name="to" type="email" label="To" placeholder="customer@example.com" required error={errors.to} />
           <FormInput register={register} name="subject" label="Subject" placeholder="How can we help?" required error={errors.subject} />
           <FormTextarea register={register} name="body" label="Message" rows={8} required error={errors.body} />
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={close} disabled={send.isPending}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={send.isPending}>
-              <Send className="h-4 w-4" /> Send
-            </Button>
+          <DialogFooter className="sm:justify-between">
+            {/* A fresh email has no customer in context yet, so placeholders
+                that depend on one resolve to empty — the sender fills those in
+                before sending. Company and sender details still come through. */}
+            <TemplatePicker
+              disabled={send.isPending}
+              onInsert={({ subject, body }) => {
+                if (subject) setValue("subject", subject, { shouldValidate: true });
+                if (body) setValue("body", body, { shouldValidate: true });
+              }}
+            />
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={close} disabled={send.isPending}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={send.isPending}>
+                <Send className="h-4 w-4" /> Send
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

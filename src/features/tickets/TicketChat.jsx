@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/common/UserAvatar";
 import EmptyState from "@/components/common/EmptyState";
+import TemplatePicker from "@/features/email/TemplatePicker";
 import { ticketService } from "@/services/ticket.service";
 import { toastError } from "@/services/api";
 import { QUERY_KEYS } from "@/constants/app";
@@ -131,9 +132,18 @@ export default function TicketChat({ ticket, className }) {
             disabled={sending}
           />
           <div className="flex items-center justify-between gap-2">
-            <p className="hidden text-xs text-muted-foreground sm:block">
-              Press Ctrl+Enter to send
-            </p>
+            <div className="flex items-center gap-3">
+              {/* A ticket reply has no subject line of its own — the thread
+                  already has one — so only the body is inserted here. */}
+              <TemplatePicker
+                ticketId={ticket?.id}
+                disabled={sending}
+                onInsert={({ body }) => setDraft((prev) => (prev.trim() ? `${prev.trim()}\n\n${body}` : body))}
+              />
+              <p className="hidden text-xs text-muted-foreground sm:block">
+                Press Ctrl+Enter to send
+              </p>
+            </div>
             <Button onClick={send} disabled={sending || !draft.trim()}>
               <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send reply"}
             </Button>

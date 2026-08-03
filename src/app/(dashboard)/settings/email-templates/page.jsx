@@ -26,7 +26,10 @@ export default function EmailTemplatesPage() {
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div>
           <CardTitle className="text-base">Email templates</CardTitle>
-          <CardDescription>Reusable subject + body snippets for emailing customers.</CardDescription>
+          <CardDescription>
+            Saved replies with placeholders like {"{{customer_name}}"}, filled in automatically when
+            you use one from a ticket or the inbox.
+          </CardDescription>
         </div>
         <Button size="sm" onClick={() => setDialog({ open: true, template: null })}>
           <Plus className="h-4 w-4" /> New template
