@@ -39,6 +39,7 @@ import {
   useTestImapChannel,
   useDeleteChannel,
 } from "@/features/email/hooks";
+import { useDepartmentOptions } from "@/features/departments/hooks";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/utils/cn";
 

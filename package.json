@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "check": "node scripts/check-imports.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
