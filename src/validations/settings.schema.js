@@ -49,14 +49,22 @@ export const emailSettingsSchema = z.object({
 });
 
 /* ── SMS settings ─────────────────────────────────────────────── */
+// Nepal-first: Sparrow and Aakash are what a company here actually buys, and
+// the local telcos sell bulk directly. Twilio and Vonage stay for companies
+// already on them, but they no longer lead the list.
+export const SMS_PROVIDERS = ["sparrow", "aakash", "ntc", "ncell", "twilio", "vonage", "msg91"];
+
 export const smsSettingsSchema = z.object({
-  provider: z.enum(["twilio", "msg91", "vonage"], {
+  provider: z.enum(SMS_PROVIDERS, {
     errorMap: () => ({ message: "Please pick an SMS provider" }),
   }),
   senderId: z
     .string()
     .min(3, "Sender ID must be at least 3 characters")
-    .max(11, "Sender IDs can't exceed 11 characters"),
+    // Alphanumeric sender IDs are capped at 11 characters by GSM, but Nepali
+    // providers also issue numeric shortcodes (Sparrow's 9779…), which are
+    // longer. Allowing 16 covers both rather than rejecting a valid shortcode.
+    .max(16, "Sender ID can't exceed 16 characters"),
   enabled: z.boolean().optional(),
 });
 

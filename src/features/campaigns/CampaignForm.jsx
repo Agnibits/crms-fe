@@ -15,9 +15,17 @@ import { cn } from "@/utils/cn";
 
 const AUDIENCE_OPTIONS = CAMPAIGN_AUDIENCES;
 
+// The SMS hint says the gateway is not connected because this is the moment
+// someone is deciding how to reach an audience — finding out afterwards that
+// nothing was delivered is the expensive way to learn it.
 const TYPE_OPTIONS = [
   { value: "email", label: "Email", icon: Mail, hint: "Rich subject + body sent to inboxes" },
-  { value: "sms", label: "SMS", icon: MessageSquare, hint: "Short 160-character text message" },
+  {
+    value: "sms",
+    label: "SMS",
+    icon: MessageSquare,
+    hint: "Not connected yet — drafts save, nothing is delivered",
+  },
 ];
 
 export default function CampaignForm({

@@ -2,8 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
-import { Send } from "lucide-react";
+import { Info } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,10 +11,18 @@ import { FormInput, FormSelect, FormSwitch } from "@/components/forms/fields";
 import { smsSettingsSchema } from "@/validations/settings.schema";
 import { useSetting, useUpdateSetting } from "@/features/settings/hooks";
 
+/**
+ * Nepali gateways lead the list — they are what a company here actually buys.
+ * Twilio and Vonage remain for companies already on them.
+ */
 const PROVIDERS = [
-  { value: "twilio", label: "Twilio" },
-  { value: "msg91", label: "MSG91" },
-  { value: "vonage", label: "Vonage" },
+  { value: "sparrow", label: "Sparrow SMS (Nepal)" },
+  { value: "aakash", label: "Aakash SMS (Nepal)" },
+  { value: "ntc", label: "Nepal Telecom bulk SMS" },
+  { value: "ncell", label: "Ncell bulk SMS" },
+  { value: "twilio", label: "Twilio (international)" },
+  { value: "vonage", label: "Vonage (international)" },
+  { value: "msg91", label: "MSG91 (India)" },
 ];
 
 export default function SmsSettingsPage() {
@@ -30,7 +37,7 @@ export default function SmsSettingsPage() {
   } = useForm({
     resolver: zodResolver(smsSettingsSchema),
     values: {
-      provider: data?.provider || "twilio",
+      provider: data?.provider || "sparrow",
       senderId: data?.senderId || "",
       enabled: data?.enabled ?? true,
     },
@@ -40,7 +47,9 @@ export default function SmsSettingsPage() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">SMS Settings</CardTitle>
-        <CardDescription>Configure the gateway used to send SMS notifications and campaigns.</CardDescription>
+        <CardDescription>
+          Choose the gateway your company uses and save its sender ID here.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {error ? (
@@ -53,15 +62,47 @@ export default function SmsSettingsPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit((values) => update.mutate(values))} noValidate className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormSelect control={control} name="provider" label="Provider" options={PROVIDERS} error={errors.provider} required />
-              <FormInput register={register} name="senderId" label="Sender ID" placeholder="e.g. AGNIBT" error={errors.senderId} required />
+            {/* Said plainly, above the form: nothing here sends a message yet.
+                A settings screen that looks finished is how someone comes to
+                rely on one that isn't. */}
+            <div className="flex gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+              <div className="text-sm">
+                <p className="font-medium">Not connected yet — no SMS is sent</p>
+                <p className="mt-0.5 text-muted-foreground">
+                  Your choice is saved so it is ready when the gateway is wired up, but the CRM does
+                  not send text messages today. Use email for anything a customer must receive.
+                </p>
+              </div>
             </div>
-            <FormSwitch control={control} name="enabled" label="Enable SMS" hint="Turn off to pause all outgoing SMS." error={errors.enabled} />
-            <div className="flex flex-col justify-end gap-2 sm:flex-row">
-              <Button type="button" variant="outline" onClick={() => toast.success("Test SMS sent")}>
-                <Send className="h-4 w-4" /> Send test SMS
-              </Button>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormSelect
+                control={control}
+                name="provider"
+                label="Provider"
+                options={PROVIDERS}
+                error={errors.provider}
+                required
+              />
+              <FormInput
+                register={register}
+                name="senderId"
+                label="Sender ID"
+                placeholder="e.g. AGNIBITS or 9779XXXXX"
+                hint="The name or shortcode your gateway approved for you."
+                error={errors.senderId}
+                required
+              />
+            </div>
+            <FormSwitch
+              control={control}
+              name="enabled"
+              label="Enable SMS"
+              hint="Turn off to pause all outgoing SMS once the gateway is connected."
+              error={errors.enabled}
+            />
+            <div className="flex justify-end">
               <Button type="submit" loading={update.isPending} disabled={!isDirty}>
                 Save changes
               </Button>
