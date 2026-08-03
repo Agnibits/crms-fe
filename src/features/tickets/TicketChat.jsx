@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Send } from "lucide-react";
@@ -28,6 +28,16 @@ export default function TicketChat({ ticket, className }) {
   const [localMessages, setLocalMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const draftRef = useRef(null);
+
+  // Resize on every draft change rather than on keystrokes, so text that
+  // arrives from a template opens the box just as typing would.
+  useEffect(() => {
+    const el = draftRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   const messages = useMemo(() => {
     const server = ticket?.messages ?? [];
@@ -123,6 +133,7 @@ export default function TicketChat({ ticket, className }) {
         {/* Composer */}
         <div className="space-y-2 border-t pt-4">
           <Textarea
+            ref={draftRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
@@ -130,6 +141,10 @@ export default function TicketChat({ ticket, className }) {
             placeholder="Type your reply…"
             aria-label="Reply message"
             disabled={sending}
+            // Grows with the text instead of trapping a six-line template in a
+            // three-line box. Capped so a long reply still leaves the
+            // conversation above it visible.
+            className="max-h-64 resize-none overflow-y-auto"
           />
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
@@ -138,7 +153,18 @@ export default function TicketChat({ ticket, className }) {
               <TemplatePicker
                 ticketId={ticket?.id}
                 disabled={sending}
-                onInsert={({ body }) => setDraft((prev) => (prev.trim() ? `${prev.trim()}\n\n${body}` : body))}
+                onInsert={({ body }) => {
+                  setDraft((prev) => (prev.trim() ? `${prev.trim()}\n\n${body}` : body));
+                  // Put the caret at the end of the inserted text: the reply is
+                  // a starting point to edit, and landing in it says so.
+                  requestAnimationFrame(() => {
+                    const el = draftRef.current;
+                    if (!el) return;
+                    el.focus();
+                    el.setSelectionRange(el.value.length, el.value.length);
+                    el.scrollTop = el.scrollHeight;
+                  });
+                }}
               />
               <p className="hidden text-xs text-muted-foreground sm:block">
                 Press Ctrl+Enter to send
