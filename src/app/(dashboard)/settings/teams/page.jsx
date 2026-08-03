@@ -1,26 +1,15 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import SectionCrudTable from "@/features/settings/SectionCrudTable";
-import { teamSchema } from "@/validations/settings.schema";
-
+/**
+ * Teams is hidden from the settings navigation, but old links and bookmarks
+ * still point here. Send them to Departments — the section that actually does
+ * the grouping work today — rather than showing a page where a team can be
+ * created, no member can be added to it, and the team lead means nothing.
+ *
+ * The Team table, routes and API are untouched. To bring the section back,
+ * restore the nav entry in SettingsNav.jsx and replace this file with a real
+ * page: membership on the user form, and a lead that reads leadUserId.
+ */
 export default function TeamsSettingsPage() {
-  return (
-    <SectionCrudTable
-      sectionKey="teams"
-      itemLabel="Team"
-      title="Teams"
-      description="Group members into working teams."
-      schema={teamSchema}
-      columns={[
-        { key: "name", header: "Name", className: "font-medium" },
-        { key: "lead", header: "Team lead" },
-        { key: "members", header: "Members", className: "text-right tabular-nums" },
-      ]}
-      fields={[
-        { name: "name", label: "Team name", required: true, placeholder: "e.g. Enterprise Sales" },
-        { name: "lead", label: "Team lead", placeholder: "e.g. John Smith" },
-        { name: "members", label: "Members", type: "number", placeholder: "0" },
-      ]}
-    />
-  );
+  redirect("/settings/departments");
 }
