@@ -27,7 +27,6 @@ export const companySchema = z.object({
     .optional()
     .or(z.literal("")),
   address: optionalText(400, "Address is too long"),
-  gstin: optionalText(20, "GSTIN looks too long"),
 });
 
 /* ── Email settings ───────────────────────────────────────────── */

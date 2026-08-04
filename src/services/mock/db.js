@@ -419,7 +419,6 @@ const settings = {
     website: "https://agnibits.com",
     address: "4th Floor, Tech Park One, Pune, India",
     logo: "",
-    gstin: "27ABCDE1234F1Z5",
   },
   branches: [
     { id: "br-1", name: "Pune HQ", city: "Pune", country: "India", isPrimary: true },
