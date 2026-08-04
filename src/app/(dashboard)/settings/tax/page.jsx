@@ -16,6 +16,15 @@ import { useSetting, useUpdateSetting } from "@/features/settings/hooks";
 
 let tempId = 0;
 
+// Nepal-first presets. VAT at 13% is the standard rate almost every registered
+// business charges; "VAT Exempt" (0%) covers basic goods/services that the Act
+// zero-rates. One click beats making every user remember and type the rate.
+const NEPAL_TAX_PRESETS = [
+  { name: "VAT", rate: 13 },
+  { name: "VAT Exempt", rate: 0 },
+];
+const NEPAL_VAT_RATE = 13;
+
 export default function TaxSettingsPage() {
   const { data, isPending, error, refetch } = useSetting("tax");
   const update = useUpdateSetting("tax");
@@ -31,10 +40,18 @@ export default function TaxSettingsPage() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(taxSchema),
-    values: { defaultRate: data?.defaultRate ?? 0 },
+    // Default to Nepal VAT for a fresh setup; a saved 0 is respected (0 ?? 13 = 0).
+    values: { defaultRate: data?.defaultRate ?? NEPAL_VAT_RATE },
   });
 
   const addTax = () => setTaxes((prev) => [...prev, { id: `new-${tempId++}`, name: "", rate: 0 }]);
+  /** Add a named preset, skipping it if a row with that name already exists. */
+  const addPreset = ({ name, rate }) =>
+    setTaxes((prev) =>
+      prev.some((t) => t.name.trim().toLowerCase() === name.toLowerCase())
+        ? prev
+        : [...prev, { id: `new-${tempId++}`, name, rate }]
+    );
   const removeTax = (id) => setTaxes((prev) => prev.filter((t) => t.id !== id));
   const patchTax = (id, patch) =>
     setTaxes((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
@@ -64,18 +81,44 @@ export default function TaxSettingsPage() {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
             <div className="max-w-xs">
-              <FormNumber register={register} name="defaultRate" label="Default tax rate (%)" error={errors.defaultRate} required />
+              <FormNumber
+                register={register}
+                name="defaultRate"
+                label="Default tax rate (%)"
+                error={errors.defaultRate}
+                hint="Nepal's standard VAT rate is 13%."
+                required
+              />
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-medium">Tax rates</h3>
-                <Button type="button" size="sm" variant="outline" onClick={addTax}>
-                  <Plus className="h-4 w-4" /> Add tax
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {NEPAL_TAX_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.name}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => addPreset(preset)}
+                    >
+                      <Plus className="h-4 w-4" /> {preset.name} {preset.rate}%
+                    </Button>
+                  ))}
+                  <Button type="button" size="sm" variant="outline" onClick={addTax}>
+                    <Plus className="h-4 w-4" /> Custom
+                  </Button>
+                </div>
               </div>
               {taxes.length === 0 ? (
-                <EmptyState title="No tax rates" description="Add a named tax rate like GST or VAT." className="py-8" />
+                <EmptyState
+                  title="No tax rates"
+                  description="Nepal's standard VAT is 13%. Add it in one click, or create a custom rate."
+                  actionLabel="Add VAT (13%)"
+                  onAction={() => addPreset({ name: "VAT", rate: NEPAL_VAT_RATE })}
+                  className="py-8"
+                />
               ) : (
                 <div className="space-y-2">
                   {taxes.map((tax) => (
@@ -83,7 +126,7 @@ export default function TaxSettingsPage() {
                       <Input
                         value={tax.name}
                         onChange={(e) => patchTax(tax.id, { name: e.target.value })}
-                        placeholder="Tax name (e.g. GST)"
+                        placeholder="Tax name (e.g. VAT)"
                         className="flex-1"
                         aria-label="Tax name"
                       />
