@@ -22,6 +22,7 @@ import { quoteSchema } from "@/validations/quote.schema";
 import { productHooks } from "@/features/products/hooks";
 import { useCustomerOptions } from "@/features/quotes/hooks";
 import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
+import { useDefaultTaxRate } from "@/features/settings/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
@@ -44,6 +45,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
   const defaultBranchId = useDefaultBranchId(defaultValues);
   const { isLocked } = useFieldLocks("quote");
+  const { rate: defaultTaxRate } = useDefaultTaxRate();
   const products = productHooks.useList({ page: 1, limit: 100, status: "active" });
 
   const customerOptions = (customers.data?.items ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -69,7 +71,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
             unitPrice: it.unitPrice ?? 0,
             taxRate: it.taxRate ?? 0,
           }))
-        : [{ ...emptyItem }],
+        : [{ ...emptyItem, taxRate: defaultTaxRate }],
       discount: defaultValues?.discount ?? 0,
       tax: defaultValues?.tax ?? 0,
       validUntil: defaultValues?.validUntil?.slice(0, 10) ?? defaultValidUntil(),
@@ -193,7 +195,7 @@ export default function QuoteBuilder({ defaultValues, onSubmit, submitting = fal
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Line items</CardTitle>
-          <Button type="button" variant="outline" size="sm" onClick={() => append({ ...emptyItem })}>
+          <Button type="button" variant="outline" size="sm" onClick={() => append({ ...emptyItem, taxRate: defaultTaxRate })}>
             <Plus className="h-4 w-4" /> Add item
           </Button>
         </CardHeader>

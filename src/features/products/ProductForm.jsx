@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePlus, Loader2, Plus, Save, X } from "lucide-react";
@@ -15,6 +15,7 @@ import {
 import CategoriesDialog from "@/features/products/CategoriesDialog";
 import { productSchema } from "@/validations/product.schema";
 import { productCategoryHooks, useProductUnits } from "@/features/products/hooks";
+import { useDefaultTaxRate } from "@/features/settings/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 
 const STATUS_OPTIONS = [
@@ -62,11 +63,16 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
   // so nobody edits a value the API is going to discard.
   const { lockProps } = useFieldLocks("product");
 
+  const isEdit = Boolean(defaultValues?.id);
+  const { rate: defaultTaxRate, ready: taxRateReady } = useDefaultTaxRate();
+
   const {
     register,
     control,
     watch,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
@@ -86,6 +92,17 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
       description: defaultValues?.description ?? "",
     },
   });
+
+  // New products pre-fill the company's default tax rate (Nepal VAT) once the
+  // tax setting resolves — but only if the user hasn't already typed a rate, and
+  // never when editing (an existing 0% product must stay 0%).
+  useEffect(() => {
+    if (isEdit || !taxRateReady) return;
+    const current = getValues("taxRate");
+    if (current === "" || current === null || current === undefined) {
+      setValue("taxRate", defaultTaxRate);
+    }
+  }, [isEdit, taxRateReady, defaultTaxRate, getValues, setValue]);
 
   // Services have no inventory — hide stock/SKU fields when Service is chosen.
   const isService = watch("type") === "SERVICE";
@@ -276,7 +293,7 @@ export default function ProductForm({ defaultValues, onSubmit, submitting = fals
             min={0}
             max={100}
             placeholder="e.g. 13"
-            hint="VAT/GST percentage applied on this product"
+            hint="VAT percentage applied on this product (Nepal standard is 13%)"
           />
           <FormSelect
             control={control}

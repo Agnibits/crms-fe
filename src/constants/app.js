@@ -18,6 +18,10 @@ export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 // orders, payments) are formatted in theirs. Matches Company.currency's default.
 export const DEFAULT_CURRENCY = "NPR";
 
+// Nepal's standard VAT. Used to pre-fill new products / ad-hoc line items when
+// the company hasn't configured a tax default in Settings → Tax.
+export const DEFAULT_TAX_RATE = 13;
+
 export const QUERY_KEYS = {
   auth: ["auth"],
   dashboard: ["dashboard"],

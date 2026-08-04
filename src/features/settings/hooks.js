@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { toastError } from "@/services/api";
 import { settingsService } from "@/services/settings.service";
-import { QUERY_KEYS } from "@/constants/app";
+import { QUERY_KEYS, DEFAULT_TAX_RATE } from "@/constants/app";
 
 const settingKey = (key) => [...QUERY_KEYS.settings, key];
 
@@ -16,6 +16,21 @@ export function useSetting(key, options = {}) {
     enabled: !!key,
     ...options,
   });
+}
+
+/**
+ * The company's default tax rate (Settings → Tax), falling back to Nepal's
+ * standard VAT. Used to pre-fill new products and ad-hoc invoice/quote lines so
+ * VAT isn't silently forgotten. `ready` is false until the setting resolves, so
+ * callers can avoid pre-filling with the fallback before the real value loads.
+ */
+export function useDefaultTaxRate() {
+  const { data, isSuccess } = useSetting("tax");
+  const rate = Number(data?.defaultRate);
+  return {
+    rate: Number.isFinite(rate) ? rate : DEFAULT_TAX_RATE,
+    ready: isSuccess,
+  };
 }
 
 /** Save a settings section with a success toast. */

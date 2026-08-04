@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { FormDatePicker, FormSelect, FormTextarea } from "@/components/forms/fields";
 import { useCustomerOptions } from "@/features/contacts/hooks";
 import { useBranchOptions, useDefaultBranchId } from "@/features/branches/hooks";
+import { useDefaultTaxRate } from "@/features/settings/hooks";
 import { useFieldLocks } from "@/hooks/useFieldLocks";
 import { formatCurrency } from "@/utils/format";
 
@@ -48,6 +49,7 @@ export default function InvoiceForm({
   const { options: branchOptions, hasBranches } = useBranchOptions({ includeNone: false });
   const defaultBranchId = useDefaultBranchId(defaultValues);
   const { isLocked } = useFieldLocks("invoice");
+  const { rate: defaultTaxRate } = useDefaultTaxRate();
   const noCustomers = !customers.isPending && customers.options.length === 0;
 
   const {
@@ -62,7 +64,7 @@ export default function InvoiceForm({
       branchId: defaultBranchId,
       dueDate: dateInDays(15),
       notes: "",
-      items: [{ ...EMPTY_ITEM }],
+      items: [{ ...EMPTY_ITEM, taxRate: defaultTaxRate }],
       ...defaultValues,
     },
   });
@@ -165,7 +167,7 @@ export default function InvoiceForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => append({ ...EMPTY_ITEM })}
+            onClick={() => append({ ...EMPTY_ITEM, taxRate: defaultTaxRate })}
           >
             <Plus /> Add Item
           </Button>
