@@ -221,6 +221,26 @@ export default function DashboardPage() {
               </>
             ) : (
               <>
+                {s?.targetAttainment != null ? (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-sm text-muted-foreground">Monthly Target</p>
+                      <p className="text-2xl font-semibold">{s.targetAttainment}%</p>
+                    </div>
+                    {/* Bar caps at 100%, but the label shows real attainment (can exceed target). */}
+                    <Progress value={Math.min(s.targetAttainment, 100)} className="mt-2" />
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {formatCurrency(s.monthRevenue)} of {formatCurrency(s.monthTarget)} this month
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-3 text-center">
+                    <p className="text-sm text-muted-foreground">No monthly target set</p>
+                    <Link href="/settings/targets" className="text-xs text-primary hover:underline">
+                      Set a sales target →
+                    </Link>
+                  </div>
+                )}
                 <div>
                   <div className="flex items-baseline justify-between">
                     <p className="text-sm text-muted-foreground">Lead Conversion Rate</p>
